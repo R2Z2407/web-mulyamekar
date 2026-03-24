@@ -1,0 +1,66 @@
+---
+// src/components/AparaturDesa.astro
+import { supabase } from '../lib/supabase.js';
+
+// Tarik data dari tabel 'aparatur', urutkan berdasarkan kolom 'urutan' dari kecil ke besar
+// Di beranda kita batasi tampil 6 orang aja dulu, sisanya nanti di halaman /pemerintahan
+const { data: aparatur, error } = await supabase
+  .from('aparatur')
+  .select('*')
+  .order('urutan', { ascending: true })
+  .limit(6);
+
+if (error) {
+  console.error("Gagal menarik data Aparatur:", error);
+}
+---
+
+<section id="pemerintahan" class="min-h-screen flex flex-col justify-center py-20 max-md:landscape:py-16 max-md:landscape:min-h-[400px] bg-teal-50">
+  <div class="container mx-auto px-4 max-w-6xl">
+    
+    <div class="text-center max-w-2xl mx-auto mb-16 max-md:landscape:mb-8">
+      <h2 class="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-2" data-aos="zoom-in">Struktur Organisasi</h2>
+      <h3 class="text-3xl md:text-4xl font-extrabold text-teal-950 leading-tight max-md:landscape:text-2xl">Aparatur Desa Mulyamekar</h3>
+      <div class="w-24 h-1.5 bg-amber-400 mx-auto mt-6 max-md:landscape:mt-3 rounded-full"></div>
+    </div>
+
+    {error || !aparatur || aparatur.length === 0 ? (
+      <div class="text-center py-10 bg-white text-gray-500 rounded-xl shadow-sm border border-gray-100">Data aparatur belum tersedia.</div>
+    ) : (
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-4 sm:px-0 max-md:landscape:grid-cols-3 max-md:landscape:gap-3">
+        {aparatur.map((orang, index) => (
+          <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl hover:border-teal-200 transition-all duration-300 group flex flex-col items-center text-center p-8 max-md:landscape:p-4 relative" data-aos="fade-up" 
+        data-aos-delay={index * 100}>
+            
+            <div class="absolute top-0 w-full h-24 max-md:landscape:h-12 bg-gradient-to-b from-teal-100/50 to-transparent"></div>
+            
+            <div class="relative w-32 h-32 max-md:landscape:w-16 max-md:landscape:h-16 mb-6 max-md:landscape:mb-3 mt-4 max-md:landscape:mt-2">
+              <div class="absolute inset-0 bg-amber-400 rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity"></div>
+              <img 
+                src={orang.foto_url} 
+                alt={orang.nama} 
+                class="w-full h-full object-cover rounded-full border-4 border-white shadow-md relative z-10 bg-gray-100"
+              />
+            </div>
+
+            <h4 class="text-xl max-md:landscape:text-sm font-bold text-gray-900 group-hover:text-teal-800 transition-colors line-clamp-1">
+              {orang.nama}
+            </h4>
+            <p class="text-amber-600 font-semibold text-sm max-md:landscape:text-[10px] tracking-wide mt-2 max-md:landscape:mt-1 bg-amber-50 px-3 py-1 rounded-full line-clamp-1">
+              {orang.jabatan}
+            </p>
+
+          </div>
+        ))}
+      </div>
+    )}
+
+    <div class="mt-12 max-md:landscape:mt-6 text-center">
+      <a href="/pemerintahan" class="inline-flex items-center gap-2 text-teal-700 font-bold hover:text-amber-600 transition-colors max-md:landscape:text-sm">
+        Lihat Struktur SOTK Lengkap
+        <svg class="w-5 h-5 max-md:landscape:w-4 max-md:landscape:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+      </a>
+    </div>
+
+  </div>
+</section>

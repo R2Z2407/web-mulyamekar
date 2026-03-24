@@ -1,0 +1,316 @@
+---
+// src/pages/admin/umkm.astro
+import '../../global.css';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+---
+
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Verifikasi UMKM - Admin Mulyamekar</title>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    <Header />
+    
+    <main class="flex-grow pt-24 pb-20">
+        <div class="container mx-auto px-4 max-w-7xl">
+            
+            <div class="mb-8 flex flex-col md:flex-row justify-between items-end gap-4">
+                <div>
+                    <a href="/admin" class="text-orange-600 font-bold text-sm hover:text-orange-700 transition-colors">&larr; Kembali ke Dashboard Admin</a>
+                    <h1 class="text-3xl font-extrabold text-gray-900 mt-2 flex items-center gap-3">
+                        <span class="text-4xl">🏪</span> Verifikasi Toko UMKM
+                    </h1>
+                    <p class="text-sm text-gray-500 mt-1">Kelola permohonan pembukaan toko warga untuk Pasar Desa.</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex space-x-2 overflow-x-auto hide-scrollbar w-full md:w-auto">
+                    <button onclick="pindahTab('Menunggu Verifikasi')" id="tab_menunggu" class="tab-btn px-5 py-2.5 font-bold text-sm rounded-xl transition-all bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap shadow-sm">
+                        ⏳ Menunggu ACC <span id="countMenunggu" class="ml-1 bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full text-xs">0</span>
+                    </button>
+                    <button onclick="pindahTab('Disetujui')" id="tab_disetujui" class="tab-btn px-5 py-2.5 font-bold text-sm rounded-xl transition-all bg-white text-gray-500 hover:bg-gray-50 border border-transparent whitespace-nowrap">
+                        🟢 Toko Aktif
+                    </button>
+                    <button onclick="pindahTab('Ditolak')" id="tab_ditolak" class="tab-btn px-5 py-2.5 font-bold text-sm rounded-xl transition-all bg-white text-gray-500 hover:bg-gray-50 border border-transparent whitespace-nowrap">
+                        🔴 Ditolak
+                    </button>
+                </div>
+
+                <div class="w-full md:w-72 relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" id="inputPencarian" onkeyup="lakukanPencarian()" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 transition-all text-sm font-medium" placeholder="Cari nama toko / pemilik...">
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 border-b border-gray-100 text-gray-600">
+                            <tr>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider">Tgl Pengajuan</th>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider">Identitas Toko</th>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider">Pemilik / Kontak</th>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider text-center">Status</th>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableToko" class="divide-y divide-gray-100 text-sm">
+                            <tr><td colspan="5" class="p-10 text-center text-gray-400 font-bold animate-pulse">Memuat data toko...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="modalDetailToko" class="fixed inset-0 z-[80] bg-gray-900/80 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="modalDetailTokoBox" class="bg-white rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300 max-h-[90vh] flex flex-col overflow-hidden">
+            
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-orange-50 shrink-0">
+                <div>
+                    <h3 class="text-xl font-black text-orange-900">Detail Pengajuan Toko</h3>
+                    <p class="text-xs text-orange-600 mt-1" id="modalSubtitle">Periksa kelengkapan data sebelum menyetujui.</p>
+                </div>
+                <button onclick="tutupModalDetail()" class="text-orange-400 hover:text-orange-600 bg-white p-2 rounded-full shadow-sm font-bold">✖</button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto hide-scrollbar flex-grow">
+                <input type="hidden" id="detail_id">
+                
+                <div class="space-y-5">
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Nama Warga (Pemilik)</p>
+                        <p class="font-black text-gray-800 text-lg flex items-center gap-2">
+                            👤 <span id="detail_pemilik">Memuat...</span>
+                        </p>
+                    </div>
+
+                    <div class="bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
+                        <p class="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1">Nama Toko / Usaha</p>
+                        <p class="font-black text-orange-900 text-xl flex items-center gap-2">
+                            🏪 <span id="detail_nama_toko">Memuat...</span>
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">WhatsApp</p>
+                            <p class="font-bold text-emerald-600 font-mono" id="detail_wa">...</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 md:col-span-2">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Alamat Operasional</p>
+                            <p class="font-medium text-gray-700 text-sm leading-relaxed" id="detail_alamat">...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="areaTombolModal" class="p-6 border-t border-gray-100 bg-white shrink-0 flex gap-3">
+                </div>
+        </div>
+    </div>
+
+    <Footer />
+
+    <style>
+        .animate-fadeIn { animation: fadeIn 0.3s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+
+    <script>
+        import { supabase } from '../../lib/supabase.js';
+
+        let dataTokoMentah = [];
+        let tabAktif = 'Menunggu Verifikasi';
+        let kataKunci = '';
+
+        // Pensteril Teks (Keamanan XSS)
+        function steril(teks) {
+            if (!teks) return '';
+            return String(teks).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char] || char));
+        }
+
+        async function initPage() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = '/login'; return; }
+
+            const { data: profil } = await supabase.from('profil_user').select('role').eq('id', session.user.id).single();
+            if (!profil || profil.role !== 'admin') {
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Akses Ditolak', 'Khusus Admin Desa.');
+                window.location.href = '/'; return;
+            }
+
+            await loadDataToko();
+        }
+
+        // ================= PENGAMBILAN DATA =================
+        async function loadDataToko() {
+            const { data, error } = await supabase.from('umkm_toko').select('*').order('created_at', { ascending: false });
+            
+            if (error) {
+                document.getElementById('tableToko').innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500">Gagal memuat data: ${error.message}</td></tr>`;
+                return;
+            }
+
+            dataTokoMentah = data || [];
+            
+            // Hitung badge notifikasi
+            const jmlMenunggu = dataTokoMentah.filter(t => t.status === 'Menunggu Verifikasi').length;
+            document.getElementById('countMenunggu').innerText = jmlMenunggu;
+
+            renderTabel();
+        }
+
+        // ================= KONTROL TAB & PENCARIAN =================
+        window.pindahTab = (namaTab) => {
+            tabAktif = namaTab;
+            
+            // Reset style semua tombol tab
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn px-5 py-2.5 font-bold text-sm rounded-xl transition-all bg-white text-gray-500 hover:bg-gray-50 border border-transparent whitespace-nowrap";
+            });
+
+            // Aktifin tab yang dipilih (Warnanya disesuaikan)
+            let warnaAktif = "bg-amber-50 text-amber-700 border-amber-200 shadow-sm";
+            if(namaTab === 'Disetujui') warnaAktif = "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm";
+            if(namaTab === 'Ditolak') warnaAktif = "bg-rose-50 text-rose-700 border-rose-200 shadow-sm";
+
+            if (namaTab === 'Menunggu Verifikasi') document.getElementById('tab_menunggu').className = `tab-btn px-5 py-2.5 font-bold text-sm rounded-xl transition-all whitespace-nowrap border ${warnaAktif}`;
+            if (namaTab === 'Disetujui') document.getElementById('tab_disetujui').className = `tab-btn px-5 py-2.5 font-bold text-sm rounded-xl transition-all whitespace-nowrap border ${warnaAktif}`;
+            if (namaTab === 'Ditolak') document.getElementById('tab_ditolak').className = `tab-btn px-5 py-2.5 font-bold text-sm rounded-xl transition-all whitespace-nowrap border ${warnaAktif}`;
+
+            renderTabel();
+        };
+
+        window.lakukanPencarian = () => {
+            kataKunci = document.getElementById('inputPencarian').value.toLowerCase();
+            renderTabel();
+        };
+
+        // ================= RENDER TABEL =================
+        function renderTabel() {
+            const tbody = document.getElementById('tableToko');
+            
+            // 1. Filter by Tab
+            let dataSaring = dataTokoMentah.filter(t => t.status === tabAktif);
+            
+            // 2. Filter by Search (Nama Toko atau Nama Pemilik)
+            if (kataKunci) {
+                dataSaring = dataSaring.filter(t => 
+                    (t.nama_toko && t.nama_toko.toLowerCase().includes(kataKunci)) || 
+                    (t.nama_pemilik && t.nama_pemilik.toLowerCase().includes(kataKunci))
+                );
+            }
+
+            if (dataSaring.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-12 text-center text-gray-400 bg-gray-50/50"><span class="text-4xl mb-3 block">📭</span><p class="font-bold">Tidak ada data toko.</p></td></tr>`;
+                return;
+            }
+
+            let html = '';
+            dataSaring.forEach(toko => {
+                const tgl = new Date(toko.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+                
+                let badgeStatus = '';
+                if(toko.status === 'Menunggu Verifikasi') badgeStatus = `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 animate-pulse">⏳ Menunggu ACC</span>`;
+                else if(toko.status === 'Disetujui') badgeStatus = `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">🟢 Tervalidasi</span>`;
+                else badgeStatus = `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">🔴 Ditolak</span>`;
+
+                html += `
+                <tr class="hover:bg-orange-50/30 transition-colors border-b border-gray-50 last:border-0">
+                    <td class="p-4 align-top text-gray-500 text-xs">${tgl}</td>
+                    <td class="p-4 align-top">
+                        <p class="font-black text-orange-900 text-base">${steril(toko.nama_toko)}</p>
+                        <p class="text-[10px] text-gray-500 truncate max-w-[200px] mt-1" title="${steril(toko.alamat)}">📍 ${steril(toko.alamat)}</p>
+                    </td>
+                    <td class="p-4 align-top">
+                        <p class="font-bold text-gray-800 text-sm">👤 ${steril(toko.nama_pemilik)}</p>
+                        <p class="font-mono text-emerald-600 text-xs mt-1">📱 ${steril(toko.no_wa)}</p>
+                    </td>
+                    <td class="p-4 align-top text-center pt-5">${badgeStatus}</td>
+                    <td class="p-4 align-top text-center pt-4">
+                        <button onclick="bukaModalDetail('${toko.id}')" class="bg-white border border-orange-200 text-orange-600 hover:bg-orange-50 font-bold py-1.5 px-4 rounded-lg text-xs shadow-sm transition-all w-full">
+                            🔍 Periksa
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // ================= KONTROL MODAL DETAIL =================
+        window.bukaModalDetail = (id) => {
+            const toko = dataTokoMentah.find(t => t.id === id);
+            if (!toko) return;
+
+            // Kunci Scroll Layar Belakang
+            document.body.classList.add('overflow-hidden');
+
+            // Isi Data Modal
+            document.getElementById('detail_id').value = toko.id;
+            document.getElementById('detail_pemilik').innerText = steril(toko.nama_pemilik);
+            document.getElementById('detail_nama_toko').innerText = steril(toko.nama_toko);
+            document.getElementById('detail_wa').innerText = steril(toko.no_wa);
+            document.getElementById('detail_alamat').innerText = steril(toko.alamat);
+
+            // Setup Tombol Aksi di Modal Tergantung Status
+            const areaTombol = document.getElementById('areaTombolModal');
+            if (toko.status === 'Menunggu Verifikasi') {
+                areaTombol.innerHTML = `
+                    <button onclick="prosesStatus('${toko.id}', 'Ditolak')" class="flex-1 bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 font-bold py-3.5 rounded-xl transition-all">Tolak Pengajuan</button>
+                    <button onclick="prosesStatus('${toko.id}', 'Disetujui')" class="flex-1 bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg font-black py-3.5 rounded-xl transition-all">✅ Setujui Toko</button>
+                `;
+            } else if (toko.status === 'Disetujui') {
+                areaTombol.innerHTML = `
+                    <button onclick="prosesStatus('${toko.id}', 'Ditolak')" class="w-full bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 font-bold py-3.5 rounded-xl transition-all">🚫 Cabut Izin / Nonaktifkan Toko</button>
+                `;
+            } else { // Ditolak
+                areaTombol.innerHTML = `
+                    <button onclick="prosesStatus('${toko.id}', 'Disetujui')" class="w-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 font-bold py-3.5 rounded-xl transition-all">♻️ Pulihkan & Setujui Toko</button>
+                `;
+            }
+
+            // Tampilkan Modal
+            const m = document.getElementById('modalDetailToko'); const b = document.getElementById('modalDetailTokoBox');
+            m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+        };
+
+        window.tutupModalDetail = () => {
+            document.body.classList.remove('overflow-hidden');
+            const m = document.getElementById('modalDetailToko'); const b = document.getElementById('modalDetailTokoBox');
+            m.classList.add('opacity-0'); b.classList.remove('scale-100'); b.classList.add('scale-95'); setTimeout(() => { m.classList.add('hidden'); }, 300);
+        };
+
+        // ================= AKSI UPDATE STATUS =================
+        window.prosesStatus = async (id, statusBaru) => {
+            let pesanConfirm = statusBaru === 'Disetujui' ? 'Setujui toko ini agar warga bisa mulai berjualan?' : 'Tolak/Nonaktifkan toko ini? Warga tidak akan bisa berjualan.';
+            
+            if (confirm(pesanConfirm)) {
+                // Kunci tombol biar ga diklik 2x (opsional, tapi bagus)
+                document.getElementById('areaTombolModal').innerHTML = `<div class="w-full text-center py-3.5 text-orange-600 font-bold animate-pulse">Memproses...</div>`;
+
+                const { error } = await supabase.from('umkm_toko').update({ status: statusBaru }).eq('id', id);
+                
+                if (error) {
+                    alert('Gagal memproses: ' + error.message);
+                    tutupModalDetail();
+                } else {
+                    tutupModalDetail();
+                    loadDataToko(); // Reload tabel untuk mencerminkan perubahan
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

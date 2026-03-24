@@ -1,0 +1,170 @@
+---
+// src/pages/admin/akun.astro
+import '../../global.css';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const daftarRT = [
+  "Belum Diatur", "RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW 02"
+];
+---
+
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kelola Akun & RT/RW - Admin Mulyamekar</title>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    <Header />
+    
+    <main class="flex-grow pt-10 pb-20">
+        <div class="container mx-auto px-4 max-w-6xl">
+            <div class="mb-8">
+                <a href="/admin" class="text-teal-600 hover:text-amber-600 text-sm font-bold mb-2 inline-flex items-center gap-1 transition-colors">
+                    &larr; Kembali ke Dashboard
+                </a>
+                <h1 class="text-3xl font-extrabold text-teal-950">Kelola Hak Akses Akun</h1>
+                <p class="text-gray-500 mt-1">Angkat warga menjadi Ketua RT/RW atau jadikan mereka Admin.</p>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-teal-50 text-teal-900 border-b border-teal-100">
+                                <th class="p-4 font-bold text-sm">Informasi Pengguna</th>
+                                <th class="p-4 font-bold text-sm">Email Akun</th>
+                                <th class="p-4 font-bold text-sm">Ubah Role (Jabatan)</th>
+                                <th class="p-4 font-bold text-sm">Wilayah Tugas (Khusus RT)</th>
+                                <th class="p-4 font-bold text-sm text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableAkun" class="divide-y divide-gray-100 text-sm">
+                            <tr><td colspan="5" class="p-8 text-center text-gray-400">Memuat data pengguna...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    <Footer />
+
+    <script>
+        import { supabase } from '../../lib/supabase.js';
+
+        // 🔥 FUNGSI STERILISASI (ANTI-XSS) 🔥
+        function steril(teks) {
+            if (!teks) return '';
+            return String(teks).replace(/[&<>'"]/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[char] || char));
+        }
+
+        async function initPage() {
+            try {
+                // 1. Cek Login
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) { window.location.href = '/login'; return; }
+
+                // 2. Cek Profil Admin (Lebih aman)
+                const { data: profilAdmin, error: errProfil } = await supabase
+                    .from('profil_user')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (errProfil || !profilAdmin || profilAdmin.role !== 'admin') {
+                    await showCustomAlert('error','Akses Ditolak!',' Hanya Admin yang bisa buka halaman ini.');
+                    window.location.href = '/';
+                    return;
+                }
+
+                // 3. Lolos Satpam -> Muat Tabel
+                loadSemuaAkun();
+
+            } catch (error) {
+                console.error("Terjadi crash di sistem keamanan:", error);
+                document.getElementById('tableAkun').innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500 font-bold">Terjadi error sistem: ${error.message}</td></tr>`;
+            }
+        }
+
+        async function loadSemuaAkun() {
+            try {
+                const { data, error } = await supabase.from('profil_user').select('*').order('created_at', { ascending: false });
+                const tbody = document.getElementById('tableAkun');
+                
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada akun yang terdaftar.</td></tr>`;
+                    return;
+                }
+
+                let html = '';
+                data.forEach(user => {
+                    // 🛡️ STERILKAN PROFIL USER
+                    const namaAman = steril(user.nama_lengkap) || 'Belum diisi';
+                    const nikAman = steril(user.nik) || '-';
+                    const emailAman = steril(user.email);
+
+                    // Dropdown Role
+                    const isWarga = user.role === 'warga' ? 'selected' : '';
+                    const isRT = user.role === 'rt_rw' ? 'selected' : '';
+                    const isAdmin = user.role === 'admin' ? 'selected' : '';
+
+                    // Dropdown Wilayah
+                    let opsiWilayah = `<option value="">Belum Diatur</option>`;
+                    ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW 02"].forEach(rt => {
+                        const sel = user.wilayah_rt === rt ? 'selected' : '';
+                        opsiWilayah += `<option value="${rt}" ${sel}>${rt}</option>`;
+                    });
+
+                    html += `
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="p-4">
+                                <p class="font-bold text-teal-900">${namaAman}</p>
+                                <p class="text-xs text-gray-500 font-mono mt-1">NIK: ${nikAman}</p>
+                            </td>
+                            <td class="p-4 text-gray-600">${emailAman}</td>
+                            <td class="p-4">
+                                <select id="role-${user.id}" class="bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-teal-500 block p-2 outline-none cursor-pointer font-bold w-full">
+                                    <option value="warga" ${isWarga}>Warga Biasa</option>
+                                    <option value="rt_rw" ${isRT}>Ketua RT/RW</option>
+                                    <option value="admin" ${isAdmin}>Admin Desa</option>
+                                </select>
+                            </td>
+                            <td class="p-4">
+                                <select id="wilayah-${user.id}" class="bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-teal-500 block p-2 outline-none cursor-pointer w-full">
+                                    ${opsiWilayah}
+                                </select>
+                                <p class="text-[10px] text-gray-400 mt-1">*Wajib diisi untuk Warga & RT</p>
+                            </td>
+                            <td class="p-4 text-center">
+                                <button onclick="simpanAkun('${user.id}')" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-xl transition-all shadow-sm active:scale-95 text-xs w-full">
+                                    Simpan Ubahan
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (error) {
+                document.getElementById('tableAkun').innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500 font-bold">Gagal memuat data: ${error.message}</td></tr>`;
+            }
+        }
+
+        window.simpanAkun = async (id) => {
+         const roleBaru = document.getElementById(`role-${id}`).value;
+         let wilayahBaru = document.getElementById(`wilayah-${id}`).value;
+
+         const { error } = await supabase.from('profil_user').update({ role: roleBaru, wilayah_rt: wilayahBaru }).eq('id', id);
+         if (error) await showCustomAlert('error','','Gagal menyimpan: ' + error.message);
+         else { await showCustomAlert('success','','Hak akses berhasil diperbarui!'); loadSemuaAkun(); }
+     };
+
+        initPage();
+    </script>
+</body>
+</html>

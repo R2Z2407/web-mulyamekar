@@ -1,0 +1,223 @@
+---
+// src/components/AuthModal.astro
+---
+
+<div id="authModal" class="fixed inset-0 z-50 hidden bg-teal-950/80 backdrop-blur-sm flex justify-center items-center opacity-0 transition-opacity duration-300 px-4">
+    
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative min-h-[550px] transform scale-95 transition-transform duration-300" id="authBox">
+        
+        <button id="btnCloseModal" class="absolute top-4 right-4 z-20 text-gray-400 hover:text-red-500 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+
+        <div id="loginView" class="absolute inset-0 p-8 flex flex-col justify-center transition-all duration-500 transform translate-x-0 opacity-100 z-10">
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-extrabold text-teal-950">Selamat Datang</h2>
+                <p class="text-gray-500 mt-1 text-sm">Masuk untuk mengakses layanan desa</p>
+            </div>
+
+            <form id="modalLoginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Email</label>
+                    <input type="email" id="loginEmail" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-teal-500 outline-none" placeholder="email@anda.com" />
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Password</label>
+                    <input type="password" id="loginPassword" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-teal-500 outline-none" placeholder="••••••••" />
+                </div>
+                <button type="submit" id="btnModalLogin" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-transform active:scale-95 mt-2">
+                    Masuk Sekarang
+                </button>
+            </form>
+            <a href="/lupa-password" class="text-xs text-teal-600 hover:text-teal-800 font-bold block text-right mt-1">Lupa kata sandi?</a>
+            <div class="mt-6 text-center text-sm text-gray-500">
+                Belum punya akun? 
+                <button id="btnTampilkanDaftar" class="text-amber-600 font-bold hover:underline">Daftar di sini</button>
+            </div>
+        </div>
+
+        <div id="registerView" class="absolute inset-0 p-8 flex flex-col justify-center transition-all duration-500 transform translate-x-full opacity-0 pointer-events-none z-0">
+            <div class="text-center mb-4">
+                <h2 class="text-2xl font-extrabold text-teal-950">Buat Akun Warga</h2>
+                <p class="text-gray-500 text-xs mt-1">Lengkapi data diri sesuai KTP</p>
+            </div>
+
+            <form id="modalRegisterForm" class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">NIK (16 Digit)</label>
+                        <input type="text" id="regNik" required minlength="16" maxlength="16" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none" />
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">Nama Lengkap</label>
+                        <input type="text" id="regNama" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none" />
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-700 mb-1">Wilayah RT/RW</label>
+                    <select id="regWilayah" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none">
+                        <option value="" disabled selected>-- Pilih RT --</option>
+                        <option value="RT 01 / RW 01">RT 01 / RW 01</option>
+                        <option value="RT 02 / RW 01">RT 02 / RW 01</option>
+                        <option value="RT 01 / RW 02">RT 01 / RW 02</option>
+                        <option value="RT 02 / RW 02">RT 02 / RW 02</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">Email</label>
+                        <input type="email" id="regEmail" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none" />
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">Password</label>
+                        <input type="password" id="regPassword" required minlength="6" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none" />
+                    </div>
+                </div>
+
+                <button type="submit" id="btnModalRegister" class="w-full bg-amber-500 hover:bg-amber-600 text-teal-950 font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95 mt-2">
+                    Daftar Sekarang
+                </button>
+            </form>
+
+            <div class="mt-4 text-center text-sm text-gray-500">
+                Sudah punya akun? 
+                <button id="btnTampilkanLogin" class="text-teal-600 font-bold hover:underline">Masuk di sini</button>
+            </div>
+        </div>
+
+        <div id="authMessage" class="absolute bottom-4 left-4 right-4 hidden p-3 rounded-lg text-center text-sm font-bold z-30 transition-all"></div>
+
+    </div>
+</div>
+
+<script>
+    import { supabase } from '../lib/supabase.js';
+
+    // Elemen UI Animasi
+    const authModal = document.getElementById('authModal');
+    const authBox = document.getElementById('authBox');
+    const btnCloseModal = document.getElementById('btnCloseModal');
+    
+    const loginView = document.getElementById('loginView');
+    const registerView = document.getElementById('registerView');
+    
+    const btnTampilkanDaftar = document.getElementById('btnTampilkanDaftar');
+    const btnTampilkanLogin = document.getElementById('btnTampilkanLogin');
+    const authMessage = document.getElementById('authMessage');
+
+    // Fungsi Buka/Tutup Modal (Dipanggil dari tombol di Header nanti)
+    window.openAuthModal = () => {
+        authModal.classList.remove('hidden');
+        // Efek transisi muncul
+        setTimeout(() => {
+            authModal.classList.remove('opacity-0');
+            authBox.classList.remove('scale-95');
+        }, 10);
+    };
+
+    btnCloseModal.addEventListener('click', () => {
+        authModal.classList.add('opacity-0');
+        authBox.classList.add('scale-95');
+        setTimeout(() => authModal.classList.add('hidden'), 300);
+    });
+
+    // ==============================================
+    // LOGIKA ANIMASI "TUTUP-MENUTUP" (SLIDE & FADE)
+    // ==============================================
+    btnTampilkanDaftar.addEventListener('click', () => {
+        // Geser Login ke kiri, pudarkan
+        loginView.classList.remove('translate-x-0', 'opacity-100', 'z-10');
+        loginView.classList.add('-translate-x-full', 'opacity-0', 'pointer-events-none', 'z-0');
+        
+        // Tarik Register dari kanan ke tengah, munculkan
+        registerView.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none', 'z-0');
+        registerView.classList.add('translate-x-0', 'opacity-100', 'z-10');
+        
+        authMessage.classList.add('hidden'); // Reset pesan
+    });
+
+    btnTampilkanLogin.addEventListener('click', () => {
+        // Geser Register ke kanan, pudarkan
+        registerView.classList.remove('translate-x-0', 'opacity-100', 'z-10');
+        registerView.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none', 'z-0');
+        
+        // Tarik Login dari kiri ke tengah, munculkan
+        loginView.classList.remove('-translate-x-full', 'opacity-0', 'pointer-events-none', 'z-0');
+        loginView.classList.add('translate-x-0', 'opacity-100', 'z-10');
+        
+        authMessage.classList.add('hidden'); // Reset pesan
+    });
+
+    // Fungsi Pembantu Notifikasi
+    const showMsg = (text, isError) => {
+        authMessage.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-emerald-100', 'text-emerald-700');
+        authMessage.classList.add(isError ? 'bg-red-100' : 'bg-emerald-100', isError ? 'text-red-700' : 'text-emerald-700');
+        authMessage.innerText = text;
+    };
+
+    // ==============================================
+    // LOGIKA LOGIN SUPABASE & SMART ROUTING
+    // ==============================================
+    document.getElementById('modalLoginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnModalLogin');
+        btn.innerText = "Memproses..."; btn.disabled = true;
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: document.getElementById('loginEmail').value,
+            password: document.getElementById('loginPassword').value,
+        });
+
+        if (error) {
+            showMsg(error.message, true);
+            btn.innerText = "Masuk Sekarang"; btn.disabled = false;
+        } else if (data.user) {
+            showMsg("Login Berhasil! Mengalihkan...", false);
+            const { data: profil } = await supabase.from('profil_user').select('role').eq('id', data.user.id).single();
+            
+            // Pintu Otomatis
+            if (profil?.role === 'admin') window.location.href = '/admin';
+            else if (profil?.role === 'rt_rw') window.location.href = '/rt';
+            else window.location.href = '/warga';
+        }
+    });
+
+    // ==============================================
+    // LOGIKA DAFTAR SUPABASE
+    // ==============================================
+    document.getElementById('modalRegisterForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnModalRegister');
+        btn.innerText = "Memproses..."; btn.disabled = true;
+
+        try {
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+            });
+            if (authError) throw authError;
+
+            if (authData.user) {
+                const { error: updateError } = await supabase.from('profil_user').update({ 
+                    nik: document.getElementById('regNik').value, 
+                    nama_lengkap: document.getElementById('regNama').value,
+                    wilayah_rt: document.getElementById('regWilayah').value
+                }).eq('id', authData.user.id);
+                if (updateError) throw updateError;
+            }
+
+            showMsg("Pendaftaran berhasil! Silakan masuk.", false);
+            setTimeout(() => {
+                btnTampilkanLogin.click(); // Otomatis geser ke form login
+                document.getElementById('modalRegisterForm').reset();
+            }, 1500);
+
+        } catch (error) {
+            showMsg(error.message, true);
+        } finally {
+            btn.innerText = "Daftar Sekarang"; btn.disabled = false;
+        }
+    });
+</script>

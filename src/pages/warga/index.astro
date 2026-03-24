@@ -1,0 +1,656 @@
+---
+// src/pages/warga/index.astro
+import '../../global.css';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const daftarRT = ["Belum Diatur", "RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW 02"];
+---
+
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard Warga & RT - Desa Mulyamekar</title>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    <Header />
+    
+    <main class="flex-grow pt-24 pb-20">
+        <div class="container mx-auto px-4 max-w-6xl">
+            
+            <div id="kontrolModeRT" class="hidden mb-6 flex justify-end">
+                <div class="bg-white px-4 py-2 rounded-full shadow-sm border border-amber-200 flex items-center gap-3">
+                    <span class="text-sm font-bold text-gray-600">Mode Warga</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleMode" class="sr-only peer" onchange="gantiMode(this.checked)">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500 shadow-inner"></div>
+                    </label>
+                    <span class="text-sm font-bold text-amber-600">Mode RT/RW</span>
+                </div>
+            </div>
+
+            <div id="tampilanWarga" class="block animate-fadeIn">
+                <div class="bg-gradient-to-r from-teal-800 to-teal-600 rounded-3xl p-8 text-white shadow-xl mb-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden border border-teal-500/30">
+                    <div class="absolute -right-20 -top-20 w-64 h-64 bg-teal-400 rounded-full opacity-20 blur-3xl"></div>
+                    
+                    <div class="flex items-center gap-6 relative z-10 w-full md:w-auto">
+                        <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-4xl shadow-inner border-2 border-white/40 backdrop-blur-sm shrink-0">👤</div>
+                        <div>
+                            <h1 class="text-2xl md:text-3xl font-black tracking-tight" id="namaWarga">Memuat...</h1>
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                <span class="bg-teal-900/50 px-3 py-1 rounded-full text-xs font-mono font-bold border border-teal-500/50 shadow-sm" id="nikWarga">...</span>
+                                <span class="bg-teal-900/50 px-3 py-1 rounded-full text-xs font-bold border border-teal-500/50 shadow-sm" id="wilayahWarga">...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative z-10 flex flex-wrap justify-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+                        <button onclick="bukaModalProfil()" class="bg-white/20 hover:bg-white/30 text-white border border-white/50 px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm text-sm flex items-center gap-2">⚙️ Edit Profil</button>
+                        <button id="btnLogoutWarga" class="bg-red-500/90 hover:bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm text-sm">Keluar</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <a href="/layanan" class="bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl border border-gray-100 transition-all hover:-translate-y-1 group flex flex-col h-full">
+                        <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">📄</div>
+                        <h3 class="text-lg font-black text-gray-800 mb-2">Layanan E-Surat</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed mb-6 flex-grow">Buat pengajuan Surat Keterangan langsung dari HP Anda.</p>
+                    </a>
+
+                    <a href="/aduan" class="bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl border border-gray-100 transition-all hover:-translate-y-1 group flex flex-col h-full">
+                        <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:bg-rose-600 group-hover:text-white transition-colors">📢</div>
+                        <h3 class="text-lg font-black text-gray-800 mb-2">Lapor Aduan</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed mb-6 flex-grow">Laporkan infrastruktur rusak atau masalah lingkungan desa.</p>
+                    </a>
+
+                    <div class="bg-gradient-to-br from-orange-500 to-amber-500 rounded-3xl p-6 text-white shadow-sm hover:shadow-xl transition-all flex flex-col h-full relative overflow-hidden group">
+                        <h3 class="text-lg font-black relative z-10 mb-2 shadow-sm">Pasar Desa (UMKM)</h3>
+                        <p id="teksUmkmDesc" class="text-orange-50 text-sm leading-relaxed mb-6 flex-grow relative z-10">Mengecek status toko Anda...</p>
+                        <div id="aksiUmkm" class="relative z-10 border-t border-white/20 pt-4"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 border-b border-gray-50 pb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">📋</span>
+                            <h2 class="text-xl font-black text-gray-800">Riwayat Pengajuan Surat Anda</h2>
+                        </div>
+                        <div class="relative w-full sm:w-64">
+                            <input type="text" id="searchRiwayat" placeholder="Cari surat..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                    </div>
+                    
+                    <div id="riwayatContainer" class="space-y-4">
+                        <div class="text-center py-10 text-gray-400 animate-pulse font-bold">Memuat data riwayat...</div>
+                    </div>
+                    <div id="paginationWarga"></div>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 border-t-4 border-t-rose-500">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 border-b border-gray-50 pb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">📢</span>
+                            <h2 class="text-xl font-black text-gray-800">Pantau Aduan Anda</h2>
+                        </div>
+                        <div class="relative w-full sm:w-64">
+                            <input type="text" id="searchRiwayatAduan" placeholder="Cari aduan yang diajukan..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 outline-none transition-all">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                    </div>
+                    
+                    <div id="riwayatAduanContainer" class="space-y-4">
+                        <div class="text-center py-10 text-gray-400 animate-pulse font-bold">Memuat data aduan Anda...</div>
+                    </div>
+                    <div id="paginationAduanWarga"></div>
+                </div>
+            </div>
+
+            <div id="tampilanRT" class="hidden animate-fadeIn">
+                <div class="bg-gradient-to-br from-amber-600 to-orange-500 rounded-3xl p-8 text-white shadow-xl mb-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden border border-amber-400/50">
+                    <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-orange-400 rounded-full opacity-40 blur-3xl"></div>
+                    <div class="relative z-10 text-center md:text-left">
+                        <span class="inline-block px-4 py-1 bg-white text-orange-600 font-extrabold rounded-full text-[10px] uppercase tracking-widest mb-3 shadow-sm">👑 Panel Pengurus Wilayah</span>
+                        <h1 class="text-2xl md:text-3xl font-black tracking-tight" id="namaRT">Memuat...</h1>
+                        <p class="text-orange-50 mt-1 font-medium">Ketua <span id="wilayahRTLabel" class="font-bold border-b border-orange-200 pb-0.5">...</span></p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8 border-t-4 border-t-amber-500">
+                    <div class="p-6 border-b border-gray-100 bg-amber-50/30 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Verifikasi Surat Warga</h2>
+                            <p class="text-sm text-gray-500 mt-1">Daftar permohonan surat di wilayah Anda.</p>
+                        </div>
+                        <div class="relative w-full sm:w-64">
+                            <input type="text" id="searchSuratRT" placeholder="Cari pemohon / surat..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none transition-all">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 border-b border-gray-100 text-gray-600">
+                                <tr>
+                                    <th class="p-4 font-bold text-xs uppercase tracking-wider">Tanggal</th>
+                                    <th class="p-4 font-bold text-xs uppercase tracking-wider">Pemohon & Berkas</th>
+                                    <th class="p-4 font-bold text-xs uppercase tracking-wider">Keperluan Surat</th>
+                                    <th class="p-4 font-bold text-xs uppercase tracking-wider text-center">Status</th>
+                                    <th class="p-4 font-bold text-xs uppercase tracking-wider text-center">Aksi Verifikasi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableSuratRT" class="divide-y divide-gray-100 text-sm">
+                                <tr><td colspan="5" class="p-8 text-center text-gray-400 animate-pulse">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="paginationSuratRT" class="px-6 py-4 bg-gray-50 border-t border-gray-100"></div>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-rose-500">
+                    <div class="p-6 border-b border-gray-100 bg-rose-50/30 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Pantauan Aduan Warga</h2>
+                            <p class="text-sm text-gray-500 mt-1">Laporan masalah di wilayah Anda (Hanya pantauan).</p>
+                        </div>
+                        <div class="relative w-full sm:w-64">
+                            <input type="text" id="searchAduanRT" placeholder="Cari pelapor / masalah..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 outline-none transition-all">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 border-b border-gray-100 text-gray-600">
+                                <tr>
+                                    <th class="p-4 font-bold text-xs uppercase tracking-wider">Pelapor</th>
+                                    <th class="p-4 font-bold text-xs uppercase tracking-wider">Kategori & Laporan</th>
+                                    <th class="p-4 font-bold text-xs uppercase tracking-wider text-center">Status Desa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableAduanRT" class="divide-y divide-gray-100 text-sm">
+                                <tr><td colspan="3" class="p-8 text-center text-gray-400 animate-pulse">Memuat data aduan...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="paginationAduanRT" class="px-6 py-4 bg-gray-50 border-t border-gray-100"></div>
+                </div>
+            </div> 
+
+        </div>
+    </main>
+
+    <div id="modalProfil" class="fixed inset-0 z-[80] bg-gray-900/80 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="modalProfilBox" class="bg-white rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-teal-50 rounded-t-3xl">
+                <h3 class="text-xl font-black text-teal-900">Pengaturan Profil</h3>
+                <button onclick="tutupModalProfil()" class="text-teal-400 hover:text-teal-600 bg-white p-2 rounded-full shadow-sm font-bold">✖</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <form id="formProfil" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Nama Sesuai KTP *</label>
+                        <input type="text" id="inputNama" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">NIK (16 Digit) *</label>
+                        <input type="text" id="inputNik" required minlength="16" maxlength="16" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Wilayah RT/RW *</label>
+                        <select id="inputRT" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-bold text-teal-900">
+                            {daftarRT.map(rt => <option value={rt === 'Belum Diatur' ? '' : rt}>{rt}</option>)}
+                        </select>
+                    </div>
+                    <button type="submit" id="btnSimpanProfil" class="w-full bg-teal-600 text-white font-black py-3.5 rounded-xl shadow-md mt-2">Simpan Perubahan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalDaftarToko" class="fixed inset-0 z-[80] bg-gray-900/80 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="modalDaftarTokoBox" class="bg-white rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-orange-50 rounded-t-3xl">
+                <h3 class="text-xl font-black text-orange-900">Buka Toko UMKM</h3>
+                <button onclick="tutupModalToko()" class="text-orange-400 hover:text-orange-600 bg-white p-2 rounded-full shadow-sm font-bold">✖</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <form id="formDaftarToko" class="space-y-4">
+                    <input type="text" id="toko_nama" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Nama Usaha">
+                    <input type="number" id="toko_wa" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Nomor WA Aktif">
+                    <textarea id="toko_alamat" required rows="2" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Alamat Usaha"></textarea>
+                    <button type="submit" id="btnSimpanToko" class="w-full bg-orange-600 text-white font-black py-4 rounded-xl shadow-lg mt-2">Kirim Pengajuan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <Footer />
+
+    <style>
+        .animate-fadeIn { animation: fadeIn 0.3s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+
+    <script>
+        import { supabase } from '../../lib/supabase.js';
+
+        let currentUser = null;
+        let profilWarga = null;
+
+        // 🔥 STATE GLOBAL UNTUK PENCARIAN & PAGINATION (BATAS 6) 🔥
+        const itemsPerPage = 6;
+        
+        let rawRiwayatWarga = [];  let filteredRiwayatWarga = [];
+        let rawRiwayatAduan = [];  let filteredRiwayatAduan = [];
+        let rawSuratRT = [];       let filteredSuratRT = [];
+        let rawAduanRT = [];       let filteredAduanRT = [];
+
+        function steril(teks) {
+            if (!teks) return '';
+            return String(teks).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char] || char));
+        }
+
+        // ================= FUNGSI BIKIN TAB PAGINATION =================
+        function createTabPaginationUI(tipe, pageSekarang, totalData) {
+            const totalPages = Math.ceil(totalData / itemsPerPage) || 1;
+            if (totalPages <= 1) return ''; 
+
+            let html = '<div class="flex justify-center gap-2 mt-6 mb-2">';
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === pageSekarang) {
+                    html += `<button class="w-10 h-10 rounded-xl bg-teal-600 text-white font-black shadow-md transform scale-110 transition-transform">${i}</button>`;
+                } else {
+                    html += `<button onclick="gantiHalaman('${tipe}', ${i})" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-500 hover:border-teal-400 hover:text-teal-600 font-bold shadow-sm transition-colors">${i}</button>`;
+                }
+            }
+            html += '</div>';
+            return html;
+        }
+
+        window.gantiHalaman = (tipe, page) => {
+            if (tipe === 'Warga') renderRiwayatWarga(page);
+            if (tipe === 'AduanWarga') renderRiwayatAduan(page);
+            if (tipe === 'SuratRT') renderSuratRT(page);
+            if (tipe === 'AduanRT') renderAduanRT(page);
+        };
+
+        // ================= INIT =================
+        async function initDashboard() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = '/'; return; }
+            currentUser = session.user;
+            
+            const { data: profil, error } = await supabase.from('profil_user').select('*').eq('id', currentUser.id).single();
+            if (error || !profil) { window.location.href = '/'; return; }
+            if (profil.role === 'admin') { window.location.href = '/admin'; return; } 
+
+            profilWarga = profil;
+
+            if (profil.role === 'rt_rw') {
+                document.getElementById('kontrolModeRT').classList.remove('hidden');
+                document.getElementById('namaRT').innerText = steril(profil.nama_lengkap) || 'Ketua RT';
+                document.getElementById('wilayahRTLabel').innerText = steril(profil.wilayah_rt) || 'Belum Diatur';
+                loadSuratRT();
+                loadAduanRT();
+            }
+
+            const safeName = steril(profil.nama_lengkap) || profil.nama || 'Warga';
+            document.getElementById('namaWarga').innerText = safeName;
+            document.getElementById('nikWarga').innerText = steril(profil.nik) || 'NIK Kosong';
+            document.getElementById('wilayahWarga').innerText = steril(profil.wilayah_rt) || 'RT/RW Kosong';
+            
+            document.getElementById('inputNama').value = safeName;
+            document.getElementById('inputNik').value = steril(profil.nik);
+            if (profil.wilayah_rt) document.getElementById('inputRT').value = steril(profil.wilayah_rt);
+
+            loadRiwayatSurat();
+            loadRiwayatAduan();
+            cekStatusToko();
+        }
+
+        window.gantiMode = (isModeRT) => {
+            if (isModeRT) {
+                document.getElementById('tampilanWarga').classList.add('hidden');
+                document.getElementById('tampilanRT').classList.remove('hidden');
+            } else {
+                document.getElementById('tampilanRT').classList.add('hidden');
+                document.getElementById('tampilanWarga').classList.remove('hidden');
+            }
+        };
+
+        // Modal Controls
+        window.bukaModalProfil = () => { document.body.classList.add('overflow-hidden'); const m = document.getElementById('modalProfil'); const b = document.getElementById('modalProfilBox'); m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10); };
+        window.tutupModalProfil = () => { document.body.classList.remove('overflow-hidden'); const m = document.getElementById('modalProfil'); const b = document.getElementById('modalProfilBox'); m.classList.add('opacity-0'); b.classList.remove('scale-100'); b.classList.add('scale-95'); setTimeout(() => { m.classList.add('hidden'); }, 300); };
+        window.bukaModalToko = () => { document.body.classList.add('overflow-hidden'); const m = document.getElementById('modalDaftarToko'); const b = document.getElementById('modalDaftarTokoBox'); m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10); };
+        window.tutupModalToko = () => { document.body.classList.remove('overflow-hidden'); const m = document.getElementById('modalDaftarToko'); const b = document.getElementById('modalDaftarTokoBox'); m.classList.add('opacity-0'); b.classList.remove('scale-100'); b.classList.add('scale-95'); setTimeout(() => { m.classList.add('hidden'); }, 300); };
+
+        async function cekStatusToko() {
+            if (!currentUser) return;
+            const aksi = document.getElementById('aksiUmkm');
+            const { data, error } = await supabase.from('umkm_toko').select('*').eq('user_id', currentUser.id).maybeSingle();
+            
+            if (error || !data) {
+                document.getElementById('teksUmkmDesc').innerText = "Daftarkan usaha Anda gratis.";
+                aksi.innerHTML = `<button onclick="bukaModalToko()" class="w-full bg-white text-orange-600 font-extrabold py-2.5 rounded-xl shadow-sm hover:scale-105 transition-transform text-sm">Daftar Buka Toko</button>`;
+            } else if (data.status === 'Disetujui') {
+                document.getElementById('teksUmkmDesc').innerText = `Toko ${data.nama_toko} aktif.`;
+                aksi.innerHTML = `<a href="/toko" class="block text-center w-full bg-emerald-500 text-white font-extrabold py-2.5 rounded-xl shadow-sm hover:bg-emerald-600 transition-colors text-sm">Masuk Toko Saya &rarr;</a>`;
+            } else {
+                document.getElementById('teksUmkmDesc').innerText = `Status: ${data.status}`;
+                aksi.innerHTML = `<div class="bg-white/20 text-white font-bold py-2.5 px-4 rounded-xl text-center text-sm border border-white/30">Diproses Admin</div>`;
+            }
+        }
+
+        // ==============================================================
+        // 1A. RIWAYAT SURAT WARGA 
+        // ==============================================================
+        async function loadRiwayatSurat() {
+            const container = document.getElementById('riwayatContainer');
+            const { data, error } = await supabase.from('pengajuan_surat').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+            
+            if (error) {
+                console.error("Error Surat:", error);
+                container.innerHTML = `<div class="text-center py-8 text-rose-500 font-bold">Gagal memuat data surat.</div>`;
+                return;
+            }
+            
+            rawRiwayatWarga = data || [];
+            filteredRiwayatWarga = rawRiwayatWarga;
+            renderRiwayatWarga(1);
+        }
+
+        function renderRiwayatWarga(page) {
+            const container = document.getElementById('riwayatContainer');
+            const paginasiContainer = document.getElementById('paginationWarga');
+            
+            if (filteredRiwayatWarga.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200"><p class="text-gray-500 font-bold">Tidak ada riwayat pengajuan surat.</p></div>`;
+                paginasiContainer.innerHTML = ''; return;
+            }
+
+            const start = (page - 1) * itemsPerPage;
+            const dataTampil = filteredRiwayatWarga.slice(start, start + itemsPerPage);
+
+            let html = '';
+            dataTampil.forEach(s => {
+                const tgl = new Date(s.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+                const statusRtText = s.status_rt || ''; 
+                
+                let bDesa = s.status === 'Menunggu' ? 'bg-amber-50 text-amber-600 border-amber-200' : (s.status === 'Diproses' ? 'bg-blue-50 text-blue-600 border-blue-200' : (s.status === 'Ditolak' ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'));
+                let bRT = statusRtText === 'Menunggu ACC RT' ? 'bg-amber-50 text-amber-600 border-amber-200' : (statusRtText.includes('Disetujui') ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : (statusRtText.includes('Ditolak') ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-gray-100 text-gray-500 border-gray-200'));
+                
+                let catatanHTML = '';
+                if (s.status === 'Selesai' && s.file_hasil) {
+                    catatanHTML = `<a href="${s.file_hasil}" target="_blank" class="mt-3 inline-block bg-emerald-500 text-white px-4 py-2 rounded-xl text-[11px] font-bold shadow-md hover:bg-emerald-600 transition-all hover:-translate-y-0.5">📥 Download Surat (PDF)</a>`;
+                } else if (s.status === 'Ditolak' && s.alasan_penolakan) {
+                    catatanHTML = `<div class="mt-3 bg-rose-50 p-3 rounded-xl border border-rose-100"><p class="text-[10px] font-black text-rose-800 uppercase">Alasan Penolakan:</p><p class="text-xs text-rose-600 font-medium mt-1">${steril(s.alasan_penolakan)}</p></div>`;
+                } else if (statusRtText === 'Ditolak RT') {
+                     catatanHTML = `<div class="mt-3 bg-rose-50 p-3 rounded-xl border border-rose-100"><p class="text-xs text-rose-600 font-medium">Ditolak oleh RT. Silakan hubungi Pak RT.</p></div>`;
+                }
+
+                html += `
+                <div class="p-5 border border-gray-100 rounded-3xl hover:border-teal-200 bg-white flex flex-col md:flex-row justify-between gap-4 shadow-sm transition-all hover:shadow-md">
+                    <div class="flex-grow">
+                        <h3 class="font-black text-teal-950 text-base">${steril(s.jenis_surat)}</h3>
+                        <p class="text-[11px] text-gray-500 font-medium mt-1">Tgl Pengajuan: ${tgl}</p>
+                        ${catatanHTML}
+                    </div>
+                    <div class="flex flex-col gap-2 shrink-0 items-start md:items-end">
+                        <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold border ${bRT} whitespace-nowrap">RT: ${statusRtText || 'Menunggu'}</span>
+                        <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold border ${bDesa} whitespace-nowrap">Desa: ${s.status}</span>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+            paginasiContainer.innerHTML = createTabPaginationUI('Warga', page, filteredRiwayatWarga.length);
+        }
+
+        document.getElementById('searchRiwayat').addEventListener('input', (e) => {
+            const keyword = e.target.value.toLowerCase();
+            filteredRiwayatWarga = rawRiwayatWarga.filter(s => s.jenis_surat.toLowerCase().includes(keyword) || s.status.toLowerCase().includes(keyword) || (s.status_rt || '').toLowerCase().includes(keyword));
+            renderRiwayatWarga(1);
+        });
+
+        // ==============================================================
+        // 1B. RIWAYAT ADUAN WARGA 
+        // ==============================================================
+        async function loadRiwayatAduan() {
+            const container = document.getElementById('riwayatAduanContainer');
+            const { data, error } = await supabase.from('aduan_warga').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+            
+            if (error) {
+                console.error("Error Aduan:", error);
+                container.innerHTML = `<div class="text-center py-8 text-rose-500 font-bold">Gagal memuat data aduan.</div>`;
+                return;
+            }
+            
+            rawRiwayatAduan = data || [];
+            filteredRiwayatAduan = rawRiwayatAduan;
+            renderRiwayatAduan(1);
+        }
+
+        function renderRiwayatAduan(page) {
+            const container = document.getElementById('riwayatAduanContainer');
+            const paginasiContainer = document.getElementById('paginationAduanWarga');
+            
+            if (filteredRiwayatAduan.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200"><p class="text-gray-500 font-bold">Belum ada riwayat aduan yang diajukan.</p></div>`;
+                paginasiContainer.innerHTML = ''; return;
+            }
+
+            const start = (page - 1) * itemsPerPage;
+            const dataTampil = filteredRiwayatAduan.slice(start, start + itemsPerPage);
+
+            let html = '';
+            dataTampil.forEach(a => {
+                const tgl = new Date(a.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+                let bStatus = a.status === 'Menunggu' ? 'bg-amber-50 text-amber-600 border-amber-200' : (a.status === 'Diproses' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200');
+                
+                let fotoHTML = a.foto_url ? `<a href="${a.foto_url}" target="_blank" class="mt-2 inline-block bg-white text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm hover:border-teal-400 hover:text-teal-600 transition-all">📸 Lihat Foto Bukti</a>` : '';
+
+                html += `
+                <div class="p-5 border border-gray-100 rounded-3xl hover:border-rose-200 bg-white flex flex-col md:flex-row justify-between gap-4 shadow-sm transition-all hover:shadow-md">
+                    <div class="flex-grow">
+                        <span class="text-[9px] font-bold text-rose-600 uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100 mb-1.5 inline-block">${steril(a.kategori)}</span>
+                        <h3 class="font-bold text-gray-800 text-sm">${steril(a.judul)}</h3>
+                        <p class="text-[11px] text-gray-500 font-medium mt-1">Dikirim pada: ${tgl}</p>
+                        ${fotoHTML}
+                    </div>
+                    <div class="flex flex-col gap-2 shrink-0 items-start md:items-end">
+                        <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold border ${bStatus} whitespace-nowrap">Status: ${a.status}</span>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+            paginasiContainer.innerHTML = createTabPaginationUI('AduanWarga', page, filteredRiwayatAduan.length);
+        }
+
+        document.getElementById('searchRiwayatAduan').addEventListener('input', (e) => {
+            const keyword = e.target.value.toLowerCase();
+            filteredRiwayatAduan = rawRiwayatAduan.filter(a => (a.kategori || '').toLowerCase().includes(keyword) || (a.judul || '').toLowerCase().includes(keyword) || (a.status || '').toLowerCase().includes(keyword));
+            renderRiwayatAduan(1);
+        });
+
+        // ==============================================================
+        // 2. TABEL RT: SURAT WARGA (PAGINATION TAB + KUNCI ADMIN)
+        // ==============================================================
+        async function loadSuratRT() {
+            if (!profilWarga.wilayah_rt) return;
+            const { data, error } = await supabase.from('pengajuan_surat').select('*').eq('wilayah_rt', profilWarga.wilayah_rt).order('created_at', { ascending: false });
+            if (error) return;
+            rawSuratRT = data || [];
+            filteredSuratRT = rawSuratRT;
+            renderSuratRT(1);
+        }
+
+        function renderSuratRT(page) {
+            const tbody = document.getElementById('tableSuratRT');
+            const paginasiContainer = document.getElementById('paginationSuratRT');
+            
+            if (filteredSuratRT.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500">Tidak ada pengajuan surat.</td></tr>`; 
+                paginasiContainer.innerHTML = ''; return; 
+            }
+
+            const start = (page - 1) * itemsPerPage;
+            const dataTampil = filteredSuratRT.slice(start, start + itemsPerPage);
+
+            let html = '';
+            const sekarang = new Date();
+
+            dataTampil.forEach(s => {
+                const tglDibuat = new Date(s.created_at);
+                const tgl = tglDibuat.toLocaleDateString('id-ID', { day:'numeric', month:'short' });
+                
+                const isExpired = ((sekarang - tglDibuat) / (1000 * 60 * 60)) > 24;
+                const statusRtText = s.status_rt || '';
+                
+                let bRT = statusRtText === 'Menunggu ACC RT' ? 'bg-amber-100 text-amber-700' : (statusRtText.includes('Disetujui') ? 'bg-emerald-100 text-emerald-700' : (statusRtText === 'Ditolak RT' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'));
+                
+                let berkasHTML = '';
+                if (isExpired && s.status === 'Menunggu') {
+                    berkasHTML = `<span class="inline-block mt-2 bg-rose-50 border border-rose-200 text-rose-600 font-bold px-2 py-1 rounded text-[10px]">⚠️ Berkas Hangus (>24 Jam)</span>`;
+                } else if (s.file_persyaratan) {
+                    try {
+                        const files = JSON.parse(s.file_persyaratan);
+                        berkasHTML = `<div class="mt-2 space-y-1">`;
+                        for (const [nama, url] of Object.entries(files)) { berkasHTML += `<a href="${url}" target="_blank" class="block text-[10px] text-blue-600 hover:underline">📄 Cek ${nama}</a>`; }
+                        berkasHTML += `</div>`;
+                    } catch(e) {
+                        berkasHTML = `<a href="${s.file_persyaratan}" target="_blank" class="text-[10px] text-blue-600 underline">Lihat Berkas</a>`;
+                    }
+                }
+
+                // 🔥 KUNCI/GEMBOK: JIKA ADMIN SUDAH PROSES 🔥
+                let tombolAksi = '';
+                if (s.status !== 'Menunggu') {
+                    tombolAksi = `<span class="text-[9px] text-gray-500 font-bold uppercase bg-gray-100 px-2 py-1.5 rounded border border-gray-200 shadow-inner block"><span class="text-xs">🔒</span> Terkunci Oleh Desa</span>`;
+                } else {
+                    if (statusRtText === 'Menunggu ACC RT') {
+                        tombolAksi = `<div class="flex flex-col gap-1.5"><button onclick="updateStatusRT('${s.id}', 'Disetujui RT')" class="bg-emerald-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-emerald-600">ACC</button><button onclick="updateStatusRT('${s.id}', 'Ditolak RT')" class="bg-rose-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-rose-600">Tolak</button></div>`;
+                    } else if (statusRtText === 'Bypass RT') {
+                        tombolAksi = `<span class="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded border border-blue-100">Otomatis Desa</span>`;
+                    } else {
+                        let btnText = statusRtText === 'Disetujui RT' ? 'Batal ACC' : 'Batal Tolak';
+                        tombolAksi = `<button onclick="updateStatusRT('${s.id}', 'Menunggu ACC RT')" class="text-[10px] text-gray-500 underline hover:text-gray-800 font-bold">${btnText}</button>`;
+                    }
+                }
+
+                html += `<tr class="hover:bg-amber-50/30 border-b border-gray-50"><td class="p-4 text-gray-500 text-xs">${tgl}</td><td class="p-4"><p class="font-bold text-gray-900">${steril(s.nama_lengkap)}</p><p class="text-[10px] text-gray-500 font-mono mt-1 bg-gray-100 inline-block px-1.5 py-0.5 rounded">${steril(s.nik)}</p>${berkasHTML}</td><td class="p-4 text-gray-600 text-sm"><p class="font-bold text-gray-800 text-xs">${steril(s.jenis_surat)}</p><p class="text-[11px] text-gray-500 mt-1 line-clamp-2">${steril(s.keperluan)}</p></td><td class="p-4 text-center"><span class="px-2 py-1 rounded-md text-[9px] font-bold uppercase ${bRT}">${statusRtText}</span></td><td class="p-4 text-center align-middle">${tombolAksi}</td></tr>`;
+            });
+            
+            tbody.innerHTML = html;
+            paginasiContainer.innerHTML = createTabPaginationUI('SuratRT', page, filteredSuratRT.length);
+        }
+
+        window.updateStatusRT = async (id, statusBaru) => {
+            const { error } = await supabase.from('pengajuan_surat').update({ status_rt: statusBaru }).eq('id', id);
+            if (!error) loadSuratRT();
+        };
+
+        document.getElementById('searchSuratRT').addEventListener('input', (e) => {
+            const keyword = e.target.value.toLowerCase();
+            filteredSuratRT = rawSuratRT.filter(s => s.nama_lengkap.toLowerCase().includes(keyword) || s.jenis_surat.toLowerCase().includes(keyword));
+            renderSuratRT(1);
+        });
+
+        // ==============================================================
+        // 3. TABEL RT: ADUAN WARGA (PAGINATION TAB)
+        // ==============================================================
+        async function loadAduanRT() {
+            if (!profilWarga.wilayah_rt) return;
+            const { data, error } = await supabase.from('aduan_warga').select('*').eq('wilayah_rt', profilWarga.wilayah_rt).order('created_at', { ascending: false });
+            if (error) return;
+            rawAduanRT = data || [];
+            filteredAduanRT = rawAduanRT;
+            renderAduanRT(1);
+        }
+
+        function renderAduanRT(page) {
+            const tbody = document.getElementById('tableAduanRT');
+            const paginasiContainer = document.getElementById('paginationAduanRT');
+            
+            if (filteredAduanRT.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-gray-500">Belum ada aduan warga.</td></tr>`; 
+                paginasiContainer.innerHTML = ''; return; 
+            }
+
+            const start = (page - 1) * itemsPerPage;
+            const dataTampil = filteredAduanRT.slice(start, start + itemsPerPage);
+
+            let html = '';
+            dataTampil.forEach(a => {
+                const tgl = new Date(a.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short' });
+                let bStatus = a.status === 'Menunggu' ? 'bg-amber-100 text-amber-700' : (a.status === 'Diproses' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700');
+                
+                let fotoHTML = a.foto_url ? `<a href="${a.foto_url}" target="_blank" class="block mt-1 text-[10px] font-bold text-blue-500 hover:underline">Lihat Foto</a>` : '';
+
+                html += `<tr class="hover:bg-rose-50/30 border-b border-gray-50"><td class="p-4 align-top"><p class="font-bold text-gray-900">${steril(a.nama_pelapor)}</p><p class="text-[10px] text-gray-500 mt-1">${tgl}</p></td><td class="p-4 align-top"><span class="text-[9px] font-bold text-rose-600 uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100 block w-max mb-1">${steril(a.kategori)}</span><p class="text-sm font-bold text-gray-800">${steril(a.judul)}</p>${fotoHTML}</td><td class="p-4 text-center align-top"><span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase ${bStatus} border shadow-sm">${a.status}</span></td></tr>`;
+            });
+            
+            tbody.innerHTML = html;
+            paginasiContainer.innerHTML = createTabPaginationUI('AduanRT', page, filteredAduanRT.length);
+        }
+
+        document.getElementById('searchAduanRT').addEventListener('input', (e) => {
+            const keyword = e.target.value.toLowerCase();
+            filteredAduanRT = rawAduanRT.filter(a => (a.nama_pelapor || '').toLowerCase().includes(keyword) || (a.kategori || '').toLowerCase().includes(keyword) || (a.judul || '').toLowerCase().includes(keyword));
+            renderAduanRT(1);
+        });
+
+        // ================= SUBMIT PROFIL =================
+        document.getElementById('formProfil').addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            const { error } = await supabase.from('profil_user').update({ nama_lengkap: steril(document.getElementById('inputNama').value.trim()), nik: steril(document.getElementById('inputNik').value.trim()), wilayah_rt: document.getElementById('inputRT').value }).eq('id', currentUser.id);
+            if (error) alert('Gagal: ' + error.message); else window.location.reload(); 
+        });
+
+        // ================= SUBMIT UMKM TOKO (DENGAN PENGAMAN) =================
+        document.getElementById('formDaftarToko')?.addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            const btn = document.getElementById('btnSimpanToko'); 
+            btn.disabled = true; 
+            btn.innerText = "Mengirim...";
+            
+            try {
+                const namaAman = profilWarga?.nama_lengkap || profilWarga?.nama || 'Warga Mulyamekar';
+                const payload = { 
+                    user_id: currentUser.id, 
+                    nama_toko: document.getElementById('toko_nama').value, 
+                    nama_pemilik: namaAman, 
+                    no_wa: document.getElementById('toko_wa').value.toString(), 
+                    alamat: document.getElementById('toko_alamat').value, 
+                    status: 'Menunggu Verifikasi' 
+                };
+
+                console.log("Mengirim data UMKM:", payload);
+                const { error } = await supabase.from('umkm_toko').insert([payload]);
+                if (error) throw error; 
+                
+                tutupModalToko(); 
+                document.getElementById('formDaftarToko').reset(); 
+                cekStatusToko(); 
+                
+                if(typeof showCustomAlert !== 'undefined') {
+                    showCustomAlert('success', 'Berhasil', 'Pengajuan toko berhasil dikirim. Menunggu verifikasi Admin.');
+                } else {
+                    alert('Pengajuan Toko Terkirim!');
+                }
+            } catch (err) {
+                console.error("ERROR UMKM TOKO:", err);
+                if(typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal Mengirim', err.message);
+                else alert("Gagal: " + err.message);
+            } finally {
+                btn.disabled = false; 
+                btn.innerText = "Kirim Pengajuan Toko";
+            }
+        });
+
+        document.getElementById('btnLogoutWarga')?.addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = '/'; });
+        document.getElementById('btnLogout')?.addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = '/'; });
+
+        initDashboard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,396 @@
+---
+// src/pages/admin/layanan.astro
+import '../../global.css';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+---
+
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kelola Layanan Surat - Admin Mulyamekar</title>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    <Header />
+    
+    <main class="flex-grow pt-10 pb-20">
+        <div class="container mx-auto px-4 max-w-7xl">
+            <div class="mb-8">
+                <a href="/admin" class="text-teal-600 font-bold text-sm hover:text-amber-600 transition-colors">&larr; Kembali ke Dashboard</a>
+                <h1 class="text-3xl font-extrabold text-teal-950 mt-2">Layanan Administrasi Surat</h1>
+                <p class="text-sm text-gray-500">Kelola permohonan pengajuan surat, tinjau berkas, dan berikan tindak lanjut kepada warga.</p>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                
+                <div class="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Daftar Pengajuan Masuk</h2>
+                    </div>
+                    <div class="relative w-full sm:w-72">
+                        <input type="text" id="searchSurat" placeholder="Cari pemohon / jenis surat..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all shadow-sm">
+                        <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-teal-50 text-teal-900 border-b border-teal-100">
+                            <tr>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider w-32">Tgl Masuk</th>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider">Pemohon & Berkas</th>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider">Jenis Surat & Keperluan</th>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider text-center">Validasi RT</th>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider text-center">Status Desa</th>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableSurat" class="divide-y divide-gray-100 text-sm">
+                            <tr><td colspan="6" class="p-8 text-center text-gray-400 italic animate-pulse font-bold">Memuat data pengajuan surat...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="paginationSurat" class="px-6 py-4 bg-gray-50 border-t border-gray-100"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalStatus" class="fixed inset-0 z-[60] bg-gray-900/60 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="modalBox" class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-teal-900">Proses Surat Pemohon</h3>
+                <button id="btnTutupModal" class="text-gray-400 hover:text-red-500 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form id="formStatus" class="space-y-4">
+                <input type="hidden" id="editSuratId">
+                
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-4">
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Informasi Pemohon:</p>
+                    <p id="labelNama" class="font-bold text-teal-950 text-lg"></p>
+                    <p id="labelWilayah" class="text-xs text-amber-600 font-bold mb-2"></p>
+                    <p id="labelJenis" class="text-sm text-gray-600 font-medium"></p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Ubah Status Akhir (Desa) *</label>
+                    <select id="inputStatus" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-bold">
+                        <option value="Menunggu">⏳ Menunggu Diproses</option>
+                        <option value="Diproses">🔄 Sedang Diproses</option>
+                        <option value="Selesai">✅ Selesai (Siap Diambil)</option>
+                        <option value="Ditolak">❌ Ditolak</option>
+                    </select>
+                </div>
+
+                <div id="containerUploadPdf" class="hidden bg-teal-50 border border-teal-100 p-4 rounded-xl mt-4">
+                    <label class="block text-xs font-bold text-teal-900 mb-2">Unggah File Surat (PDF) Hasil Akhir</label>
+                    <p class="text-[10px] text-teal-700 mb-3">Warga dapat mengunduh surat ini langsung dari dashboard mereka.</p>
+                    <input type="file" id="inputFileHasil" accept=".pdf" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-teal-600 file:text-white hover:file:bg-teal-700 transition-all cursor-pointer">
+                    <p id="statusUpload" class="text-[10px] text-amber-600 font-bold mt-2 hidden animate-pulse">Sedang mengunggah file...</p>
+                </div>
+
+                <div id="containerAlasanTolak" class="hidden bg-rose-50 border border-rose-100 p-4 rounded-xl mt-4">
+                    <label class="block text-xs font-bold text-rose-900 mb-2">Berikan Alasan Penolakan *</label>
+                    <textarea id="inputAlasanTolak" rows="3" class="w-full px-3 py-2 bg-white border border-rose-200 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Misal: Foto KTP buram, tidak melampirkan pengantar RT, dll..."></textarea>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100 mt-4">
+                    <button type="submit" id="btnSimpanStatus" class="w-full bg-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:bg-teal-700 transition-all active:scale-95">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <Footer />
+
+    <script>
+        import { supabase } from '../../lib/supabase.js';
+        
+        // 🔥 STATE GLOBAL UNTUK PENCARIAN & PAGINATION (LIMIT 6) 🔥
+        const itemsPerPage = 6;
+        let dataGlobal = [];
+        let rawSurat = [];
+        let filteredSurat = [];
+
+        function steril(teks) {
+            if (!teks) return '';
+            return String(teks).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char] || char));
+        }
+
+        // --- HELPER PAGINATION ---
+        function createPaginationUI(pageSekarang, totalData) {
+            const totalPages = Math.ceil(totalData / itemsPerPage) || 1;
+            if (totalPages <= 1) return ''; 
+
+            let prevBtn = pageSekarang === 1 ? `<button disabled class="opacity-30 cursor-not-allowed px-4 py-2 bg-gray-200 rounded-lg text-xs font-bold">&larr; Sebelumnya</button>` : `<button onclick="gantiHalaman(${pageSekarang - 1})" class="px-4 py-2 bg-white border border-gray-200 hover:border-teal-500 text-teal-700 rounded-lg text-xs font-bold transition-all shadow-sm">&larr; Sebelumnya</button>`;
+            
+            let nextBtn = pageSekarang === totalPages ? `<button disabled class="opacity-30 cursor-not-allowed px-4 py-2 bg-gray-200 rounded-lg text-xs font-bold">Selanjutnya &rarr;</button>` : `<button onclick="gantiHalaman(${pageSekarang + 1})" class="px-4 py-2 bg-white border border-gray-200 hover:border-teal-500 text-teal-700 rounded-lg text-xs font-bold transition-all shadow-sm">Selanjutnya &rarr;</button>`;
+
+            return `
+            <div class="flex justify-between items-center w-full">
+                <span class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Menampilkan Halaman <b class="text-gray-900">${pageSekarang}</b> dari <b class="text-gray-900">${totalPages}</b></span>
+                <div class="flex gap-2">${prevBtn}${nextBtn}</div>
+            </div>`;
+        }
+
+        window.gantiHalaman = (page) => renderSurat(page);
+
+        async function initPage() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = '/login'; return; }
+
+            const { data: profil } = await supabase.from('profil_user').select('role').eq('id', session.user.id).single();
+            if (!profil || profil.role !== 'admin') {
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Akses Ditolak', 'Khusus Admin Desa.');
+                window.location.href = '/'; return;
+            }
+            loadSurat();
+        }
+
+        async function loadSurat() {
+            const { data, error } = await supabase.from('pengajuan_surat').select('*').order('created_at', { ascending: false });
+            if (error) {
+                document.getElementById('tableSurat').innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Gagal memuat: ${error.message}</td></tr>`;
+                return;
+            }
+            
+            dataGlobal = data || []; // Simpan referensi asli buat Modal
+            rawSurat = data || [];
+            filteredSurat = rawSurat;
+            renderSurat(1);
+        }
+
+        function renderSurat(page) {
+            const tbody = document.getElementById('tableSurat');
+            const paginasiContainer = document.getElementById('paginationSurat');
+            
+            if (filteredSurat.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="6" class="p-12 text-center text-gray-400 font-medium">Belum ada pengajuan surat.</td></tr>`; 
+                paginasiContainer.innerHTML = '';
+                return; 
+            }
+
+            const start = (page - 1) * itemsPerPage;
+            const dataTampil = filteredSurat.slice(start, start + itemsPerPage);
+
+            let html = '';
+            const sekarang = new Date(); 
+
+            dataTampil.forEach(item => {
+                const tglDibuat = new Date(item.created_at);
+                const tglStr = tglDibuat.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+                
+                const selisihJam = (sekarang - tglDibuat) / (1000 * 60 * 60);
+                const isExpired = selisihJam > 24;
+
+                let badgeClass = "bg-amber-100 text-amber-700 border-amber-200";
+                if(item.status === 'Diproses') badgeClass = "bg-blue-100 text-blue-700 border-blue-200";
+                if(item.status === 'Selesai') badgeClass = "bg-emerald-100 text-emerald-700 border-emerald-200";
+                if(item.status === 'Ditolak') badgeClass = "bg-rose-100 text-rose-700 border-rose-200";
+
+                let rtClass = "bg-gray-100 text-gray-500 border-gray-200";
+                if(item.status_rt?.includes('Disetujui')) rtClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
+                if(item.status_rt?.includes('Ditolak')) rtClass = "bg-rose-50 text-rose-600 border-rose-200";
+                if(item.status_rt === 'Bypass RT') rtClass = "bg-blue-50 text-blue-600 border-blue-200";
+
+                let berkasHTML = '';
+                if (isExpired && item.status === 'Menunggu') {
+                    berkasHTML = `<span class="inline-block mt-2 bg-rose-50 border border-rose-200 text-rose-600 font-bold px-2 py-1 rounded text-[10px]">⚠️ Berkas Hangus (>24 Jam)</span>`;
+                } else if (item.file_persyaratan) {
+                    try {
+                        const files = JSON.parse(item.file_persyaratan);
+                        berkasHTML = `<div class="mt-2 space-y-1">`;
+                        for (const [nama, url] of Object.entries(files)) {
+                            berkasHTML += `<a href="${url}" target="_blank" class="block text-[10px] text-blue-600 hover:text-blue-800 hover:underline font-semibold flex items-center gap-1">📄 Cek ${nama}</a>`;
+                        }
+                        berkasHTML += `</div>`;
+                    } catch(e) {
+                        berkasHTML = `<a href="${item.file_persyaratan}" target="_blank" class="text-[10px] text-blue-600 underline">Lihat Berkas</a>`;
+                    }
+                }
+
+                html += `
+                <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
+                    <td class="p-4 text-xs text-gray-500 font-medium align-top">${tglStr}</td>
+                    <td class="p-4 align-top">
+                        <p class="font-bold text-teal-950">${steril(item.nama_lengkap)}</p>
+                        <p class="text-[10px] font-mono text-gray-500 bg-gray-100 inline-block px-1.5 py-0.5 rounded mt-1">${steril(item.nik)}</p>
+                        <p class="text-[10px] text-teal-600 font-bold mt-1">${steril(item.wilayah_rt)}</p>
+                        ${berkasHTML}
+                    </td>
+                    <td class="p-4 align-top max-w-xs">
+                        <p class="font-bold text-gray-800 text-xs">${steril(item.jenis_surat)}</p>
+                        <p class="text-[11px] text-gray-500 mt-1 line-clamp-2">${steril(item.keperluan)}</p>
+                        ${item.status === 'Ditolak' && item.alasan_penolakan ? `<div class="mt-2 bg-rose-50 p-2 rounded border border-rose-100"><p class="text-[9px] font-bold text-rose-700">Alasan Tolak:</p><p class="text-[10px] text-rose-600">${steril(item.alasan_penolakan)}</p></div>` : ''}
+                        ${item.file_hasil ? `<a href="${item.file_hasil}" target="_blank" class="inline-block mt-2 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-md font-bold">📥 Lihat Surat Jadi</a>` : ''}
+                    </td>
+                    <td class="p-4 text-center align-top">
+                        <span class="px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider rounded-lg border shadow-sm block ${rtClass}">
+                            ${item.status_rt || 'Menunggu'}
+                        </span>
+                    </td>
+                    <td class="p-4 text-center align-top">
+                        <span class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm block ${badgeClass}">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td class="p-4 text-center align-top">
+                        <button onclick="bukaModal('${item.id}')" class="text-teal-600 font-bold text-[10px] bg-teal-50 px-3 py-2 rounded-lg border border-teal-200 hover:bg-teal-600 hover:text-white shadow-sm transition-all block w-full">
+                            PROSES
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            
+            tbody.innerHTML = html;
+            paginasiContainer.innerHTML = createPaginationUI(page, filteredSurat.length);
+        }
+
+        // --- SEARCH EVENT ---
+        document.getElementById('searchSurat').addEventListener('input', (e) => {
+            const keyword = e.target.value.toLowerCase();
+            filteredSurat = rawSurat.filter(s => 
+                s.nama_lengkap.toLowerCase().includes(keyword) || 
+                s.jenis_surat.toLowerCase().includes(keyword) || 
+                s.nik.includes(keyword) ||
+                s.status.toLowerCase().includes(keyword)
+            );
+            renderSurat(1);
+        });
+
+        // --- LOGIKA MODAL ---
+        const modal = document.getElementById('modalStatus');
+        const modalBox = document.getElementById('modalBox');
+        const selectStatus = document.getElementById('inputStatus');
+        const containerPdf = document.getElementById('containerUploadPdf');
+        const containerAlasan = document.getElementById('containerAlasanTolak');
+        const inputAlasan = document.getElementById('inputAlasanTolak');
+
+        selectStatus.addEventListener('change', (e) => {
+            if (e.target.value === 'Selesai') {
+                containerPdf.classList.remove('hidden');
+                containerAlasan.classList.add('hidden');
+                inputAlasan.removeAttribute('required');
+            } else if (e.target.value === 'Ditolak') {
+                containerPdf.classList.add('hidden');
+                containerAlasan.classList.remove('hidden');
+                inputAlasan.setAttribute('required', 'true');
+            } else {
+                containerPdf.classList.add('hidden');
+                containerAlasan.classList.add('hidden');
+                inputAlasan.removeAttribute('required');
+            }
+        });
+
+        window.bukaModal = (id) => {
+            const item = dataGlobal.find(d => d.id === id);
+            if (!item) return;
+
+            document.getElementById('editSuratId').value = item.id;
+            document.getElementById('labelNama').innerText = item.nama_lengkap + ' (' + item.nik + ')';
+            document.getElementById('labelWilayah').innerText = item.wilayah_rt || 'Wilayah Belum Diset';
+            document.getElementById('labelJenis').innerText = item.jenis_surat;
+            document.getElementById('inputStatus').value = item.status;
+            
+            document.getElementById('inputFileHasil').value = '';
+            inputAlasan.value = item.alasan_penolakan || '';
+            
+            containerPdf.classList.add('hidden');
+            containerAlasan.classList.add('hidden');
+            inputAlasan.removeAttribute('required');
+
+            if (item.status === 'Selesai') containerPdf.classList.remove('hidden');
+            if (item.status === 'Ditolak') {
+                containerAlasan.classList.remove('hidden');
+                inputAlasan.setAttribute('required', 'true');
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modalBox.classList.remove('scale-95'); modalBox.classList.add('scale-100'); }, 10);
+        };
+
+        const tutupModal = () => {
+            modal.classList.add('opacity-0'); modalBox.classList.remove('scale-100'); modalBox.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        };
+
+        document.getElementById('btnTutupModal').addEventListener('click', tutupModal);
+
+        document.getElementById('formStatus').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editSuratId').value;
+            const statusBaru = document.getElementById('inputStatus').value;
+            const itemSurat = dataGlobal.find(d => d.id === id);
+            
+            const btn = document.getElementById('btnSimpanStatus');
+            const statUpload = document.getElementById('statusUpload');
+            btn.disabled = true; btn.innerText = "Memproses...";
+
+            try {
+                let fileHasilUrl = itemSurat.file_hasil; 
+                let alasanUpdate = itemSurat.alasan_penolakan;
+
+                if (statusBaru === 'Selesai') {
+                    const filePdf = document.getElementById('inputFileHasil').files[0];
+                    if (filePdf) {
+                        statUpload.classList.remove('hidden');
+                        const fileExt = filePdf.name.split('.').pop();
+                        const fileName = `surat_${Date.now()}.${fileExt}`;
+
+                        const { data: uploadData, error: uploadError } = await supabase.storage
+                            .from('berkas_layanan')
+                            .upload(`hasil_surat/${fileName}`, filePdf);
+
+                        if (uploadError) throw new Error("Gagal mengunggah PDF: " + uploadError.message);
+
+                        const { data: publicUrlData } = supabase.storage.from('berkas_layanan').getPublicUrl(`hasil_surat/${fileName}`);
+                        fileHasilUrl = publicUrlData.publicUrl;
+                        statUpload.classList.add('hidden');
+                    }
+                    alasanUpdate = null; 
+                } else if (statusBaru === 'Ditolak') {
+                    alasanUpdate = inputAlasan.value;
+                } else {
+                    alasanUpdate = null; 
+                }
+
+                const payloadUpdate = { status: statusBaru, alasan_penolakan: alasanUpdate };
+                if (fileHasilUrl) payloadUpdate.file_hasil = fileHasilUrl;
+
+                const { error: errorSurat } = await supabase.from('pengajuan_surat').update(payloadUpdate).eq('id', id);
+                if (errorSurat) throw errorSurat;
+
+                if (statusBaru === 'Selesai' && itemSurat.jenis_surat === 'Surat Keterangan Tidak Mampu (SKTM)') {
+                    const payloadBansos = { nik: itemSurat.nik, nama_warga: itemSurat.nama_lengkap, sumber_usulan: 'Otomatis dari Pengajuan SKTM' };
+                    const { error: errorBansos } = await supabase.from('usulan_bansos').insert([payloadBansos]);
+                    if (errorBansos) console.error("Gagal automasi bansos:", errorBansos.message);
+                }
+
+                tutupModal();
+                if(typeof showCustomAlert !== 'undefined') {
+                    let pesanSukses = 'Status pengajuan surat berhasil diperbarui!';
+                    if (fileHasilUrl) pesanSukses += ' File PDF balasan berhasil dilampirkan.';
+                    await showCustomAlert('success', 'Berhasil', pesanSukses);
+                } else alert('Berhasil diperbarui!');
+                
+                loadSurat();
+            } catch (error) {
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Gagal', error.message);
+                else alert(error.message);
+                statUpload.classList.add('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Simpan Perubahan";
+            }
+        });
+
+        initPage();
+    </script>
+</body>
+</html>

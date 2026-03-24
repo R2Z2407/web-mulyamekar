@@ -1,0 +1,295 @@
+---
+// src/pages/admin/statistik.astro
+import BaseLayout from '../../layout/BaseLayout.astro';
+---
+
+<BaseLayout title="Kelola Statistik Desa - Admin Mulyamekar">
+    <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <main class="flex-grow pt-24 pb-20 bg-slate-50">
+        <div class="container mx-auto px-4 max-w-5xl">
+            
+            <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <div>
+                    <a href="/admin" class="text-blue-600 font-bold text-sm hover:text-blue-800 transition-colors inline-flex items-center gap-1 mb-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        Kembali ke Dashboard
+                    </a>
+                    <h1 class="text-3xl font-extrabold text-slate-800 flex items-center gap-3 tracking-tight">
+                        <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        </div>
+                        Pusat Statistik Desa
+                    </h1>
+                    <p class="text-sm text-slate-500 mt-2 font-medium">Perbarui angka demografi penduduk agar selalu akurat di halaman depan.</p>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-3xl p-6 mb-8 flex items-start sm:items-center gap-5 shadow-sm relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-500 opacity-10 rounded-full blur-2xl"></div>
+                <div class="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-3xl shrink-0 border border-blue-100 z-10">🔄</div>
+                <div class="z-10">
+                    <h3 class="text-blue-950 font-black text-lg">Sinkronisasi Dukcapil Aktif</h3>
+                    <p class="text-blue-800 text-sm mt-1 leading-relaxed">
+                        Sistem otomatis mendekripsi & menghitung jumlah penduduk, KK (Unik), status pekerjaan, hingga bayi baru lahir langsung dari <b class="font-extrabold">Buku Induk Penduduk</b>. Data berlabel <span class="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-widest mx-1 shadow-sm">Auto-Sync</span> dikunci karena selalu *update* otomatis.
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-800 border-b border-slate-200 shadow-sm">
+                                <th class="p-5 font-black text-xs uppercase tracking-widest border-r border-slate-200">Kategori / Label Data</th>
+                                <th class="p-5 font-black text-xs uppercase tracking-widest border-r border-slate-200 text-center w-48">Angka Terkini</th>
+                                <th class="p-5 font-black text-xs uppercase tracking-widest text-center w-40">Aksi & Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableStatistik" class="divide-y divide-slate-100 text-sm">
+                            <tr><td colspan="3" class="p-16 text-center text-slate-400 font-bold animate-pulse flex flex-col items-center justify-center gap-2"><span class="text-3xl">🧮</span> Sedang menghitung dan mensinkronisasi data Dukcapil...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        import { supabase } from '../../lib/supabase.js';
+
+        // 🔥 KUNCI RAHASIA UNTUK DEKRIPSI DATA DUKCAPIL 🔥
+        const SECRET_KEY = "DukcapilMulyamekarAman2026!"; 
+
+        function decrypt(ciphertext) {
+            if (!ciphertext) return "";
+            try {
+                const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
+                const originalText = bytes.toString(CryptoJS.enc.Utf8);
+                return originalText || ciphertext; 
+            } catch (e) {
+                return ciphertext;
+            }
+        }
+
+        async function initPage() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) { window.location.href = '/login'; return; }
+
+                const { data: profil, error: errProfil } = await supabase.from('profil_user').select('role').eq('id', session.user.id).single();
+                if (errProfil || !profil || profil.role !== 'admin') {
+                    if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error','Akses Ditolak!',' Anda bukan Admin Desa.');
+                    else alert('Akses Ditolak! Khusus Admin.');
+                    window.location.href = '/'; return;
+                }
+
+                // Jalankan Mesin Penghitung
+                jalankanSinkronisasiDukcapil();
+            } catch (error) {
+                console.error("Crash keamanan:", error);
+            }
+        }
+        
+        // ================= MESIN AUTO-SYNC DUKCAPIL =================
+        async function jalankanSinkronisasiDukcapil() {
+            try {
+                // 1. Ambil seluruh data Dukcapil
+                const { data: dbPenduduk, error: errPenduduk } = await supabase.from('data_penduduk').select('*');
+                if (errPenduduk) throw errPenduduk;
+
+                // 2. Siapkan Wadah Metrik
+                let metrics = { 
+                    total_penduduk: 0, 
+                    laki_laki: 0, 
+                    perempuan: 0, 
+                    total_kk: 0, 
+                    bayi: 0, 
+                    bekerja: 0, 
+                    tidak_bekerja: 0, 
+                    pelajar: 0, 
+                    pensiunan: 0 
+                };
+                
+                const kkSet = new Set();
+                const today = new Date();
+
+                // 3. Proses Perhitungan (Termasuk Dekripsi Data Sensitif)
+                (dbPenduduk || []).forEach(d => {
+                    // Hindari menghitung warga yang sudah meninggal/pindah
+                    if(d.status_warga === 'Meninggal' || d.status_warga === 'Pindah') return;
+
+                    metrics.total_penduduk++;
+                    
+                    if (d.jenis_kelamin === 'Laki-laki') metrics.laki_laki++;
+                    if (d.jenis_kelamin === 'Perempuan') metrics.perempuan++;
+
+                    // Hitung KK Unik (Harus dekripsi dulu)
+                    const kk = decrypt(d.no_kk);
+                    if (kk) kkSet.add(kk);
+
+                    // Hitung Bayi Baru Lahir (Umur 0)
+                    const tglLahir = decrypt(d.tanggal_lahir);
+                    if (tglLahir) {
+                        const birth = new Date(tglLahir);
+                        let age = today.getFullYear() - birth.getFullYear();
+                        const m = today.getMonth() - birth.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                        if (age === 0) metrics.bayi++; // Jika umur 0 tahun, anggap Bayi
+                    }
+
+                    // Klastering Status Pekerjaan
+                    const p = d.pekerjaan || '';
+                    if (p.includes('PNS') || p.includes('BUMN') || p.includes('TNI') || p.includes('Swasta') || p.includes('Wiraswasta') || p.includes('Pekerja') || p.includes('Petani') || p.includes('Nelayan')) {
+                        metrics.bekerja++;
+                    } else if (p.includes('Belum') || p.includes('Mengurus Rumah')) {
+                        metrics.tidak_bekerja++;
+                    } else if (p.includes('Pelajar') || p.includes('Mahasiswa')) {
+                        metrics.pelajar++;
+                    } else if (p.includes('Pensiun')) {
+                        metrics.pensiunan++;
+                    } else {
+                        metrics.bekerja++; // Default cadangan
+                    }
+                });
+                
+                metrics.total_kk = kkSet.size; // Total KK Murni (Tanpa Ganda)
+
+                // 4. Ambil Data Statistik yang ada di Database saat ini
+                const { data: dbStatistik, error: errStat } = await supabase.from('statistik_desa').select('*').order('urutan', { ascending: true });
+                if(errStat) throw errStat;
+
+                // 5. Blueprint Auto-Sync Metrik
+                const blueprintSync = [
+                    { label: 'Total Penduduk', satuan: 'Jiwa', key: 'total_penduduk', urutan: 1, icon: '👥' },
+                    { label: 'Kepala Keluarga (KK)', satuan: 'Keluarga', key: 'total_kk', urutan: 2, icon: '🏡' },
+                    { label: 'Warga Laki-laki', satuan: 'Jiwa', key: 'laki_laki', urutan: 3, icon: '👨' },
+                    { label: 'Warga Perempuan', satuan: 'Jiwa', key: 'perempuan', urutan: 4, icon: '👩' },
+                    { label: 'Kelahiran / Bayi', satuan: 'Jiwa', key: 'bayi', urutan: 5, icon: '👶' },
+                    { label: 'Warga Bekerja', satuan: 'Jiwa', key: 'bekerja', urutan: 6, icon: '💼' },
+                    { label: 'Tidak/Belum Bekerja', satuan: 'Jiwa', key: 'tidak_bekerja', urutan: 7, icon: '🛋️' },
+                    { label: 'Pelajar & Mahasiswa', satuan: 'Jiwa', key: 'pelajar', urutan: 8, icon: '🎓' },
+                    { label: 'Pensiunan', satuan: 'Jiwa', key: 'pensiunan', urutan: 9, icon: '👴' }
+                ];
+
+                let finalStats = [...(dbStatistik || [])];
+
+                // 6. Terapkan Nilai Baru ke Database (Otomatis Simpan!)
+                for (const blue of blueprintSync) {
+                    const valueStr = metrics[blue.key].toString();
+                    const existingRow = finalStats.find(row => row.label === blue.label);
+
+                    if (existingRow) {
+                        if (existingRow.nilai !== valueStr) {
+                            // Update diam-diam ke Database jika nilainya berubah
+                            await supabase.from('statistik_desa').update({ nilai: valueStr }).eq('id', existingRow.id);
+                            existingRow.nilai = valueStr; 
+                        }
+                    } else {
+                        // Jika baris ini belum pernah dibikin di database, Insert otomatis!
+                        const { data: newRow } = await supabase.from('statistik_desa').insert([{
+                            label: blue.label,
+                            satuan: blue.satuan,
+                            nilai: valueStr,
+                            urutan: blue.urutan
+                        }]).select();
+                        if(newRow && newRow.length > 0) finalStats.push(newRow[0]);
+                    }
+                }
+
+                // 7. Render UI
+                finalStats.sort((a, b) => a.urutan - b.urutan); // Urutkan biar rapi
+                const autoLabels = blueprintSync.map(s => s.label);
+                
+                const tbody = document.getElementById('tableStatistik');
+                let html = '';
+
+                finalStats.forEach(row => {
+                    const isAuto = autoLabels.includes(row.label);
+                    const blueInfo = blueprintSync.find(b => b.label === row.label);
+                    const icon = blueInfo ? blueInfo.icon : '📌';
+
+                    if(isAuto) {
+                        // TAMPILAN UNTUK DATA AUTO-SYNC
+                        html += `
+                        <tr class="bg-blue-50/20 hover:bg-blue-50/50 transition-colors border-l-4 border-l-blue-500">
+                            <td class="p-5 border-r border-slate-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl opacity-80">${icon}</span>
+                                    <div>
+                                        <p class="font-extrabold text-slate-800 text-sm">${row.label}</p>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-widest shadow-sm">Auto-Sync</span>
+                                            <span class="text-[11px] text-slate-500 font-medium">Satuan: ${row.satuan}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="p-5 text-center border-r border-slate-100">
+                                <input type="text" readonly value="${row.nilai}" class="w-full text-center bg-slate-100/50 border border-slate-200 rounded-xl py-2.5 font-black text-slate-500 outline-none cursor-not-allowed" />
+                            </td>
+                            <td class="p-5 text-center">
+                                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center justify-center gap-1.5 w-max mx-auto shadow-sm">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> Tersinkron
+                                </span>
+                            </td>
+                        </tr>`;
+                    } else {
+                        // TAMPILAN UNTUK DATA MANUAL (Contoh: Luas Wilayah, Jumlah RT, dll)
+                        html += `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-5 border-r border-slate-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl opacity-80">📌</span>
+                                    <div>
+                                        <p class="font-bold text-slate-700 text-sm">${row.label}</p>
+                                        <p class="text-[11px] text-slate-500 font-medium mt-1">Satuan: ${row.satuan}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="p-5 text-center border-r border-slate-100">
+                                <input type="number" id="input-${row.id}" value="${row.nilai}" class="w-full text-center bg-white border border-slate-300 rounded-xl py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-bold text-slate-800 outline-none shadow-sm transition-all" />
+                            </td>
+                            <td class="p-5 text-center">
+                                <button onclick="updateStatistikManual('${row.id}')" class="bg-white hover:bg-slate-800 text-slate-700 hover:text-white border border-slate-300 hover:border-slate-800 font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm active:scale-95 text-[11px] uppercase tracking-wider w-full">
+                                    Simpan Manual
+                                </button>
+                            </td>
+                        </tr>`;
+                    }
+                });
+                tbody.innerHTML = html;
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('tableStatistik').innerHTML = `<tr><td colspan="3" class="p-8 text-center text-rose-500 font-bold bg-rose-50 rounded-xl border border-rose-200">Terjadi Kesalahan Sinkronisasi: ${error.message}</td></tr>`;
+            }
+        }
+
+        // ================= FUNGSI UPDATE DATA MANUAL =================
+        window.updateStatistikManual = async (id) => {
+            const inputElemen = document.getElementById(`input-${id}`);
+            const nilaiBaru = inputElemen.value;
+
+            inputElemen.classList.add('opacity-50', 'pointer-events-none');
+
+            const { error } = await supabase.from('statistik_desa').update({ nilai: nilaiBaru }).eq('id', id);
+
+            inputElemen.classList.remove('opacity-50', 'pointer-events-none');
+
+            if (error) {
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error','Gagal Simpan',error.message);
+                else alert(error.message);
+            } else {
+                // Efek sukses hijau ala UI modern
+                inputElemen.classList.add('bg-emerald-50', 'border-emerald-400', 'text-emerald-700', 'ring-2', 'ring-emerald-200');
+                setTimeout(() => {
+                    inputElemen.classList.remove('bg-emerald-50', 'border-emerald-400', 'text-emerald-700', 'ring-2', 'ring-emerald-200');
+                }, 1500);
+            }
+        };
+
+        initPage();
+    </script>
+</BaseLayout>

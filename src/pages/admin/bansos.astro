@@ -1,0 +1,361 @@
+---
+// src/pages/admin/bansos.astro
+import '../../global.css';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+---
+
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kelola Bansos - Admin Mulyamekar</title>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    <Header />
+    
+    <main class="flex-grow pt-24 pb-20">
+        <div class="container mx-auto px-4 max-w-6xl">
+            <div class="mb-8">
+                <a href="/admin" class="text-teal-600 font-bold text-sm hover:text-amber-600 transition-colors">&larr; Kembali ke Dashboard</a>
+                <h1 class="text-3xl font-extrabold text-teal-950 mt-2">Pusat Kelola Bansos</h1>
+                <p class="text-sm text-gray-500">Kelola master program bantuan dan daftar antrean usulan warga.</p>
+            </div>
+
+            <div class="flex space-x-2 mb-6 border-b border-gray-200">
+                <button onclick="pindahTab('program')" id="tab_program" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-teal-600 text-teal-800 bg-teal-50">
+                    📦 Daftar Program Bansos
+                </button>
+                <button onclick="pindahTab('usulan')" id="tab_usulan" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-700">
+                    👥 Antrean Usulan Warga
+                </button>
+            </div>
+
+            <div id="konten_program" class="block animate-fadeIn">
+                <div class="flex justify-end mb-4">
+                    <button onclick="bukaFormProgram()" class="bg-teal-600 text-white font-bold py-2 px-4 rounded-xl shadow hover:bg-teal-700 text-sm transition-all">+ Program Baru</button>
+                </div>
+
+                <div id="formProgramContainer" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                    <h2 id="judulFormProgram" class="text-lg font-bold text-teal-900 mb-4">Tambah Program Bansos</h2>
+                    <form id="formProgram" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="hidden" id="prog_id">
+                        <div>
+                            <label class="block text-xs font-bold mb-1 text-gray-700">Nama Program *</label>
+                            <input type="text" id="prog_nama" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500" placeholder="Contoh: BLT Dana Desa Tahap 1">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold mb-1 text-gray-700">Kategori *</label>
+                            <select id="prog_kategori" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500">
+                                <option value="Tunai">Tunai (Uang)</option>
+                                <option value="Sembako">Non-Tunai (Sembako)</option>
+                                <option value="Kesehatan">Kesehatan (BPJS/Lainnya)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold mb-1 text-gray-700">Sumber Dana</label>
+                            <input type="text" id="prog_sumber" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500" placeholder="Contoh: APBN / Dana Desa">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold mb-1 text-gray-700">Tahun Anggaran</label>
+                            <input type="number" id="prog_tahun" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                        <div class="md:col-span-2 flex justify-end gap-2 mt-2">
+                            <button type="button" onclick="tutupFormProgram()" class="px-4 py-2 bg-gray-100 text-gray-700 font-bold rounded-xl text-sm">Batal</button>
+                            <button type="submit" id="btnSimpanProg" class="px-4 py-2 bg-teal-600 text-white font-bold rounded-xl text-sm">Simpan Program</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-teal-50 text-teal-900 border-b border-teal-100">
+                                <tr>
+                                    <th class="p-4 font-bold text-sm">Nama Program & Tahun</th>
+                                    <th class="p-4 font-bold text-sm">Kategori</th>
+                                    <th class="p-4 font-bold text-sm">Sumber Dana</th>
+                                    <th class="p-4 font-bold text-sm text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableProgram" class="divide-y divide-gray-100 text-sm">
+                                <tr><td colspan="4" class="p-8 text-center text-gray-400 animate-pulse">Memuat program bansos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="konten_usulan" class="hidden animate-fadeIn">
+                <div class="flex justify-end mb-4">
+                    <button onclick="bukaFormUsulan()" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-xl shadow hover:bg-blue-700 text-sm transition-all">+ Tambah Usulan Manual</button>
+                </div>
+
+                <div id="formUsulanContainer" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6 border-l-4 border-l-blue-500">
+                    <h2 id="judulFormUsulan" class="text-lg font-bold text-blue-900 mb-4">Data Usulan Penerima</h2>
+                    <form id="formUsulan" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="hidden" id="usl_id">
+                        <div>
+                            <label class="block text-xs font-bold mb-1 text-gray-700">NIK Warga *</label>
+                            <input type="text" id="usl_nik" required pattern="[0-9]{16}" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="16 Digit NIK KTP">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold mb-1 text-gray-700">Nama Lengkap *</label>
+                            <input type="text" id="usl_nama" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="Sesuai KTP">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold mb-1 text-gray-700">Sumber Usulan *</label>
+                            <select id="usl_sumber" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                                <option value="Usulan RT/RW">Usulan RT/RW</option>
+                                <option value="Hasil Musdes">Hasil Musdes (Musyawarah Desa)</option>
+                                <option value="Otomatis dari Pengajuan SKTM">Otomatis dari Pengajuan SKTM</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold mb-1 text-gray-700">Status Usulan *</label>
+                            <select id="usl_status" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                                <option value="Menunggu Kuota">🟠 Menunggu Kuota</option>
+                                <option value="Disetujui">🟢 Disetujui (Masuk Daftar Penerima)</option>
+                                <option value="Ditolak">🔴 Ditolak (Tidak Memenuhi Syarat)</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <label class="block text-sm font-bold mb-2 text-blue-900">Alokasikan ke Program (Jika Disetujui)</label>
+                            <select id="usl_program" class="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-gray-700">
+                                <option value="Belum Ditentukan">-- Belum Ditentukan / Menunggu Kuota --</option>
+                            </select>
+                        </div>
+
+                        <div class="md:col-span-2 flex justify-end gap-2 mt-2">
+                            <button type="button" onclick="tutupFormUsulan()" class="px-4 py-2 bg-gray-100 text-gray-700 font-bold rounded-xl text-sm">Batal</button>
+                            <button type="submit" id="btnSimpanUsl" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl text-sm">Simpan Usulan</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-blue-50 text-blue-900 border-b border-blue-100">
+                                <tr>
+                                    <th class="p-4 font-bold text-sm w-24">Tanggal</th>
+                                    <th class="p-4 font-bold text-sm">Data Warga</th>
+                                    <th class="p-4 font-bold text-sm">Bantuan Diterima & Status</th>
+                                    <th class="p-4 font-bold text-sm text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableUsulan" class="divide-y divide-gray-100 text-sm">
+                                <tr><td colspan="4" class="p-8 text-center text-gray-400 animate-pulse">Memuat usulan warga...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    <Footer />
+
+    <style>
+        .animate-fadeIn { animation: fadeIn 0.3s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+
+    <script>
+        import { supabase } from '../../lib/supabase.js';
+        
+        let dataProgram = [];
+        let dataUsulan = [];
+
+        function steril(teks) {
+            if (!teks) return '';
+            return String(teks).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char] || char));
+        }
+
+        async function initPage() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = '/login'; return; }
+            document.getElementById('prog_tahun').value = new Date().getFullYear();
+            
+            await loadProgram();
+            loadUsulan();
+        }
+
+        window.pindahTab = (namaTab) => {
+            const tabProg = document.getElementById('tab_program');
+            const tabUsl = document.getElementById('tab_usulan');
+            const kontProg = document.getElementById('konten_program');
+            const kontUsl = document.getElementById('konten_usulan');
+
+            if (namaTab === 'program') {
+                tabProg.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-teal-600 text-teal-800 bg-teal-50";
+                tabUsl.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-700";
+                kontProg.classList.remove('hidden'); kontUsl.classList.add('hidden');
+            } else {
+                tabUsl.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-blue-600 text-blue-800 bg-blue-50";
+                tabProg.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-700";
+                kontUsl.classList.remove('hidden'); kontProg.classList.add('hidden');
+            }
+        }
+
+        // =====================================
+        // CRUD PROGRAM
+        // =====================================
+        async function loadProgram() {
+            const { data, error } = await supabase.from('bansos').select('*').order('created_at', { ascending: false });
+            const tbody = document.getElementById('tableProgram');
+            const selectProgram = document.getElementById('usl_program');
+            
+            if (error) {
+                console.error("Supabase Error Program:", error);
+                tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-500 font-bold">Gagal mengambil data dari database: ${error.message}</td></tr>`;
+                return;
+            }
+            
+            dataProgram = data;
+            let html = '';
+            let optHtml = '<option value="Belum Ditentukan">-- Belum Ditentukan / Menunggu Kuota --</option>'; 
+
+            data.forEach(item => {
+                let katWarna = item.kategori === 'Tunai' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700';
+                
+                html += `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-4">
+                        <p class="font-bold text-teal-900">${steril(item.nama_bantuan)}</p>
+                        <p class="text-[10px] text-gray-500">Tahun: ${item.tahun}</p>
+                    </td>
+                    <td class="p-4"><span class="px-2 py-1 text-[10px] font-bold rounded ${katWarna}">${steril(item.kategori)}</span></td>
+                    <td class="p-4 text-xs font-bold text-gray-600">${steril(item.sumber_dana)}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="editProg('${item.id}')" class="text-amber-600 text-[10px] font-bold px-2 py-1 bg-amber-50 rounded border border-amber-200">EDIT</button>
+                        <button onclick="hapusProg('${item.id}')" class="text-red-600 text-[10px] font-bold px-2 py-1 bg-red-50 rounded border border-red-200 ml-1">HAPUS</button>
+                    </td>
+                </tr>`;
+
+                optHtml += `<option value="${steril(item.nama_bantuan)} [${item.tahun}]">✅ ${steril(item.nama_bantuan)} (${item.tahun})</option>`;
+            });
+            tbody.innerHTML = html || '<tr><td colspan="4" class="p-8 text-center text-gray-400">Belum ada program bansos.</td></tr>';
+            selectProgram.innerHTML = optHtml; 
+        }
+
+        window.bukaFormProgram = () => { document.getElementById('formProgram').reset(); document.getElementById('prog_id').value = ''; document.getElementById('formProgramContainer').classList.remove('hidden'); }
+        window.tutupFormProgram = () => { document.getElementById('formProgramContainer').classList.add('hidden'); }
+
+        document.getElementById('formProgram').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('prog_id').value;
+            const payload = {
+                nama_bantuan: document.getElementById('prog_nama').value,
+                kategori: document.getElementById('prog_kategori').value,
+                sumber_dana: document.getElementById('prog_sumber').value,
+                tahun: parseInt(document.getElementById('prog_tahun').value)
+            };
+            const { error } = id ? await supabase.from('bansos').update(payload).eq('id', id) : await supabase.from('bansos').insert([payload]);
+            if (!error) { tutupFormProgram(); loadProgram(); loadUsulan(); } 
+            else { alert("Gagal Simpan: " + error.message); }
+        });
+
+        window.editProg = (id) => {
+            const item = dataProgram.find(d => d.id === id);
+            if(item){
+                document.getElementById('prog_id').value = item.id;
+                document.getElementById('prog_nama').value = item.nama_bantuan;
+                document.getElementById('prog_kategori').value = item.kategori;
+                document.getElementById('prog_sumber').value = item.sumber_dana;
+                document.getElementById('prog_tahun').value = item.tahun;
+                document.getElementById('judulFormProgram').innerText = 'Edit Program';
+                document.getElementById('formProgramContainer').classList.remove('hidden');
+            }
+        }
+        window.hapusProg = async (id) => { if(confirm('Hapus program ini?')) { await supabase.from('bansos').delete().eq('id', id); loadProgram(); } }
+
+        // =====================================
+        // CRUD USULAN 
+        // =====================================
+        async function loadUsulan() {
+            const { data, error } = await supabase.from('usulan_bansos').select('*').order('created_at', { ascending: false });
+            const tbody = document.getElementById('tableUsulan');
+            
+            if (error) {
+                console.error("Supabase Error Usulan:", error);
+                tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-500 font-bold">Gagal mengambil usulan: ${error.message}</td></tr>`;
+                return;
+            }
+            
+            dataUsulan = data;
+            let html = '';
+            data.forEach(item => {
+                const tgl = new Date(item.created_at).toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
+                let bStatus = item.status_usulan === 'Disetujui' ? 'bg-emerald-100 text-emerald-700' : (item.status_usulan === 'Ditolak' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700');
+                
+                // Tambahan Keamanan: Cek apakah nama_program isinya valid
+                let badgeProgram = (item.nama_program && item.nama_program !== 'Belum Ditentukan') 
+                    ? `<span class="mt-2 block w-fit px-2 py-1 bg-blue-100 text-blue-800 text-[10px] font-bold rounded shadow-sm">🎁 ${steril(item.nama_program)}</span>` 
+                    : `<span class="mt-2 block w-fit px-2 py-1 bg-gray-100 text-gray-400 text-[10px] font-bold rounded border border-gray-200 border-dashed">⏳ Menunggu Alokasi</span>`;
+
+                html += `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-4 text-xs text-gray-500 align-top">${tgl}</td>
+                    <td class="p-4 align-top">
+                        <p class="font-bold text-gray-900">${steril(item.nama_warga)}</p>
+                        <p class="text-[10px] font-mono text-gray-500">${steril(item.nik)}</p>
+                        <p class="text-[10px] font-bold mt-1 text-gray-400">Dari: ${steril(item.sumber_usulan)}</p>
+                    </td>
+                    <td class="p-4 align-top">
+                        <span class="px-2 py-1 text-[10px] font-bold rounded-full border ${bStatus}">${item.status_usulan}</span>
+                        ${badgeProgram} </td>
+                    <td class="p-4 text-center align-top">
+                        <button onclick="editUsl('${item.id}')" class="text-blue-600 text-[10px] font-bold px-2 py-1 bg-blue-50 rounded border border-blue-200 block w-full mb-1">PROSES</button>
+                        <button onclick="hapusUsl('${item.id}')" class="text-red-600 text-[10px] font-bold px-2 py-1 bg-red-50 rounded border border-red-200 block w-full">HAPUS</button>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html || '<tr><td colspan="4" class="p-8 text-center text-gray-400">Belum ada antrean usulan.</td></tr>';
+        }
+
+        window.bukaFormUsulan = () => { document.getElementById('formUsulan').reset(); document.getElementById('usl_id').value = ''; document.getElementById('formUsulanContainer').classList.remove('hidden'); }
+        window.tutupFormUsulan = () => { document.getElementById('formUsulanContainer').classList.add('hidden'); }
+
+        document.getElementById('formUsulan').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('usl_id').value;
+            const btn = document.getElementById('btnSimpanUsl');
+            btn.disabled = true; btn.innerText = "Menyimpan...";
+
+            const payload = {
+                nik: document.getElementById('usl_nik').value,
+                nama_warga: document.getElementById('usl_nama').value,
+                sumber_usulan: document.getElementById('usl_sumber').value,
+                status_usulan: document.getElementById('usl_status').value,
+                nama_program: document.getElementById('usl_program').value 
+            };
+
+            const { error } = id ? await supabase.from('usulan_bansos').update(payload).eq('id', id) : await supabase.from('usulan_bansos').insert([payload]);
+            btn.disabled = false; btn.innerText = "Simpan Usulan";
+
+            if (!error) { tutupFormUsulan(); loadUsulan(); } 
+            else { alert("Gagal Simpan: " + error.message); }
+        });
+
+        window.editUsl = (id) => {
+            const item = dataUsulan.find(d => d.id === id);
+            if(item){
+                document.getElementById('usl_id').value = item.id;
+                document.getElementById('usl_nik').value = item.nik;
+                document.getElementById('usl_nama').value = item.nama_warga;
+                document.getElementById('usl_sumber').value = item.sumber_usulan;
+                document.getElementById('usl_status').value = item.status_usulan;
+                document.getElementById('usl_program').value = item.nama_program || 'Belum Ditentukan';
+                
+                document.getElementById('judulFormUsulan').innerText = 'Proses Data Penerima';
+                document.getElementById('formUsulanContainer').classList.remove('hidden');
+                document.getElementById('formUsulanContainer').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        window.hapusUsl = async (id) => { if(confirm('Hapus usulan ini?')) { await supabase.from('usulan_bansos').delete().eq('id', id); loadUsulan(); } }
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

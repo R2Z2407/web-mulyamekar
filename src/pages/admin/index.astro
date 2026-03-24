@@ -1,0 +1,206 @@
+---
+// src/pages/admin/index.astro
+// Cukup panggil BaseLayout, Header dan Footer otomatis ikut!
+import BaseLayout from '../../layout/BaseLayout.astro';
+---
+
+<BaseLayout title="Dashboard Admin - Desa Mulyamekar">
+    
+    <main class="flex-grow pt-24 pb-20">
+        <div class="container mx-auto px-4 max-w-6xl">
+            
+            <div class="bg-teal-900 rounded-3xl p-8 md:p-10 text-white shadow-xl mb-10 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-teal-800 rounded-full opacity-50 blur-2xl"></div>
+                <div class="relative z-10 text-center md:text-left">
+                    <p class="text-amber-400 font-bold text-sm tracking-wider uppercase mb-1">Pusat Kendali</p>
+                    <h1 class="text-3xl font-extrabold mb-2">Dashboard Admin Desa</h1>
+                    <p class="text-teal-200 text-sm max-w-lg">Kelola layanan surat, aduan warga, publikasi berita, hingga keuangan desa dari satu tempat.</p>
+                </div>
+                <div class="relative z-10 w-full md:w-auto">
+                    <button id="btnLogout" class="w-full md:w-auto bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95">
+                        Keluar Sistem
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-12">
+                
+                <a href="/admin/layanan" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-300 hover:shadow-md transition-all group flex flex-col items-center text-center">
+                    <div class="relative w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span id="badgeSurat" class="hidden absolute -top-2 -right-3 bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-white shadow-sm animate-pulse">0</span>
+                    </div>
+                    <h2 class="font-bold text-teal-950 text-base mb-1">Surat Warga</h2>
+                </a>
+
+                <a href="/admin/aduan" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-300 hover:shadow-md transition-all group flex flex-col items-center text-center">
+                    <div class="relative w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                        <span id="badgeAduan" class="hidden absolute -top-2 -right-3 bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-white shadow-sm animate-pulse">0</span>
+                    </div>
+                    <h2 class="font-bold text-teal-950 text-base mb-1">Aduan Warga</h2>
+                </a>
+
+                <a href="/admin/penduduk" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-blue-400 hover:shadow-md transition-all group flex flex-col items-center text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-blue-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl">DUKCAPIL</div>
+                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
+                    </div>
+                    <h2 class="font-bold text-teal-950 text-base mb-1">Data Penduduk</h2>
+                    <p id="infoPenduduk" class="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded border border-blue-100">Memuat...</p>
+                </a>
+
+                <a href="/admin/umkm" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-orange-300 hover:shadow-md transition-all group flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="font-bold text-orange-950 text-base mb-1">Kelola UMKM</h2>
+                    <p id="infoUmkm" class="text-[10px] text-orange-600 font-bold bg-orange-50 px-2 py-1 rounded border border-orange-100">Memuat...</p>
+                </a>
+
+                <a href="/admin/bansos" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-rose-300 hover:shadow-md transition-all group flex flex-col items-center text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-rose-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl">SOSIAL</div>
+                    <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-rose-600 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    </div>
+                    <h2 class="font-bold text-teal-950 text-base mb-1">Kelola Bansos</h2>
+                    <p id="infoBansos" class="text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded border border-rose-100">Memuat...</p>
+                </a>
+
+                <a href="/admin/apbdes" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-300 hover:shadow-md transition-all group flex flex-col items-center text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl">KEUANGAN</div>
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h2 class="font-bold text-teal-950 text-base mb-1">Kelola APBDes</h2>
+                </a>
+
+                <a href="/admin/berita" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-300 hover:shadow-md transition-all group flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
+                    </div>
+                    <h2 class="font-bold text-teal-950 text-base mb-1">Portal Berita</h2>
+                </a>
+
+                <a href="/admin/statistik" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-300 hover:shadow-md transition-all group flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    </div>
+                    <h2 class="font-bold text-teal-950 text-base mb-1">Statistik Desa</h2>
+                </a>
+
+                <a href="/admin/laporan" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-300 hover:shadow-md transition-all group flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <h2 class="font-bold text-teal-950 text-base mb-1">Export Laporan</h2>
+                </a>
+
+                <a href="/admin/akun" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-300 hover:shadow-md transition-all group flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </div>
+                    <h2 class="font-bold text-teal-950 text-base mb-1">Hak Akses</h2>
+                </a>
+
+                <a href="/admin/pemerintahan" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-300 hover:shadow-md transition-all group flex flex-col items-center text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-teal-600 text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl">PROFIL</div>
+                    <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                    <h2 class="font-bold text-teal-950 text-base mb-1">Pemerintahan</h2>
+                </a>
+            </div>
+            
+        </div>
+    </main>
+
+    <script>
+        import { supabase } from '../../lib/supabase.js';
+
+        async function initPage() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) { window.location.href = '/'; return; }
+
+                const { data: profil, error } = await supabase
+                    .from('profil_user')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (error || !profil || profil.role !== 'admin') {
+                    if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error','Akses Ditolak!',' Anda bukan Admin.');
+                    else alert('Akses Ditolak! Anda bukan Admin.');
+                    window.location.href = '/'; 
+                    return;
+                }
+
+                loadDashboardStats();
+
+            } catch (error) {
+                console.error("Crash:", error);
+            }
+        }
+
+        async function loadDashboardStats() {
+            try {
+                // Statistik Surat Baru
+                const { count: countSurat } = await supabase.from('pengajuan_surat').select('*', { count: 'exact', head: true }).eq('status', 'Menunggu');
+                const badgeSurat = document.getElementById('badgeSurat');
+                if (countSurat > 0) {
+                    badgeSurat.innerText = `${countSurat} Baru`;
+                    badgeSurat.classList.remove('hidden');
+                }
+
+                // Statistik Aduan Baru
+                const { count: countAduan } = await supabase.from('aduan_warga').select('*', { count: 'exact', head: true }).eq('status', 'Menunggu');
+                const badgeAduan = document.getElementById('badgeAduan');
+                if (countAduan > 0) {
+                    badgeAduan.innerText = `${countAduan} Baru`;
+                    badgeAduan.classList.remove('hidden');
+                }
+
+                // Statistik UMKM
+                const { count: countToko } = await supabase.from('umkm_toko').select('*', { count: 'exact', head: true });
+                const { count: countProduk } = await supabase.from('umkm_produk').select('*', { count: 'exact', head: true });
+                document.getElementById('infoUmkm').innerText = `${countToko || 0} Toko | ${countProduk || 0} Produk`;
+
+                // Statistik Bansos
+                const { data: dataBansos, error: errBansos } = await supabase.from('usulan_bansos').select('status');
+                let bansosDiberikan = 0;
+                if (!errBansos && dataBansos) {
+                    bansosDiberikan = dataBansos.filter(b => b.status === 'Disetujui' || b.status === 'Disalurkan' || b.status === 'Selesai').length;
+                    if (bansosDiberikan === 0 && dataBansos.length > 0) bansosDiberikan = dataBansos.length; 
+                }
+                document.getElementById('infoBansos').innerText = `${bansosDiberikan} Disalurkan`;
+
+                // 🔥 ANTISIPASI FITUR DUKCAPIL 🔥
+                // Kita bungkus pakai try-catch agar jika tabel `data_penduduk` belum dibuat di Supabase, script tidak akan crash.
+                try {
+                    const { count: countPenduduk, error: errPenduduk } = await supabase.from('data_penduduk').select('*', { count: 'exact', head: true });
+                    if (!errPenduduk) {
+                        document.getElementById('infoPenduduk').innerText = `${countPenduduk || 0} Warga Tercatat`;
+                    } else {
+                        document.getElementById('infoPenduduk').innerText = "Belum Ada Data";
+                    }
+                } catch (errData) {
+                    document.getElementById('infoPenduduk').innerText = "Buat Database Dulu";
+                }
+
+            } catch (error) {
+                console.error("Gagal memuat data statistik dashboard:", error);
+            }
+        }
+
+        document.getElementById('btnLogout')?.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = '/'; 
+        });
+
+        initPage();
+    </script>
+
+</BaseLayout>

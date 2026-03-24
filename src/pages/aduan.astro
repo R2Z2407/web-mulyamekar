@@ -1,0 +1,301 @@
+---
+// src/pages/aduan.astro
+import '../global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import AuthModal from '../components/AuthModal.astro';
+---
+
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Layanan Aduan Warga - Mulyamekar</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        /* Agar peta tidak menutupi modal/header */
+        #mapLokasi { z-index: 10 !important; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    <Header />
+    
+    <main id="mainContent" class="flex-grow pt-24 pb-20 hidden">
+        <section class="bg-teal-950 text-white py-16 mb-10 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+            <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-rose-500 rounded-full blur-3xl opacity-20"></div>
+            <div class="container mx-auto px-4 max-w-4xl relative z-10 text-center">
+                <span class="inline-block px-4 py-1.5 bg-rose-500 text-white font-bold rounded-full text-xs tracking-widest uppercase mb-4 shadow-sm">Suara Warga</span>
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4">Layanan Pengaduan</h1>
+                <p class="text-teal-100 max-w-2xl mx-auto text-lg">Laporkan masalah infrastruktur, lingkungan, atau pelayanan desa. Kami siap menindaklanjuti.</p>
+            </div>
+        </section>
+
+        <div class="container mx-auto px-4 max-w-4xl">
+            <div class="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-rose-400 to-amber-400"></div>
+
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-6 flex items-start gap-3">
+                    <div class="mt-0.5 text-blue-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm text-blue-900 font-bold">Identitas Terlindungi</p>
+                        <p class="text-xs text-blue-700 mt-1">Sistem otomatis menyematkan Nama dan NIK berdasarkan akun Anda yang sedang aktif.</p>
+                    </div>
+                </div>
+
+                <form id="formAduan" class="space-y-6 mt-2 hidden">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Kategori Laporan *</label>
+                            <select id="kategori" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-bold text-gray-800 transition-all cursor-pointer">
+                                <option value="">-- Pilih Kategori --</option>
+                                <option value="Infrastruktur & Jalan">🚧 Infrastruktur & Jalan Rusak</option>
+                                <option value="Lingkungan & Sampah">♻️ Lingkungan & Sampah</option>
+                                <option value="Pelayanan Desa">🏢 Pelayanan Desa</option>
+                                <option value="Ketertiban & Keamanan">🚨 Ketertiban & Keamanan</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Judul Laporan *</label>
+                            <input type="text" id="judul_laporan" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Misal: Jalan berlubang di RT 02">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Jelaskan Detail Masalah *</label>
+                        <textarea id="isi_laporan" required rows="3" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ceritakan detail masalah yang terjadi..."></textarea>
+                    </div>
+
+                    <div class="bg-amber-50 border border-amber-100 p-5 rounded-xl">
+                        <label class="block text-sm font-bold text-amber-900 mb-2">Lokasi Kejadian *</label>
+                        <p class="text-xs text-amber-700 mb-4">Geser pin merah pada peta ke lokasi kejadian, lalu tuliskan patokan lokasinya.</p>
+                        
+                        <div id="mapLokasi" class="w-full h-56 rounded-xl border border-amber-200 mb-4 shadow-inner relative z-0"></div>
+                        
+                        <input type="text" id="detail_lokasi" required class="w-full px-4 py-3 bg-white border border-amber-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none transition-all text-sm" placeholder="Ketik patokan lokasi: Misal di depan warung Bu Ani...">
+                    </div>
+
+                    <div class="bg-rose-50 border border-rose-100 p-5 rounded-xl">
+                        <label class="block text-sm font-bold text-rose-900 mb-2">Upload Foto Bukti Laporan *</label>
+                        <input type="file" id="input_foto" required accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-rose-600 file:text-white hover:file:bg-rose-700 transition-all cursor-pointer shadow-sm">
+                        
+                        <div id="statusContainer" class="hidden mt-4 bg-white p-3 rounded-lg border border-rose-100 shadow-sm">
+                            <p id="statusTeks" class="text-xs font-bold text-amber-600 flex items-center gap-2">
+                                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span id="statusPesan">Memproses data...</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-100">
+                        <button type="submit" id="btnKirim" class="w-full bg-rose-600 text-white font-extrabold py-4 px-6 rounded-xl shadow-lg hover:bg-rose-700 transition-all active:scale-95 text-lg flex justify-center items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                            Kirim Aduan Sekarang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <AuthModal />
+    <Footer />
+
+    <script>
+        import { supabase } from '../lib/supabase.js';
+        const IMGBB_API_KEY = import.meta.env.PUBLIC_IMGBB_API_KEY;
+
+        const formAduan = document.getElementById('formAduan');
+        const inputFoto = document.getElementById('input_foto');
+        const btnKirim = document.getElementById('btnKirim');
+        const statusContainer = document.getElementById('statusContainer');
+        const statusPesan = document.getElementById('statusPesan');
+        const statusTeks = document.getElementById('statusTeks');
+
+        let userProfile = null;
+        
+        // Variabel untuk Peta (Leaflet)
+        let map;
+        let marker;
+        let letakLat = "-6.5519"; // Default Latitude (sekitar Purwakarta)
+        let letakLng = "107.4452"; // Default Longitude
+
+        // --- INISIALISASI PETA LEAFLET ---
+        function initMap() {
+            if (map) return; // Mencegah map di-render dua kali
+            
+            map = L.map('mapLokasi').setView([letakLat, letakLng], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            marker = L.marker([letakLat, letakLng], {draggable: true}).addTo(map);
+
+            // Jika HP mengizinkan GPS, otomatis arahkan ke lokasi user
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    letakLat = pos.coords.latitude;
+                    letakLng = pos.coords.longitude;
+                    map.setView([letakLat, letakLng], 16);
+                    marker.setLatLng([letakLat, letakLng]);
+                });
+            }
+
+            // Update koordinat saat pin digeser
+            marker.on('dragend', function() {
+                letakLat = marker.getLatLng().lat;
+                letakLng = marker.getLatLng().lng;
+            });
+
+            // Update koordinat saat peta diklik
+            map.on('click', function(e) {
+                marker.setLatLng(e.latlng);
+                letakLat = e.latlng.lat;
+                letakLng = e.latlng.lng;
+            });
+
+            // Wajib dipanggil biar peta nge-render sempurna di dalam div yang awalnya 'hidden'
+            setTimeout(() => { map.invalidateSize(); }, 500);
+        }
+
+        // --- CEK SESI LOGIN ---
+        async function checkLogin() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Akses Ditolak!', 'Anda harus login.');
+                else alert('Akses Ditolak! Anda harus login terlebih dahulu.');
+                window.location.href = '/';
+                return;
+            }
+
+            document.getElementById('mainContent').classList.remove('hidden');
+            formAduan.classList.remove('hidden');
+
+            const { data: profil } = await supabase.from('profil_user').select('*').eq('id', session.user.id).single();
+            userProfile = profil;
+
+            // Panggil Peta setelah halaman tampil
+            initMap();
+        }
+        
+        checkLogin();
+
+        // --- FUNGSI AUTO COMPRESS FOTO ---
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1200; 
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > MAX_WIDTH) {
+                            height = Math.round((height * MAX_WIDTH) / width);
+                            width = MAX_WIDTH;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        canvas.toBlob((blob) => {
+                            if (!blob) return reject(new Error('Gagal kompresi foto'));
+                            const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' });
+                            resolve(newFile);
+                        }, 'image/jpeg', 0.7);
+                    };
+                    img.onerror = err => reject(err);
+                };
+                reader.onerror = err => reject(err);
+            });
+        }
+
+        // --- FUNGSI UPLOAD KE IMGBB ---
+        async function uploadKeImgBB(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+            const data = await response.json();
+            if (data.success) return data.data.url;
+            else throw new Error("Gagal mengupload foto bukti ke server.");
+        }
+
+        // --- SUBMIT FORM (ANTI ERROR SCHEMA) ---
+        formAduan.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!userProfile) return;
+            const fileAsli = inputFoto.files[0];
+            if (!fileAsli) return;
+
+            btnKirim.disabled = true;
+            statusContainer.classList.remove('hidden');
+            statusTeks.classList.replace('text-rose-600', 'text-amber-600');
+            statusTeks.innerHTML = `<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span id="statusPesan">Memproses gambar...</span>`;
+            
+            try {
+                // 1. KOMPRES & UPLOAD FOTO
+                document.getElementById('statusPesan').innerText = "Mengompres & mengirim foto bukti...";
+                const fileKompres = await compressImage(fileAsli);
+                const fotoUrl = await uploadKeImgBB(fileKompres);
+
+                // 🔥 TRIK ANTI ERROR & TYPO FIX: GABUNGKAN LOKASI KE DALAM DESKRIPSI 🔥
+                const ketLokasi = document.getElementById('detail_lokasi').value;
+                const linkMaps = `(Maps: ${letakLat.toFixed(6)}, ${letakLng.toFixed(6)})`;
+                
+                // TYPO FIX: isiLaporanAsli (Tanpa spasi)
+                const isiLaporanAsli = document.getElementById('isi_laporan').value;
+                const gabunganDeskripsi = `${isiLaporanAsli}\n\n📍 Patokan Lokasi: ${ketLokasi} ${linkMaps}`;
+
+                // 2. SIMPAN KE TABEL `aduan_warga`
+                document.getElementById('statusPesan').innerText = "Menyimpan laporan ke sistem desa...";
+                const payload = {
+                    nama_pelapor: userProfile.nama_lengkap || userProfile.nama || 'Warga',
+                    kategori: document.getElementById('kategori').value,
+                    judul: document.getElementById('judul_laporan').value, 
+                    deskripsi: gabunganDeskripsi, // <--- Lokasi & koordinat masuk sini!
+                    foto_url: fotoUrl, 
+                    status: 'Menunggu',
+                    wilayah_rt: userProfile.wilayah_rt,
+                    user_id: userProfile.id
+                };
+
+                const { error } = await supabase.from('aduan_warga').insert([payload]);
+                if (error) throw error;
+
+                statusContainer.classList.add('hidden');
+                if(typeof showCustomAlert !== 'undefined') {
+                    await showCustomAlert('success', 'Laporan Terkirim!', 'Aduan telah masuk ke sistem desa dan Pak RT.');
+                } else {
+                    alert('Laporan berhasil dikirim!');
+                }
+
+                formAduan.reset();
+                window.location.href = '/warga'; // Balikin warga ke dashboard setelah lapor
+
+            } catch (err) {
+                console.error(err);
+                statusTeks.classList.replace('text-amber-600', 'text-rose-600');
+                statusTeks.innerHTML = `❌ <span class="font-bold">Gagal:</span> ${err.message}`;
+            } finally {
+                btnKirim.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

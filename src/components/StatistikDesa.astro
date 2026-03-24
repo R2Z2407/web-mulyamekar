@@ -1,0 +1,98 @@
+---
+// src/components/StatistikDesa.astro
+import { supabase } from '../lib/supabase.js';
+
+// Tarik data statistik, urutkan
+const { data: statistik, error } = await supabase
+  .from('statistik_desa')
+  .select('*')
+  .order('urutan', { ascending: true });
+
+if (error) {
+  console.error("Gagal menarik data Statistik:", error);
+}
+
+// Fungsi pembantu format ribuan
+const formatRibuan = (angka) => {
+  return new Intl.NumberFormat('id-ID').format(angka);
+};
+
+// 🔥 FUNGSI PEMETAAN BOOTSTRAP ICON OTOMATIS 🔥
+const getIconClass = (label) => {
+  if (!label) return 'bi-pin-fill';
+  const l = label.toLowerCase();
+  
+  // Icon Data Dukcapil (Sama persis dengan Admin)
+  if (l === 'total penduduk') return 'bi-people-fill';
+  if (l === 'kepala keluarga (kk)') return 'bi-house-heart-fill';
+  if (l === 'warga laki-laki') return 'bi-gender-male';
+  if (l === 'warga perempuan') return 'bi-gender-female';
+  if (l === 'kelahiran / bayi') return 'bi-baby';
+  if (l === 'warga bekerja') return 'bi-briefcase-fill';
+  if (l === 'tidak/belum bekerja') return 'bi-cup-hot';
+  if (l === 'pelajar & mahasiswa') return 'bi-book-fill';
+  if (l === 'pensiunan') return 'bi-person-badge';
+
+  // Icon Fallback Data Manual Desa
+  if (l.includes('luas') || l.includes('wilayah')) return 'bi-map-fill';
+  if (l.includes('rt') || l.includes('rw')) return 'bi-building-fill';
+  if (l.includes('masjid') || l.includes('ibadah')) return 'bi-moon-stars-fill';
+  if (l.includes('sekolah') || l.includes('pendidikan')) return 'bi-mortarboard-fill';
+  if (l.includes('posyandu') || l.includes('kesehatan')) return 'bi-hospital-fill';
+  if (l.includes('umkm') || l.includes('usaha') || l.includes('toko')) return 'bi-shop';
+
+  return 'bi-bar-chart-fill'; // Default icon
+};
+---
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<section id="statistik" class="min-h-screen flex flex-col justify-center py-20 max-md:landscape:py-16 max-md:landscape:min-h-[450px] bg-teal-950 text-white relative overflow-hidden">
+  
+  <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/connected.png')]"></div>
+
+  <div class="container mx-auto px-4 max-w-6xl relative z-10">
+    
+    <div class="text-center max-w-2xl mx-auto mb-16 max-md:landscape:mb-8" data-aos="fade-up">
+      <h2 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">Informasi Penduduk</h2>
+      <h3 class="text-3xl md:text-4xl font-extrabold leading-tight max-md:landscape:text-2xl">Mulyamekar Dalam Angka</h3>
+      <p class="text-teal-200 mt-4 text-sm max-md:landscape:mt-2 max-md:landscape:text-xs">Ringkasan data demografi dan wilayah desa terbaru berdasarkan basis data kependudukan.</p>
+    </div>
+
+    {error || !statistik || statistik.length === 0 ? (
+      <div class="text-center py-10 bg-teal-900 rounded-xl text-teal-300 font-medium">Data statistik belum tersedia.</div>
+    ) : (
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-md:landscape:gap-3">
+        {statistik.map((item, index) => (
+          
+          // Kartu Statistik (Muncul dari bawah satu per satu)
+          <div 
+            class="bg-teal-900 border border-teal-800 p-8 max-md:landscape:p-4 rounded-3xl flex flex-col items-center text-center shadow-lg transition-all duration-300 hover:border-amber-400 hover:shadow-amber-900/50 hover:shadow-2xl hover:-translate-y-2 group"
+            data-aos="fade-up"
+            data-aos-delay={index * 100} 
+          >
+            
+            <div class="w-16 h-16 max-md:landscape:w-10 max-md:landscape:h-10 rounded-full bg-teal-800 text-amber-400 flex items-center justify-center mb-6 max-md:landscape:mb-3 border-4 border-teal-700 transition-all duration-300 group-hover:bg-amber-100 group-hover:border-amber-200 group-hover:text-amber-700 shadow-inner">
+              <i class={`bi ${getIconClass(item.label)} text-3xl max-md:landscape:text-xl`}></i>
+            </div>
+            
+            <span class="text-xs font-semibold text-teal-300 uppercase tracking-wider mb-2 max-md:landscape:mb-1 group-hover:text-amber-300 transition-colors line-clamp-1">
+              {item.label}
+            </span>
+            
+            <div class="flex items-baseline gap-1 mt-auto">
+              <h4 class="text-4xl max-md:landscape:text-2xl font-extrabold text-white transition-all duration-300 group-hover:scale-110">
+                {formatRibuan(item.nilai)}
+              </h4>
+              <span class="text-sm max-md:landscape:text-[10px] text-teal-400 font-medium group-hover:text-white transition-colors">
+                {item.satuan}
+              </span>
+            </div>
+            
+          </div>
+        ))}
+      </div>
+    )}
+
+  </div>
+</section>
