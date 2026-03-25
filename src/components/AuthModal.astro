@@ -97,6 +97,7 @@
     let currentMode = 'login'; 
     let tempNama = ''; 
     let tempNik = '';
+    let tempWilayahRt = '';
     let sisaResend = 2; // Total 3x (1x Signup awal + 2x Resend)
     let waktuTunggu = 0;
     let intervalTimer = null;
@@ -258,24 +259,25 @@
 
                 // Menggunakan URL dari supabase.js
                 console.log("👉 [CCTV 2.5] Memanggil Edge Function Supabase 'cek-nik'...");
-                
-const { data: hasil, error: invokeError } = await supabase.functions.invoke('cek-nik', {
-    body: { nik: nik }
-});
+                const { data: hasil, error: invokeError } = await supabase.functions.invoke('cek-nik', {
+                    body: { nik: nik, nama: nama } // 🔥 WAJIB TAMBAHIN NAMA DI SINI
+            });
 
 // Kalau koneksi ke Edge Function gagal
-if (invokeError) {
-    console.error("❌ [ERROR Edge Function]:", invokeError);
-    throw new Error("Sistem verifikasi sedang sibuk. Coba beberapa saat lagi.");
-}
+                if (invokeError) {
+                    console.error("❌ [ERROR Edge Function]:", invokeError);
+                    throw new Error("Sistem verifikasi sedang sibuk. Coba beberapa saat lagi.");
+                }
 
 // Tangkap pesan dari dalam Edge Function
-if (hasil && hasil.status !== 'sukses') {
-    throw new Error(hasil.pesan || "NIK tidak terdaftar di database Dukcapil!");
-}
+                if (hasil && hasil.status !== 'sukses') {
+                    throw new Error(hasil.pesan || "NIK tidak terdaftar di database Dukcapil!");
+                }
 
                 console.log("👉 [CCTV 3] NIK Valid! Mendaftarkan ke Supabase...");
-                tempNama = nama; tempNik = nik;
+                tempNama = nama;
+                tempNik = nik;
+                tempWilayahRt = hasil.wilayah_rt || '';
                 const { error: signError } = await supabase.auth.signUp({ 
                     email, password, options: { data: { nama_lengkap: tempNama } } 
                 });
@@ -302,24 +304,24 @@ if (hasil && hasil.status !== 'sukses') {
 
                 console.log("👉 [CCTV 4] OTP Cocok! Menyimpan profil ke database...");
                 if (data.user) {
-    // 🔥 Pakai UPSERT biar otomatis nimpa data yang kosong
-    const { error: errProfil } = await supabase.from('profil_user').upsert({ 
-        id: data.user.id, 
-        nama_lengkap: nama, // Ambil langsung dari variabel DOM di atas
-        nik: nik,           // Ambil langsung dari variabel DOM di atas
-        role: 'warga' 
-    });
-
-    // Kalau gagal nyimpen profil, jangan dikasih masuk!
-    if (errProfil) {
-        console.error("❌ [Peringatan] Gagal simpan profil:", errProfil);
-        throw new Error("Akun terverifikasi, tapi gagal menyimpan data profil. Hubungi Admin.");
-    }
-}
-
-console.log("👉 [CCTV 5] Berhasil! Mengalihkan ke /warga");
-window.location.href = '/warga';
+                    // 🔥 Pakai UPSERT biar otomatis nimpa data yang kosong
+                    const { error: errProfil } = await supabase.from('profil_user').upsert({ 
+                        id: data.user.id, 
+                        nama_lengkap: tempNama, // 🔥 GANTI JADI tempNama
+                        nik: tempNik,           // 🔥 GANTI JADI tempNik
+                        email: email,
+                        wilayah_rt: tempWilayahRt,
+                        role: 'warga' 
+                    });
+                    // Kalau gagal nyimpen profil, jangan dikasih masuk!
+                    if (errProfil) {
+                        console.error("❌ [Peringatan] Gagal simpan profil:", errProfil);
+                        throw new Error("Akun terverifikasi, tapi gagal menyimpan data profil. Hubungi Admin.");
+                }
             }
+            console.log("👉 [CCTV 5] Berhasil! Mengalihkan ke /warga");
+            window.location.href = '/warga';
+        }
         } catch (error) {
             console.error("❌ [TERTANGKAP ERROR]:", error);
             let msg = error.message;
