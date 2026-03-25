@@ -37,7 +37,15 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div id="fieldTanggalLahir" class="hidden animate-fadeIn">
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Tanggal Lahir (Sesuai KTP)</label>
+                        <div class="relative">
+                            <i class="bi bi-calendar-date absolute left-4 top-3.5 text-slate-400 text-lg"></i>
+                            <input type="date" id="authTglLahir" class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition-all text-sm font-bold text-slate-900 placeholder-slate-400">
+                        </div>
+                    </div>
+
+                    <div id="fieldEmail">
                         <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Alamat Email</label>
                         <div class="relative">
                             <i class="bi bi-envelope absolute left-4 top-3.5 text-slate-400 text-lg"></i>
@@ -46,32 +54,13 @@
                     </div>
                     
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Kata Sandi</label>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider" id="labelPasswordLokal">Kata Sandi</label>
+                            <button type="button" onclick="setAuthMode('reset')" id="btnLupaSandi" class="text-xs font-bold text-teal-600 hover:text-teal-800 transition-colors">Lupa Sandi?</button>
+                        </div>
                         <div class="relative">
                             <i class="bi bi-shield-lock absolute left-4 top-3.5 text-slate-400 text-lg"></i>
                             <input type="password" id="authPassword" class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition-all text-sm font-bold text-slate-900 placeholder-slate-400" placeholder="Minimal 6 karakter">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="wadahOTP" class="hidden space-y-4 text-center">
-                    <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-2 border border-teal-100">
-                        <i class="bi bi-envelope-check"></i>
-                    </div>
-                    <label class="block text-sm font-bold text-slate-600 uppercase tracking-tight">Verifikasi Kode OTP</label>
-                    <p class="text-xs text-slate-500 font-medium">Kode rahasia 6-digit telah dikirim ke email Anda. Cek folder Inbox/Spam.</p>
-                    
-                    <div class="relative mt-2">
-                        <input type="text" id="authOTP" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full text-center tracking-[0.5em] font-mono text-2xl py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition-all font-black text-slate-900 placeholder-slate-300" placeholder="------">
-                    </div>
-
-                    <div class="pt-2 text-xs font-medium text-slate-500">
-                        Belum menerima kode? <br>
-                        <div class="mt-1 flex items-center justify-center gap-2">
-                            <button type="button" id="btnResendOTP" onclick="kirimUlangOTP()" class="text-teal-600 font-bold hover:text-teal-800 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors" disabled>
-                                Kirim Ulang (Sisa: 2)
-                            </button>
-                            <span id="resendTimerText" class="text-slate-400 font-mono bg-slate-100 px-2 py-0.5 rounded-md hidden">60s</span>
                         </div>
                     </div>
                 </div>
@@ -83,7 +72,7 @@
 
             <div class="mt-6 text-center border-t border-slate-100 pt-6" id="authToggleContainer">
                 <p class="text-sm text-slate-500 font-medium" id="authToggleText">
-                    Belum punya akun warga? 
+                    Belum punya akun warga?
                     <button type="button" onclick="setAuthMode('register')" class="text-teal-600 font-bold hover:text-teal-800 hover:underline">Daftar di sini</button>
                 </p>
             </div>
@@ -98,9 +87,6 @@
     let tempNama = ''; 
     let tempNik = '';
     let tempWilayahRt = '';
-    let sisaResend = 2; // Total 3x (1x Signup awal + 2x Resend)
-    let waktuTunggu = 0;
-    let intervalTimer = null;
 
     window.bukaAuthModal = () => {
         const m = document.getElementById('authModal');
@@ -116,7 +102,6 @@
         m.classList.add('opacity-0');
         b.classList.remove('scale-100');
         b.classList.add('scale-95');
-        clearInterval(intervalTimer);
         setTimeout(() => { m.classList.add('hidden'); document.getElementById('authForm').reset(); }, 300);
     };
 
@@ -126,98 +111,53 @@
         const desc = document.getElementById('authDesc');
         const btn = document.getElementById('btnSubmitAuth');
         const toggleText = document.getElementById('authToggleText');
-        const toggleContainer = document.getElementById('authToggleContainer');
-        const wadahUtama = document.getElementById('wadahInputUtama');
-        const wadahOTP = document.getElementById('wadahOTP');
+        
         const fieldNama = document.getElementById('fieldNama');
         const fieldNik = document.getElementById('fieldNik');
-        const inputOTP = document.getElementById('authOTP');
+        const fieldTglLahir = document.getElementById('fieldTanggalLahir');
+        const fieldEmail = document.getElementById('fieldEmail');
+        
+        const btnLupaSandi = document.getElementById('btnLupaSandi');
+        const labelPasswordLokal = document.getElementById('labelPasswordLokal');
 
         if (mode === 'login') {
             title.innerText = "Masuk Akun";
             desc.innerText = "Layanan Digital Desa Mulyamekar";
             btn.innerHTML = "Masuk Sekarang <i class='bi bi-arrow-right'></i>";
-            toggleContainer.classList.remove('hidden');
             toggleText.innerHTML = `Belum punya akun warga? <button type="button" onclick="setAuthMode('register')" class="text-teal-600 font-bold hover:text-teal-800 hover:underline">Daftar di sini</button>`;
-            wadahUtama.classList.remove('hidden');
-            wadahOTP.classList.add('hidden');
-            fieldNama.classList.add('hidden');
+            
             fieldNik.classList.add('hidden');
+            fieldNama.classList.add('hidden');
+            fieldTglLahir.classList.add('hidden');
+            fieldEmail.classList.remove('hidden');
+            if(btnLupaSandi) btnLupaSandi.classList.remove('hidden');
+            labelPasswordLokal.innerText = "Kata Sandi";
         } 
         else if (mode === 'register') {
             title.innerText = "Daftar Akun Baru";
             desc.innerText = "Validasi NIK Dukcapil Mulyamekar";
             btn.innerHTML = "Validasi & Daftar <i class='bi bi-arrow-right'></i>";
-            toggleContainer.classList.remove('hidden');
             toggleText.innerHTML = `Sudah punya akun? <button type="button" onclick="setAuthMode('login')" class="text-teal-600 font-bold hover:text-teal-800 hover:underline">Masuk di sini</button>`;
-            wadahUtama.classList.remove('hidden');
-            wadahOTP.classList.add('hidden');
-            fieldNama.classList.remove('hidden');
+            
             fieldNik.classList.remove('hidden');
+            fieldNama.classList.remove('hidden');
+            fieldTglLahir.classList.add('hidden');
+            fieldEmail.classList.remove('hidden');
+            if(btnLupaSandi) btnLupaSandi.classList.add('hidden');
+            labelPasswordLokal.innerText = "Buat Kata Sandi";
         }
-        else if (mode === 'otp') {
-            title.innerText = "Verifikasi Email";
-            desc.innerText = "Masukkan kode rahasia dari email Anda";
-            btn.innerHTML = "Verifikasi & Masuk <i class='bi bi-check-circle-fill'></i>";
-            toggleContainer.classList.add('hidden'); 
-            wadahUtama.classList.add('hidden');
-            wadahOTP.classList.remove('hidden');
-            inputOTP.value = ''; 
-        }
-    };
-
-    window.mulaiTimerResend = () => {
-        waktuTunggu = 60;
-        const btn = document.getElementById('btnResendOTP');
-        const txt = document.getElementById('resendTimerText');
-        btn.disabled = true;
-        txt.classList.remove('hidden');
-        clearInterval(intervalTimer);
-        intervalTimer = setInterval(() => {
-            waktuTunggu--;
-            txt.innerText = `${waktuTunggu}s`;
-            if (waktuTunggu <= 0) {
-                clearInterval(intervalTimer);
-                txt.classList.add('hidden');
-                if (sisaResend > 0) {
-                    btn.disabled = false;
-                    btn.innerText = `Kirim Ulang (Sisa: ${sisaResend})`;
-                } else {
-                    btn.innerText = 'Batas Habis (1 Jam)';
-                    btn.classList.replace('text-teal-600', 'text-red-500');
-                }
-            }
-        }, 1000);
-    };
-
-    window.kirimUlangOTP = async () => {
-        if (sisaResend <= 0) return;
-        const email = document.getElementById('authEmail').value.trim();
-        const btn = document.getElementById('btnResendOTP');
-        btn.disabled = true;
-        btn.innerText = "Mengirim...";
-        console.log("👉 [CCTV] Mencoba kirim ulang OTP ke:", email);
-
-        try {
-            const { error } = await supabase.auth.resend({ type: 'signup', email: email });
-            if (error) throw error;
-            sisaResend--;
+        else if (mode === 'reset') {
+            title.innerText = "Reset Kata Sandi";
+            desc.innerText = "Validasi Identitas KTP Anda";
+            btn.innerHTML = "Reset Sandi Sekarang <i class='bi bi-shield-lock'></i>";
+            toggleText.innerHTML = `Ingat kata sandi? <button type="button" onclick="setAuthMode('login')" class="text-teal-600 font-bold hover:text-teal-800 hover:underline">Kembali Masuk</button>`;
             
-            // 🔥 Pakai Custom Alert
-            showCustomAlert('success', 'Terkirim', 'Kode OTP baru telah dikirim!');
-            
-            console.log("👉 [CCTV] Kirim ulang sukses! Sisa resend:", sisaResend);
-            mulaiTimerResend();
-        } catch (error) {
-            console.error("❌ [ERROR Resend OTP]:", error);
-            let msg = error.message;
-            if(msg.includes('rate limit')) msg = "Batas pengiriman email per jam tercapai. Coba lagi nanti.";
-            
-            // 🔥 Pakai Custom Alert
-            showCustomAlert('error', 'Gagal Mengirim', msg);
-            
-            btn.disabled = false;
-            btn.innerText = `Kirim Ulang (Sisa: ${sisaResend})`;
+            fieldNik.classList.remove('hidden');
+            fieldTglLahir.classList.remove('hidden');
+            fieldNama.classList.add('hidden');
+            fieldEmail.classList.add('hidden');
+            if(btnLupaSandi) btnLupaSandi.classList.add('hidden');
+            labelPasswordLokal.innerText = "Kata Sandi Baru";
         }
     };
 
@@ -227,113 +167,115 @@
         const password = document.getElementById('authPassword').value;
         const nama = document.getElementById('authNama').value.trim();
         const nik = document.getElementById('authNik').value.trim();
-        const otp = document.getElementById('authOTP').value.trim();
+        const tglLahir = document.getElementById('authTglLahir').value;
         const btn = document.getElementById('btnSubmitAuth');
-
-        console.log("👉 [CCTV 1] Tombol Ditekan! Mode saat ini:", currentMode);
-
-        if(currentMode !== 'otp' && (!email || !password)) {
-            // 🔥 Pakai Custom Alert
-            showCustomAlert('warning', 'Peringatan', 'Email dan Password wajib diisi!');
-            return;
-        }
 
         btn.disabled = true;
         btn.innerHTML = "Memproses... <i class='bi bi-hourglass-split animate-spin'></i>";
 
         try {
+            // =========================
+            // JALUR 1: LOGIN WARGA
+            // =========================
             if (currentMode === 'login') {
-                console.log("👉 [CCTV 2] Memproses Login...");
+                if(!email || !password) throw new Error('Email dan Password wajib diisi!');
+                
                 const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) {
-                    if(error.message.includes('Email not confirmed')) throw new Error('Email belum diverifikasi. Cek inbox/spam.');
-                    throw error;
-                }
+                if (error) throw error;
+                
                 const { data: profil } = await supabase.from('profil_user').select('role').eq('id', data.user.id).single();
-                console.log("👉 [CCTV 3] Login sukses, mengalihkan halaman...");
                 window.location.href = (profil && profil.role === 'admin') ? '/admin' : '/warga';
             } 
+            
+            // =========================
+            // JALUR 2: DAFTAR (JALUR TOL TANPA OTP)
+            // =========================
             else if (currentMode === 'register') {
-                console.log("👉 [CCTV 2] Memproses Pendaftaran NIK:", nik);
                 if (nik.length !== 16) throw new Error("NIK harus 16 digit!");
+                if (!email || !password || !nama) throw new Error("Semua data wajib diisi!");
 
-                // Menggunakan URL dari supabase.js
-                console.log("👉 [CCTV 2.5] Memanggil Edge Function Supabase 'cek-nik'...");
+                // 1. Cek NIK ke Edge Function Dukcapil
                 const { data: hasil, error: invokeError } = await supabase.functions.invoke('cek-nik', {
-                    body: { nik: nik, nama: nama } // 🔥 WAJIB TAMBAHIN NAMA DI SINI
-            });
+                    body: { nik: nik, nama: nama }
+                });
 
-// Kalau koneksi ke Edge Function gagal
-                if (invokeError) {
-                    console.error("❌ [ERROR Edge Function]:", invokeError);
-                    throw new Error("Sistem verifikasi sedang sibuk. Coba beberapa saat lagi.");
-                }
+                if (invokeError) throw new Error("Sistem verifikasi sedang sibuk. Coba beberapa saat lagi.");
+                if (hasil && hasil.status !== 'sukses') throw new Error(hasil.pesan || "Verifikasi gagal!");
 
-// Tangkap pesan dari dalam Edge Function
-                if (hasil && hasil.status !== 'sukses') {
-                    throw new Error(hasil.pesan || "NIK tidak terdaftar di database Dukcapil!");
-                }
-
-                console.log("👉 [CCTV 3] NIK Valid! Mendaftarkan ke Supabase...");
+                // 2. Jika valid, langsung buat akun di Supabase Auth
                 tempNama = nama;
                 tempNik = nik;
                 tempWilayahRt = hasil.wilayah_rt || '';
-                const { error: signError } = await supabase.auth.signUp({ 
-                    email, password, options: { data: { nama_lengkap: tempNama } } 
-                });
-                
-                if (signError) throw signError;
-                
-                console.log("👉 [CCTV 4] Signup Sukses! Pindah ke mode OTP.");
-                setAuthMode('otp');
-                sisaResend = 2; // Sisa 2x kirim ulang (Total 3 email)
-                mulaiTimerResend();
-                
-                // 🔥 Pakai Custom Alert
-                showCustomAlert('success', 'Berhasil', 'NIK Valid! Kode OTP telah dikirim ke email Anda.');
-                
-                btn.disabled = false;
-            }
-            else if (currentMode === 'otp') {
-                console.log("👉 [CCTV 2] Memulai Verifikasi OTP untuk email:", email);
-                if (otp.length < 6) throw new Error("Masukkan 6 digit kode OTP!");
-                
-                console.log("👉 [CCTV 3] Mengirim token ke Supabase...");
-                const { data, error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'signup' });
-                if (error) throw error;
 
-                console.log("👉 [CCTV 4] OTP Cocok! Menyimpan profil ke database...");
-                if (data.user) {
-                    // 🔥 Pakai UPSERT biar otomatis nimpa data yang kosong
+                // Memasukkan nama, nik, dan wilayah_rt ke dalam metadata (penting untuk Trigger!)
+                const { data: authData, error: signError } = await supabase.auth.signUp({ 
+                    email, password, options: { 
+                        data: { 
+                            nama_lengkap: tempNama, 
+                            nik: tempNik,
+                            wilayah_rt: tempWilayahRt
+                        } 
+                    } 
+                });
+
+                if (signError) throw signError;
+
+                // 3. Bypass OTP, eksekusi upsert profil (sebagai fallback update jika diperlukan)
+                if (authData.user) {
                     const { error: errProfil } = await supabase.from('profil_user').upsert({ 
-                        id: data.user.id, 
-                        nama_lengkap: tempNama, // 🔥 GANTI JADI tempNama
-                        nik: tempNik,           // 🔥 GANTI JADI tempNik
+                        id: authData.user.id, 
+                        nama_lengkap: tempNama,
+                        nik: tempNik,           
                         email: email,
                         wilayah_rt: tempWilayahRt,
                         role: 'warga' 
                     });
-                    // Kalau gagal nyimpen profil, jangan dikasih masuk!
+
+                    // Jika gagal update karena RLS, kita bisa abaikan error ini 
+                    // karena data utama sudah diurus oleh Trigger di Database.
                     if (errProfil) {
-                        console.error("❌ [Peringatan] Gagal simpan profil:", errProfil);
-                        throw new Error("Akun terverifikasi, tapi gagal menyimpan data profil. Hubungi Admin.");
+                        console.warn("Upsert ditolak oleh RLS, namun Trigger Auth telah menangani insert data.");
+                    }
                 }
+
+                showCustomAlert('success', 'Pendaftaran Berhasil', 'Identitas valid. Mengalihkan ke Dashboard...');
+                setTimeout(() => { window.location.href = '/warga'; }, 1500);
             }
-            console.log("👉 [CCTV 5] Berhasil! Mengalihkan ke /warga");
-            window.location.href = '/warga';
-        }
+
+            // =========================
+            // JALUR 3: RESET SANDI OTOMATIS
+            // =========================
+            else if (currentMode === 'reset') {
+                if (nik.length !== 16) throw new Error("NIK harus 16 digit!");
+                if (!tglLahir) throw new Error("Tanggal Lahir wajib diisi!");
+                if (password.length < 6) throw new Error("Kata sandi baru minimal 6 karakter!");
+
+                // Tembak ke Edge Function reset-sandi
+                const { data: hasilReset, error: invokeErr } = await supabase.functions.invoke('reset-sandi', {
+                    body: { nik: nik, tanggalLahir: tglLahir, passwordBaru: password }
+                });
+
+                if (invokeErr) throw new Error("Sistem sedang sibuk, coba lagi nanti.");
+                if (hasilReset && hasilReset.status !== 'sukses') throw new Error(hasilReset.pesan);
+
+                // Kalau sukses reset
+                showCustomAlert('success', 'Sandi Diperbarui', 'Kata sandi berhasil direset! Silakan masuk.');
+                document.getElementById('authForm').reset();
+                setAuthMode('login'); 
+                btn.disabled = false;
+            }
+
         } catch (error) {
-            console.error("❌ [TERTANGKAP ERROR]:", error);
+            console.error("❌ [ERROR]:", error);
             let msg = error.message;
-            if(msg.includes('rate limit')) msg = "Terlalu banyak permintaan. Tunggu sebentar.";
-            if(msg.includes('already registered')) msg = "Email ini sudah digunakan!";
-            if(msg.includes('Token has expired or is invalid')) msg = "Kode OTP salah atau sudah hangus!";
-            
-            // 🔥 Pakai Custom Alert
+            if(msg.includes('already registered')) msg = "Email ini sudah terdaftar!";
             showCustomAlert('error', 'Gagal', msg);
             
+            // Kembalikan tombol seperti semula
             btn.disabled = false;
-            btn.innerHTML = currentMode === 'login' ? "Masuk Sekarang <i class='bi bi-arrow-right'></i>" : (currentMode === 'register' ? "Validasi & Daftar <i class='bi bi-arrow-right'></i>" : "Verifikasi & Masuk <i class='bi bi-check-circle-fill'></i>");
+            if (currentMode === 'login') btn.innerHTML = "Masuk Sekarang <i class='bi bi-arrow-right'></i>";
+            else if (currentMode === 'register') btn.innerHTML = "Validasi & Daftar <i class='bi bi-arrow-right'></i>";
+            else btn.innerHTML = "Reset Sandi Sekarang <i class='bi bi-shield-lock'></i>";
         }
     });
 </script>

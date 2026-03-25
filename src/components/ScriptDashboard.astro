@@ -87,16 +87,17 @@
 
         profilWarga = profil;
 
-        let finalGender = profil.jenis_kelamin;
-        if (!profil.jenis_kelamin && profil.nik && profil.nik.length === 16) {
-            console.log("👉 Mendeteksi gender dari NIK...");
+        // 🔥 REVISI: LOGIKA HACKER NIK (MUTLAK DARI NIK) 🔥
+        let finalGender = profil.jenis_kelamin || 'Laki-laki'; 
+        
+        // Paksa SELALU baca dari NIK (jika ada), abaikan data di database
+        if (profil.nik && profil.nik.length >= 8) {
             const kodeTglLahir = parseInt(profil.nik.substring(6, 8)); 
             finalGender = (kodeTglLahir > 40) ? 'Perempuan' : 'Laki-laki';
-            
-            supabase.from('profil_user').update({ jenis_kelamin: finalGender }).eq('id', currentUser.id).then();
             profilWarga.jenis_kelamin = finalGender;
         }
 
+        // Tentukan avatar berdasarkan hasil bedah NIK
         let avatarDefault = finalGender === 'Perempuan' 
             ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${profil.nama_lengkap}&backgroundColor=ffdfbf&clothing=blazerAndShirt&hair=longButNotTooLong`
             : `https://api.dicebear.com/7.x/avataaars/svg?seed=${profil.nama_lengkap}&backgroundColor=b6e3f4&clothing=blazerAndSweater&hair=shortHairShortFlat`;
