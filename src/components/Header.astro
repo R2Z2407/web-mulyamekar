@@ -1,5 +1,7 @@
 ---
 // src/components/Header.astro
+import AuthModal from './AuthModal.astro';
+import AvatarWarga from './AvatarWarga.astro'; // 🔥 IMPORT AVATAR DI SINI 🔥
 const navItems = [
   { name: 'Beranda', url: '/' },
   { name: 'Profil', url: '/profil' },
@@ -34,15 +36,15 @@ const navItems = [
         Layanan Surat
       </a>
 
-      <button id="btnNavLogin" onclick="openAuthModal()" class="hidden text-sm font-bold border-2 border-white hover:bg-white hover:text-teal-700 px-5 py-1.5 rounded-full transition-colors shadow-sm ml-2">
+      <button id="btnNavLogin" onclick="bukaAuthModal()" class="hidden text-sm font-bold border-2 border-white hover:bg-white hover:text-teal-700 px-5 py-1.5 rounded-full transition-colors shadow-sm ml-2">
         Masuk / Daftar
       </button>
 
       <div id="navProfile" class="hidden items-center gap-4 border-l border-teal-600 pl-5 ml-2">
         <a href="#" id="linkDashboard" class="flex items-center gap-2 group cursor-pointer" title="Buka Dashboard Saya">
-          <div id="userInitials" class="w-8 h-8 rounded-full bg-white text-teal-700 flex items-center justify-center font-bold text-sm shadow-sm group-hover:bg-amber-400 transition-colors">
-            ?
-          </div>
+          
+          <AvatarWarga id="headerAvatarDesktop" className="w-8 h-8 group-hover:ring-2 group-hover:ring-amber-400 transition-all" />
+          
           <div class="flex flex-col">
             <span id="userName" class="text-sm font-bold leading-tight group-hover:text-amber-400 transition-colors max-w-[100px] truncate">Memuat...</span>
             <span id="userRole" class="text-[10px] text-teal-200 uppercase tracking-wider">Role</span>
@@ -76,17 +78,15 @@ const navItems = [
         Layanan Surat
       </a>
 
-      <button id="btnMobileLogin" onclick="openAuthModal(); document.getElementById('mobile-menu-btn').click();" class="hidden w-full max-w-xs text-center border-2 border-white hover:bg-white text-white hover:text-teal-950 py-2.5 rounded-full text-lg font-bold transition-colors">
+      <button id="btnMobileLogin" onclick="bukaAuthModal(); document.getElementById('mobile-menu-btn').click();" class="hidden w-full max-w-xs text-center border-2 border-white hover:bg-white text-white hover:text-teal-950 py-2.5 rounded-full text-lg font-bold transition-colors">
         Masuk / Daftar
       </button>
 
       <div id="mobileProfile" class="hidden flex-col items-center w-full max-w-xs gap-3">
         <a href="#" id="mobileLinkDashboard" class="flex items-center gap-3 bg-teal-800 p-4 rounded-2xl w-full">
-          <img 
-            src="https://i.ibb.co.com/S7Wv5qST/logo-header.png" 
-            alt="Logo Desa" 
-            class="w-10 h-10 rounded-full object-contain bg-white shadow-sm"
-          />
+          
+          <AvatarWarga id="headerAvatarMobile" className="w-10 h-10 border-2 border-white/50" />
+          
           <div class="flex flex-col text-left">
             <span id="mobileUserName" class="text-white font-bold text-lg leading-tight">Memuat...</span>
             <span id="mobileUserRole" class="text-teal-300 text-xs uppercase font-bold tracking-wider">Role</span>
@@ -99,10 +99,11 @@ const navItems = [
 
     </nav>
   </div>
+
+  <AuthModal />
 </header>
 
 <script>
-  // Seluruh script logic Hamburger dan Autentikasi tetap sama seperti versi #14
   import { supabase } from '../lib/supabase.js';
 
   // --- LOGIKA MENU HAMBURGER MOBILE ---
@@ -152,7 +153,8 @@ const navItems = [
     const mobileLinkDashboard = document.getElementById('mobileLinkDashboard');
 
     if (session) {
-      const { data: profil } = await supabase.from('profil_user').select('nama_lengkap, role').eq('id', session.user.id).single();
+      // 🔥 PERUBAHAN 3: TARIK DATA AVATAR DARI SUPABASE 🔥
+      const { data: profil } = await supabase.from('profil_user').select('nama_lengkap, role, avatar_url, jenis_kelamin').eq('id', session.user.id).single();
       
       if (profil) {
         let targetUrl = '/warga';
@@ -162,20 +164,40 @@ const navItems = [
             targetUrl = '/admin'; 
             namaRole = 'Admin Desa'; 
         } else if (profil.role === 'rt_rw') { 
-            targetUrl = '/rt'; 
+            targetUrl = '/warga'; 
             namaRole = 'Ketua RT/RW'; 
         }
 
         const namaPendek = profil.nama_lengkap ? profil.nama_lengkap.split(' ')[0] : 'User';
 
-        // Update UI Desktop - Avatar pake ? kalo belum login, tapi di HTML udah diganti LOGO IMGBB
+        // Set Avatar di Header (Kalo belum upload, pake Dicebear sesuai gender)
+        // Set Avatar di Header
+        let finalAvatar = profil.avatar_url;
+
+        // 🔥 LOGIKA KHUSUS ADMIN 🔥
+        if (profil.role === 'admin') {
+            // Kalau dia Admin, paksa pakai Logo Desa Mulyamekar
+            finalAvatar = 'https://i.ibb.co.com/S7Wv5qST/logo-header.png';
+        } 
+        // Kalau Warga/RT dan belum punya foto, pakai Dicebear
+        else if (!finalAvatar) {
+            const gender = profil.jenis_kelamin === 'Perempuan' ? 'Perempuan' : 'Laki-laki'; 
+            finalAvatar = gender === 'Perempuan' 
+                ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${profil.nama_lengkap}&backgroundColor=ffdfbf&clothing=blazerAndShirt&hair=longButNotTooLong`
+                : `https://api.dicebear.com/7.x/avataaars/svg?seed=${profil.nama_lengkap}&backgroundColor=b6e3f4&clothing=blazerAndSweater&hair=shortHairShortFlat`;
+        }
+
+        // Terapkan Avatar ke Header
+        if(document.getElementById('headerAvatarDesktop')) document.getElementById('headerAvatarDesktop').src = finalAvatar;
+        if(document.getElementById('headerAvatarMobile')) document.getElementById('headerAvatarMobile').src = finalAvatar;
+
+        // Update UI Desktop
         if(btnNavLogin) btnNavLogin.classList.add('hidden');
         if(navProfile) {
             navProfile.classList.remove('hidden');
             navProfile.classList.add('flex');
             document.getElementById('userName').innerText = namaPendek;
             document.getElementById('userRole').innerText = namaRole;
-            // Kita gak pake Inisial lagi, pake LOGO DESA as Avatar default
             document.getElementById('linkDashboard').href = targetUrl;
         }
 
@@ -192,7 +214,6 @@ const navItems = [
     } else {
       if(btnNavLogin) btnNavLogin.classList.remove('hidden');
       if(navProfile) { navProfile.classList.add('hidden'); navProfile.classList.remove('flex'); }
-      
       if(btnMobileLogin) btnMobileLogin.classList.remove('hidden');
       if(mobileProfile) { mobileProfile.classList.add('hidden'); mobileProfile.classList.remove('flex'); }
     }

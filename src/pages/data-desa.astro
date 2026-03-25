@@ -1,0 +1,327 @@
+---
+// src/pages/data-desa.astro
+import BaseLayout from '../layout/BaseLayout.astro';
+import { supabase } from '../lib/supabase.js';
+
+// 1. Tarik Data Statistik dari Database
+const { data: stats, error } = await supabase.from('statistik_desa').select('*').order('urutan', { ascending: true });
+
+// 2. Fungsi Helper Buat Nyari Angka
+const getVal = (label) => {
+    if(!stats) return 0;
+    const item = stats.find(s => s.label.toLowerCase() === label.toLowerCase());
+    return item ? parseInt(item.nilai) || 0 : 0;
+};
+
+// 3. Tarik Metrik Utama
+const totalPenduduk = getVal('Total Penduduk');
+const totalKK = getVal('Kepala Keluarga (KK)');
+const wargaBekerja = getVal('Warga Bekerja');
+const pelajar = getVal('Pelajar & Mahasiswa');
+
+// 4. Pisahkan Data Demografi (Auto) dan Data Wilayah/Fasilitas (Manual)
+const labelDemografi = ['Total Penduduk', 'Kepala Keluarga (KK)', 'Warga Laki-laki', 'Warga Perempuan', 'Kelahiran / Bayi', 'Warga Bekerja', 'Tidak/Belum Bekerja', 'Pelajar & Mahasiswa', 'Pensiunan'];
+
+const dataDemografi = (stats || []).filter(s => labelDemografi.includes(s.label));
+const dataWilayah = (stats || []).filter(s => !labelDemografi.includes(s.label));
+---
+
+<BaseLayout title="Portal Data & Infografis - Desa Mulyamekar">
+    <script is:inline src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <main class="bg-[#F8FAFC] min-h-screen pt-24 pb-20 font-sans text-slate-800">
+        <div class="container mx-auto px-4 max-w-6xl">
+            
+            <div class="mb-6" data-aos="fade-down">
+                <a href="/#statistik" class="inline-flex items-center gap-2 text-sm font-bold text-teal-600 hover:text-amber-500 transition-colors bg-white px-4 py-2 rounded-full shadow-sm border border-slate-200">
+                    <i class="bi bi-arrow-left"></i> Kembali ke Beranda
+                </a>
+            </div>
+
+            <div class="text-center max-w-2xl mx-auto mb-12" data-aos="fade-up">
+                <span class="bg-teal-100 text-teal-700 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-sm border border-teal-200">Portal Data Terbuka</span>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mt-5 tracking-tight">Infografis <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-teal-400">Mulyamekar</span></h1>
+                <p class="text-slate-500 mt-4 text-base leading-relaxed font-medium">Transparansi data demografi dan kewilayahan desa yang diperbarui secara <i class="font-bold text-teal-600">real-time</i> dari Buku Induk Digital.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                
+                <div class="md:col-span-2 bg-gradient-to-br from-teal-700 to-teal-900 rounded-[2.5rem] p-8 md:p-10 text-white shadow-xl shadow-teal-900/20 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300" data-aos="fade-up" data-aos-delay="100">
+                    <div class="absolute -right-10 -top-10 w-64 h-64 bg-teal-400 rounded-full opacity-20 blur-3xl group-hover:opacity-40 transition-opacity"></div>
+                    <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-amber-400 rounded-full opacity-20 blur-2xl"></div>
+                    
+                    <div class="relative z-10 h-full flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 mb-4">
+                                    <i class="bi bi-people-fill text-2xl text-white"></i>
+                                </div>
+                                <h3 class="text-teal-100 font-bold text-sm uppercase tracking-widest">Total Populasi Aktif</h3>
+                            </div>
+                            <span class="bg-amber-400 text-teal-950 font-black text-[10px] px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-teal-900 animate-pulse"></span> Live
+                            </span>
+                        </div>
+                        <div class="mt-8">
+                            <h2 class="text-6xl md:text-7xl font-black tracking-tighter drop-shadow-md">{new Intl.NumberFormat('id-ID').format(totalPenduduk)}</h2>
+                            <p class="text-teal-200 font-medium text-lg mt-2 flex items-center gap-2">
+                                Jiwa terdaftar di Mulyamekar
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-1 bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-200 flex flex-col hover:shadow-lg transition-shadow" data-aos="fade-up" data-aos-delay="200">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-slate-800 font-black text-sm">Komposisi Gender</h4>
+                        <i class="bi bi-pie-chart-fill text-slate-300"></i>
+                    </div>
+                    <div class="relative flex-grow min-h-[160px] flex items-center justify-center">
+                        <canvas id="chartGender"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-2">
+                            <i class="bi bi-gender-ambiguous text-slate-200 text-3xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-6 md:col-span-1" data-aos="fade-up" data-aos-delay="300">
+                    <div class="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-200 flex-grow flex flex-col justify-center hover:shadow-lg transition-shadow relative overflow-hidden">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-amber-50 rounded-bl-full -z-0"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-lg"><i class="bi bi-house-heart-fill"></i></div>
+                                <h4 class="text-slate-500 font-bold text-xs uppercase tracking-wider">Kepala Keluarga</h4>
+                            </div>
+                            <p class="text-3xl font-black text-slate-800 mt-2">{new Intl.NumberFormat('id-ID').format(totalKK)} <span class="text-sm font-bold text-slate-400">KK</span></p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-200 flex-grow flex flex-col justify-center hover:shadow-lg transition-shadow relative overflow-hidden">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-emerald-50 rounded-bl-full -z-0"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-lg"><i class="bi bi-briefcase-fill"></i></div>
+                                <h4 class="text-slate-500 font-bold text-xs uppercase tracking-wider">Rasio Pekerja</h4>
+                            </div>
+                            <p class="text-3xl font-black text-slate-800 mt-2">{totalPenduduk > 0 ? Math.round((wargaBekerja / totalPenduduk) * 100) : 0}% <span class="text-sm font-bold text-slate-400">Aktif</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-4 bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm border border-slate-200 hover:shadow-lg transition-shadow" data-aos="fade-up" data-aos-delay="400">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="w-8 h-1 bg-teal-500 rounded-full"></span>
+                                <h3 class="text-xl font-black text-slate-800 uppercase tracking-wide">Distribusi Pekerjaan</h3>
+                            </div>
+                            <p class="text-sm text-slate-500 font-medium">Pemetaan aktivitas ekonomi warga berdasarkan data terenkripsi.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-bold text-[10px] uppercase rounded-xl border border-emerald-200 flex items-center gap-1"><i class="bi bi-circle-fill text-[8px]"></i> Pekerja: {wargaBekerja}</span>
+                            <span class="px-3 py-1.5 bg-amber-50 text-amber-700 font-bold text-[10px] uppercase rounded-xl border border-amber-200 flex items-center gap-1"><i class="bi bi-circle-fill text-[8px]"></i> Pelajar: {pelajar}</span>
+                        </div>
+                    </div>
+                    <div class="relative w-full h-[250px] md:h-[300px]">
+                        <canvas id="chartPekerjaan"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12" data-aos="fade-up" data-aos-delay="500">
+                
+                <div class="lg:col-span-1 space-y-6">
+                    <div>
+                        <h3 class="text-lg font-black text-slate-800 flex items-center gap-2 mb-4">
+                            <i class="bi bi-map-fill text-teal-600"></i> Infrastruktur & Wilayah
+                        </h3>
+                        <p class="text-sm text-slate-500 font-medium mb-6">Data kewilayahan dan fasilitas umum yang ada di Desa Mulyamekar.</p>
+                    </div>
+
+                    {dataWilayah.length > 0 ? (
+                        <div class="grid grid-cols-2 gap-4">
+                            {dataWilayah.map((w) => (
+                                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-teal-300 transition-colors">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 line-clamp-1" title={w.label}>{w.label}</p>
+                                    <p class="text-xl font-black text-slate-800">{new Intl.NumberFormat('id-ID').format(w.nilai)} <span class="text-[10px] text-slate-500 font-semibold">{w.satuan}</span></p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div class="bg-slate-100 p-6 rounded-2xl border border-slate-200 text-center border-dashed">
+                            <p class="text-sm text-slate-400 font-bold">Data wilayah belum ditambahkan oleh Admin.</p>
+                        </div>
+                    )}
+                    
+                    <div class="bg-teal-50 border border-teal-100 p-5 rounded-2xl flex items-center gap-4">
+                        <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-xl shrink-0"><i class="bi bi-shield-check"></i></div>
+                        <div>
+                            <p class="text-sm font-black text-teal-900">Data Terenkripsi (AES)</p>
+                            <p class="text-[11px] text-teal-700 font-medium mt-0.5">Sistem keamanan Dukcapil menjamin kerahasiaan NIK & identitas warga.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden h-full flex flex-col">
+                        <div class="p-6 md:p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-black text-slate-800">Rincian Demografi Lengkap</h3>
+                                <p class="text-xs text-slate-500 font-medium mt-1">Rekapitulasi angka pasti kependudukan.</p>
+                            </div>
+                            <i class="bi bi-table text-2xl text-slate-300"></i>
+                        </div>
+                        <div class="overflow-x-auto p-2">
+                            <table class="w-full text-left border-collapse">
+                                <tbody>
+                                    {dataDemografi.map((d, i) => (
+                                        <tr class={`hover:bg-slate-50 transition-colors ${i !== dataDemografi.length - 1 ? 'border-b border-slate-100' : ''}`}>
+                                            <td class="py-4 px-6 md:px-8">
+                                                <div class="flex items-center gap-3">
+                                                    <span class="w-2 h-2 rounded-full bg-teal-400"></span>
+                                                    <span class="font-bold text-slate-700 text-sm">{d.label}</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-6 md:px-8 text-right">
+                                                <span class="font-black text-slate-900 text-base">{new Intl.NumberFormat('id-ID').format(d.nilai)}</span>
+                                                <span class="text-xs text-slate-400 font-semibold ml-1">{d.satuan}</span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <script is:inline define:vars={{ statsData: stats }}>
+        window.dbStats = statsData || [];
+    </script>
+
+    <script is:inline>
+        document.addEventListener('DOMContentLoaded', () => {
+            const stats = window.dbStats;
+            const getVal = (lbl) => {
+                const item = stats.find(s => s.label.toLowerCase() === lbl.toLowerCase());
+                return item ? parseInt(item.nilai) || 0 : 0;
+            };
+
+            // SETTING GLOBAL CHART.JS BENTUK ELEGAN
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#64748b'; // slate-500
+            
+            // ==========================================
+            // 1. CHART GENDER (DOUGHNUT)
+            // ==========================================
+            const ctxGender = document.getElementById('chartGender')?.getContext('2d');
+            if(ctxGender) {
+                new Chart(ctxGender, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Laki-laki', 'Perempuan'],
+                        datasets: [{
+                            data: [getVal('warga laki-laki'), getVal('warga perempuan')],
+                            backgroundColor: ['#0ea5e9', '#ec4899'], // Biru & Pink Modern
+                            borderWidth: 0,
+                            hoverOffset: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%', // Bikin donatnya tipis elegan
+                        plugins: {
+                            legend: { display: false }, // Sembunyikan legend bawaan biar bersih
+                            tooltip: {
+                                backgroundColor: '#0f172a',
+                                padding: 10,
+                                cornerRadius: 8,
+                                callbacks: {
+                                    label: function(ctx) {
+                                        let val = new Intl.NumberFormat('id-ID').format(ctx.raw);
+                                        let total = ctx.chart._metasets[ctx.datasetIndex].total;
+                                        let pct = total > 0 ? Math.round((ctx.raw / total) * 100) : 0;
+                                        return ` ${ctx.label}: ${val} Jiwa (${pct}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ==========================================
+            // 2. CHART PEKERJAAN (BAR)
+            // ==========================================
+            const ctxPekerjaan = document.getElementById('chartPekerjaan')?.getContext('2d');
+            
+            if(ctxPekerjaan) {
+                // Bikin Gradasi Warna Keren buat Bar Chart
+                const gradientBekerja = ctxPekerjaan.createLinearGradient(0, 0, 0, 400);
+                gradientBekerja.addColorStop(0, '#0d9488'); // teal-600
+                gradientBekerja.addColorStop(1, '#14b8a6'); // teal-500
+
+                new Chart(ctxPekerjaan, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Bekerja', 'Tidak/Belum Bekerja', 'Pelajar & Mahasiswa', 'Pensiunan'],
+                        datasets: [{
+                            label: 'Jumlah Jiwa',
+                            data: [
+                                getVal('warga bekerja'), 
+                                getVal('tidak/belum bekerja'), 
+                                getVal('pelajar & mahasiswa'), 
+                                getVal('pensiunan')
+                            ],
+                            backgroundColor: [
+                                gradientBekerja, 
+                                '#f43f5e', // rose-500
+                                '#f59e0b', // amber-500
+                                '#94a3b8'  // slate-400
+                            ],
+                            borderRadius: 8, // Sudut batangnya melengkung (Apple Style)
+                            borderSkipped: false,
+                            barThickness: 40 // Ketebalan batang
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#0f172a',
+                                padding: 12,
+                                titleFont: { size: 14 },
+                                bodyFont: { size: 14, weight: 'bold' }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#f1f5f9', // Garis horizontal tipis
+                                    drawBorder: false
+                                },
+                                ticks: { font: { weight: 'bold' } }
+                            },
+                            x: {
+                                grid: { display: false }, // Hilangkan garis vertikal biar bersih
+                                ticks: { font: { weight: 'bold' } }
+                            }
+                        },
+                        animation: {
+                            y: { duration: 2000, easing: 'easeOutQuart' } // Animasi naik pelan
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</BaseLayout>

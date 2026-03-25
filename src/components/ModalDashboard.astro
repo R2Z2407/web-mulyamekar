@@ -1,0 +1,54 @@
+---
+// src/components/ModalDashboard.astro
+// Menampung semua pop-up modal untuk halaman dashboard
+const daftarRT = ["Belum Diatur", "RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW 02"];
+---
+
+<div id="modalProfil" class="fixed inset-0 z-[80] bg-gray-900/80 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+    <div id="modalProfilBox" class="bg-white rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-teal-50 rounded-t-3xl">
+            <h3 class="text-xl font-black text-teal-900">Pengaturan Profil</h3>
+            <button onclick="tutupModalProfil()" class="text-teal-400 hover:text-teal-600 bg-white p-2 rounded-full shadow-sm font-bold">✖</button>
+        </div>
+        <div class="p-6 overflow-y-auto">
+            <form id="formProfil" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nama Sesuai KTP *</label>
+                    <input type="text" id="inputNama" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">NIK (16 Digit) *</label>
+                    <input type="text" id="inputNik" required minlength="16" maxlength="16" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Wilayah RT/RW *</label>
+                    <select id="inputRT" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-bold text-teal-900">
+                        {daftarRT.map(rt => <option value={rt === 'Belum Diatur' ? '' : rt}>{rt}</option>)}
+                    </select>
+                </div>
+                <button type="submit" id="btnSimpanProfil" class="w-full bg-teal-600 text-white font-black py-3.5 rounded-xl shadow-md mt-2">Simpan Perubahan</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="modalDaftarToko" class="fixed inset-0 z-[80] bg-gray-900/80 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+    <div id="modalDaftarTokoBox" class="bg-white rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-orange-50 rounded-t-3xl">
+            <h3 class="text-xl font-black text-orange-900">Buka Toko UMKM</h3>
+            <button onclick="tutupModalToko()" class="text-orange-400 hover:text-orange-600 bg-white p-2 rounded-full shadow-sm font-bold">✖</button>
+        </div>
+        <div class="p-6 overflow-y-auto">
+            <form id="formDaftarToko" class="space-y-4">
+                <input type="text" id="toko_nama" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Nama Usaha">
+                <input type="number" id="toko_wa" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Nomor WA Aktif">
+                <textarea id="toko_alamat" required rows="2" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Alamat Usaha"></textarea>
+                <button type="submit" id="btnSimpanToko" class="w-full bg-orange-600 text-white font-black py-4 rounded-xl shadow-lg mt-2">Kirim Pengajuan</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="modalFoto" class="fixed inset-0 z-[90] bg-gray-900/90 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="tutupFoto()">
+    <img id="imgPreview" src="" class="max-w-full max-h-[90vh] rounded-xl shadow-2xl transform scale-95 transition-transform duration-300">
+</div>

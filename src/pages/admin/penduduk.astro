@@ -1,8 +1,6 @@
 ---
 // src/pages/admin/penduduk.astro
 import BaseLayout from '../../layout/BaseLayout.astro';
-
-const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW 02"];
 ---
 
 <BaseLayout title="Data Penduduk (Dukcapil) - Admin Mulyamekar">
@@ -63,22 +61,34 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
 
             <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col mb-8">
                 
-                <div class="bg-slate-50 p-6 border-b border-slate-200 flex flex-col sm:flex-row gap-5 items-center justify-between">
-                    <div class="relative w-full sm:max-w-md">
-                        <input type="text" id="searchWarga" placeholder="Cari NIK atau Nama Lengkap..." class="w-full pl-12 pr-5 py-3.5 bg-white border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all">
-                        <svg class="absolute left-4 top-4 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <div class="bg-slate-50 p-5 sm:p-6 border-b border-slate-200 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center justify-between transition-all">
+                    
+                    <div class="flex flex-row gap-3 items-center w-full sm:max-w-md justify-between">
+                        <div class="relative w-full">
+                            <input type="text" id="searchWarga" placeholder="Cari NIK atau Nama Lengkap..." class="w-full pl-12 pr-5 py-3.5 bg-white border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all">
+                            <svg class="absolute left-4 top-3.5 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        
+                        <button type="button" id="btnToggleFilter" class="sm:hidden flex items-center justify-center bg-white border border-slate-300 text-slate-600 w-12 h-12 rounded-xl shadow-sm hover:bg-slate-100 hover:text-blue-600 transition-colors shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                        </button>
                     </div>
-                    <div class="flex w-full sm:w-auto gap-4">
-                        <select id="filterStatus" class="flex-1 sm:flex-none px-5 py-3.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 outline-none cursor-pointer shadow-sm hover:border-blue-400 transition-colors">
+
+                    <div id="filterDropdownContainer" class="hidden sm:flex flex-col sm:flex-row w-full sm:w-auto gap-3 animate-fadeIn sm:animate-none">
+                        <select id="filterStatus" class="px-5 py-3.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 outline-none cursor-pointer shadow-sm hover:border-blue-400 transition-colors">
                             <option value="Semua">Semua Status</option>
                             <option value="Tetap">Warga Tetap</option>
                             <option value="Pendatang">Pendatang</option>
                             <option value="Pindah">Pindah</option>
                             <option value="Meninggal">Meninggal</option>
                         </select>
-                        <select id="filterRT" class="flex-1 sm:flex-none px-5 py-3.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 outline-none cursor-pointer shadow-sm hover:border-blue-400 transition-colors">
+                        
+                        <select id="filterRW" class="px-5 py-3.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 outline-none cursor-pointer shadow-sm hover:border-blue-400 transition-colors">
+                            <option value="Semua">Semua RW</option>
+                        </select>
+                        
+                        <select id="filterRT" class="px-5 py-3.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-700 outline-none cursor-pointer shadow-sm hover:border-blue-400 transition-colors">
                             <option value="Semua">Semua RT</option>
-                            {daftarRT.map(rt => <option value={rt}>{rt}</option>)}
                         </select>
                     </div>
                 </div>
@@ -201,12 +211,20 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
                                 </label>
                                 <textarea id="alamat" required rows="2" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 text-sm outline-none transition-all" placeholder="Jalan, Blok, patokan..."></textarea>
                             </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-600 mb-1 uppercase tracking-wider">Wilayah RT/RW *</label>
-                                <select id="wilayah_rt" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 text-sm font-bold text-slate-800 outline-none cursor-pointer transition-all">
-                                    <option value="">-- Pilih Wilayah --</option>
-                                    {daftarRT.map(rt => <option value={rt}>{rt}</option>)}
-                                </select>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1 uppercase tracking-wider">Pilih RW *</label>
+                                    <select id="pilihRW" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 text-sm font-bold text-slate-800 outline-none cursor-pointer transition-all">
+                                        <option value="">-- Pilih RW --</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-600 mb-1 uppercase tracking-wider">Pilih RT *</label>
+                                    <select id="pilihRT" required disabled class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 text-sm font-bold text-slate-800 outline-none cursor-not-allowed transition-all">
+                                        <option value="">-- Pilih RT --</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
@@ -273,16 +291,12 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
     </div>
 
     <style>
-        /* Scrollbar custom ala Mac/Modern UI */
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Style ala-ala baris excel modern YANG LEBIH LEGA */
         #tablePenduduk tr:nth-child(even) { background-color: #f8fafc; }
         #tablePenduduk tr:hover { background-color: #f1f5f9; }
         #tablePenduduk td { padding: 18px 20px; border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
@@ -290,12 +304,12 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
 
     <script>
         import { supabase } from '../../lib/supabase.js';
-
         const SECRET_KEY = "DukcapilMulyamekarAman2026!"; 
         
         const itemsPerPage = 10; 
         let rawData = [];
         let filteredData = [];
+        let masterWilayahData = [];
 
         function encrypt(teks) {
             if (!teks) return "";
@@ -343,12 +357,62 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
             const { data: profil } = await supabase.from('profil_user').select('role').eq('id', session.user.id).single();
             if (!profil || profil.role !== 'admin') { window.location.href = '/'; return; }
 
+            await loadMasterWilayah();
             loadData();
         }
 
+        async function loadMasterWilayah() {
+            const { data, error } = await supabase.from('master_wilayah').select('*').order('nomor_rw').order('nomor_rt');
+            if (error) { console.error("Gagal load wilayah", error); return; }
+            masterWilayahData = data || [];
+
+            const rwUnik = [...new Set(masterWilayahData.map(w => w.nomor_rw))].sort();
+            
+            let opsiRWFilter = '<option value="Semua">Semua RW</option>';
+            let opsiRWForm = '<option value="">-- Pilih RW --</option>';
+            
+            rwUnik.forEach(rw => {
+                opsiRWFilter += `<option value="${rw}">RW ${rw}</option>`;
+                opsiRWForm += `<option value="${rw}">RW ${rw}</option>`;
+            });
+
+            document.getElementById('filterRW').innerHTML = opsiRWFilter;
+            document.getElementById('pilihRW').innerHTML = opsiRWForm;
+        }
+
+        function updateDropdownRT(idSelectRW, idSelectRT, allowSemua = false) {
+            const rwTerpilih = document.getElementById(idSelectRW).value;
+            const selectRT = document.getElementById(idSelectRT);
+
+            if (!rwTerpilih || rwTerpilih === 'Semua') {
+                selectRT.innerHTML = allowSemua ? '<option value="Semua">Semua RT</option>' : '<option value="">-- Pilih RT --</option>';
+                selectRT.disabled = true;
+                selectRT.classList.replace('bg-white', 'bg-slate-100');
+                selectRT.classList.replace('cursor-pointer', 'cursor-not-allowed');
+                return;
+            }
+
+            const rtTersedia = masterWilayahData.filter(w => w.nomor_rw === rwTerpilih).map(w => w.nomor_rt).sort();
+            
+            let opsiRT = allowSemua ? '<option value="Semua">Semua RT</option>' : '<option value="">-- Pilih RT --</option>';
+            rtTersedia.forEach(rt => {
+                opsiRT += `<option value="${rt}">RT ${rt}</option>`;
+            });
+
+            selectRT.innerHTML = opsiRT;
+            selectRT.disabled = false;
+            selectRT.classList.replace('bg-slate-100', 'bg-white');
+            selectRT.classList.replace('cursor-not-allowed', 'cursor-pointer');
+        }
+
+        document.getElementById('filterRW').addEventListener('change', () => { 
+            updateDropdownRT('filterRW', 'filterRT', true); 
+            terapkanFilter(); 
+        });
+        document.getElementById('pilihRW').addEventListener('change', () => updateDropdownRT('pilihRW', 'pilihRT', false));
+
         async function loadData() {
             const { data, error } = await supabase.from('data_penduduk').select('*');
-            
             if (error) {
                 document.getElementById('tablePenduduk').innerHTML = `<tr><td colspan="8" class="p-8 text-center text-rose-500 font-bold">Gagal memuat database: ${error.message}</td></tr>`;
                 return;
@@ -362,7 +426,6 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
                 alamat: decrypt(d.alamat),
                 no_telp: decrypt(d.no_telp)
             }));
-
             updateStats(rawData);
             terapkanFilter();
         }
@@ -378,13 +441,18 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
         function terapkanFilter() {
             const keyword = document.getElementById('searchWarga').value.toLowerCase();
             const filterStat = document.getElementById('filterStatus').value;
+            const filterRw = document.getElementById('filterRW').value;
             const filterRt = document.getElementById('filterRT').value;
 
             filteredData = rawData.filter(d => {
                 const matchKeyword = (d.nama_lengkap||'').toLowerCase().includes(keyword) || (d.nik||'').includes(keyword);
                 const matchStatus = filterStat === 'Semua' ? true : d.status_warga === filterStat;
-                const matchRT = filterRt === 'Semua' ? true : d.wilayah_rt === filterRt;
-                return matchKeyword && matchStatus && matchRT;
+                
+                const w_rt = d.wilayah_rt || "";
+                const matchRW = filterRw === 'Semua' ? true : w_rt.includes('RW ' + filterRw);
+                const matchRT = filterRt === 'Semua' ? true : w_rt.includes('RT ' + filterRt);
+                
+                return matchKeyword && matchStatus && matchRW && matchRT;
             });
             renderData(1);
         }
@@ -393,14 +461,20 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
         document.getElementById('filterStatus').addEventListener('change', terapkanFilter);
         document.getElementById('filterRT').addEventListener('change', terapkanFilter);
 
-        window.gantiHalaman = (page) => renderData(page);
+        // LOGIKA TOMBOL BUKA/TUTUP FILTER DI MOBILE
+        document.getElementById('btnToggleFilter')?.addEventListener('click', () => {
+            const wadah = document.getElementById('filterDropdownContainer');
+            wadah.classList.toggle('hidden');
+            wadah.classList.toggle('flex');
+        });
 
+        window.gantiHalaman = (page) => renderData(page);
         function renderData(page) {
             const tbody = document.getElementById('tablePenduduk');
             const paginasiContainer = document.getElementById('paginationPenduduk');
             
             if (filteredData.length === 0) { 
-                tbody.innerHTML = `<tr><td colspan="8" class="p-16 text-center text-slate-400 font-medium">Tidak ada data warga yang cocok.</td></tr>`; 
+                tbody.innerHTML = `<tr><td colspan="8" class="p-16 text-center text-slate-400 font-medium">Tidak ada data warga yang cocok.</td></tr>`;
                 paginasiContainer.innerHTML = ''; return; 
             }
 
@@ -480,19 +554,29 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
         window.bukaModal = () => {
             document.getElementById('formPenduduk').reset();
             document.getElementById('editId').value = '';
+            
+            document.getElementById('pilihRT').innerHTML = '<option value="">-- Pilih RT --</option>';
+            document.getElementById('pilihRT').disabled = true;
+            document.getElementById('pilihRT').classList.replace('bg-white', 'bg-slate-100');
+            document.getElementById('pilihRT').classList.replace('cursor-pointer', 'cursor-not-allowed');
+
             document.getElementById('modalTitle').innerText = 'Tambah Data Warga Baru';
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); modalBox.classList.remove('scale-95'); modalBox.classList.add('scale-100'); }, 10);
         };
-
+        
         window.tutupModal = () => {
             modal.classList.add('opacity-0'); modalBox.classList.remove('scale-100'); modalBox.classList.add('scale-95');
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         };
 
         window.editData = (id) => {
-            const d = rawData.find(x => x.id === id);
-            if(!d) return;
+            const d = rawData.find(x => String(x.id) === String(id));
+            
+            if(!d) {
+                console.log("Data tidak ditemukan untuk ID:", id); // Biar gampang dilacak kalo error
+                return;
+            }
             
             document.getElementById('editId').value = d.id;
             document.getElementById('no_kk').value = d.no_kk;
@@ -503,10 +587,24 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
             document.getElementById('jenis_kelamin').value = d.jenis_kelamin;
             document.getElementById('pendidikan').value = d.pendidikan || 'SMA Sederajat';
             document.getElementById('pekerjaan').value = d.pekerjaan || 'Lainnya';
-            document.getElementById('wilayah_rt').value = d.wilayah_rt;
             document.getElementById('alamat').value = d.alamat || '';
             document.getElementById('no_telp').value = d.no_telp || '';
             document.getElementById('status_warga').value = d.status_warga;
+
+            if (d.wilayah_rt && d.wilayah_rt.includes('/')) {
+                const parts = d.wilayah_rt.split('/');
+                const textRT = parts[0].trim().replace('RT ', ''); 
+                const textRW = parts[1].trim().replace('RW ', ''); 
+                
+                document.getElementById('pilihRW').value = textRW;
+                updateDropdownRT('pilihRW', 'pilihRT', false); 
+                
+                setTimeout(() => { document.getElementById('pilihRT').value = textRT; }, 50);
+            } else {
+                document.getElementById('pilihRW').value = '';
+                document.getElementById('pilihRT').innerHTML = '<option value="">-- Pilih RT --</option>';
+                document.getElementById('pilihRT').disabled = true;
+            }
 
             document.getElementById('modalTitle').innerText = 'Edit Biodata Warga';
             modal.classList.remove('hidden');
@@ -519,7 +617,6 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
             document.getElementById('pendidikan').value = 'Belum/Tidak Sekolah';
             document.getElementById('pekerjaan').value = 'Belum/Tidak Bekerja';
             document.getElementById('status_warga').value = 'Tetap';
-            
             if(typeof showCustomAlert !== 'undefined') {
                 showCustomAlert('info', 'Template Bayi Diterapkan', 'Tanggal lahir diset hari ini, pendidikan & pekerjaan disesuaikan.');
             } else {
@@ -542,6 +639,8 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
             const btn = document.getElementById('btnSimpan');
             btn.disabled = true; btn.innerHTML = "Menyimpan...";
 
+            const finalWilayahRT = `RT ${document.getElementById('pilihRT').value} / RW ${document.getElementById('pilihRW').value}`;
+
             const payload = {
                 no_kk: encrypt(document.getElementById('no_kk').value),
                 nik: encrypt(document.getElementById('nik').value),
@@ -554,7 +653,7 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
                 jenis_kelamin: document.getElementById('jenis_kelamin').value,
                 pendidikan: document.getElementById('pendidikan').value,
                 pekerjaan: document.getElementById('pekerjaan').value,
-                wilayah_rt: document.getElementById('wilayah_rt').value,
+                wilayah_rt: finalWilayahRT,
                 status_warga: document.getElementById('status_warga').value
             };
 
@@ -567,7 +666,8 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
                 errorApi = error;
             }
 
-            btn.disabled = false; btn.innerHTML = "🔒 Simpan Data";
+            btn.disabled = false;
+            btn.innerHTML = "🔒 Simpan Data";
 
             if (errorApi) {
                 if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Gagal Simpan', errorApi.message);
@@ -583,7 +683,6 @@ const daftarRT = ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW
             const yakin = typeof showConfirmAlert !== 'undefined' 
                 ? await showConfirmAlert('Hapus Data?', 'Yakin ingin menghapus data warga ini permanen?')
                 : confirm('Hapus data warga ini permanen?');
-
             if(yakin) {
                 const { error } = await supabase.from('data_penduduk').delete().eq('id', id);
                 if(!error) loadData();

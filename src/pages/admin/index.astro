@@ -50,6 +50,15 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                     <p id="infoPenduduk" class="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded border border-blue-100">Memuat...</p>
                 </a>
 
+                <a href="/admin/wilayah" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-indigo-400 hover:shadow-md transition-all group flex flex-col items-center text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-indigo-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl">PEMETAAN</div>
+                    <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                    </div>
+                    <h2 class="font-bold text-teal-950 text-base mb-1">Wilayah RT/RW</h2>
+                    <p id="infoWilayah" class="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-1 rounded border border-indigo-100">Memuat...</p>
+                </a>
+
                 <a href="/admin/umkm" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-orange-300 hover:shadow-md transition-all group flex flex-col items-center text-center">
                     <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-orange-600 group-hover:text-white transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,7 +148,6 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                 }
 
                 loadDashboardStats();
-
             } catch (error) {
                 console.error("Crash:", error);
             }
@@ -177,8 +185,7 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                 }
                 document.getElementById('infoBansos').innerText = `${bansosDiberikan} Disalurkan`;
 
-                // 🔥 ANTISIPASI FITUR DUKCAPIL 🔥
-                // Kita bungkus pakai try-catch agar jika tabel `data_penduduk` belum dibuat di Supabase, script tidak akan crash.
+                // 🔥 STATISTIK DUKCAPIL 🔥
                 try {
                     const { count: countPenduduk, error: errPenduduk } = await supabase.from('data_penduduk').select('*', { count: 'exact', head: true });
                     if (!errPenduduk) {
@@ -188,6 +195,18 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                     }
                 } catch (errData) {
                     document.getElementById('infoPenduduk').innerText = "Buat Database Dulu";
+                }
+
+                // 🔥 STATISTIK PEMETAAN RT/RW 🔥
+                try {
+                    const { count: countWilayah, error: errWilayah } = await supabase.from('master_wilayah').select('*', { count: 'exact', head: true });
+                    if (!errWilayah) {
+                        document.getElementById('infoWilayah').innerText = `${countWilayah || 0} RT Terdata`;
+                    } else {
+                        document.getElementById('infoWilayah').innerText = "Belum Ada Data";
+                    }
+                } catch (errData) {
+                    document.getElementById('infoWilayah').innerText = "Buat Database Dulu";
                 }
 
             } catch (error) {
@@ -202,5 +221,4 @@ import BaseLayout from '../../layout/BaseLayout.astro';
 
         initPage();
     </script>
-
 </BaseLayout>
