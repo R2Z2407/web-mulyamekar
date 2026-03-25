@@ -1,0 +1,145 @@
+---
+// src/pages/pengaturan.astro
+import '../global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const daftarRT = ["Belum Diatur", "RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW 02"];
+---
+
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Profil Saya - Desa Mulyamekar</title>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    <Header />
+    
+    <main class="flex-grow pt-24 pb-20 flex justify-center">
+        <div class="container mx-auto px-4 max-w-xl">
+            
+            <div class="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden">
+                <a href="#" id="btnKembali" class="absolute top-6 left-6 text-teal-600 hover:text-amber-600 text-sm font-bold transition-colors">
+                    &larr; Kembali
+                </a>
+
+                <div class="text-center mb-8 border-b pb-6 mt-6">
+                    <h1 class="text-3xl font-extrabold text-teal-950">Pengaturan Profil</h1>
+                    <p class="text-gray-500 mt-2 text-sm">Pastikan NIK dan Nama Anda sesuai KTP agar surat valid.</p>
+                </div>
+
+                <form id="formProfil" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Email Akun</label>
+                        <input type="email" id="inputEmail" disabled class="w-full px-4 py-3 bg-gray-100 text-gray-500 border border-gray-200 rounded-xl cursor-not-allowed text-sm font-mono">
+                        <p class="text-[10px] text-gray-400 mt-1">*Email tidak dapat diubah</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Nama Lengkap Sesuai KTP *</label>
+                        <input type="text" id="inputNama" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-teal-500 outline-none text-sm" placeholder="Contoh: Ujang Surujang">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Nomor Induk Kependudukan (NIK) *</label>
+                        <input type="text" id="inputNik" required minlength="16" maxlength="16" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-teal-500 outline-none text-sm font-mono" placeholder="16 Digit NIK">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Wilayah Tempat Tinggal (RT/RW) *</label>
+                        <select id="inputRT" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-teal-500 outline-none text-sm font-bold text-teal-900 transition-colors">
+                            {daftarRT.map(rt => <option value={rt === 'Belum Diatur' ? '' : rt}>{rt}</option>)}
+                        </select>
+                        <p id="infoJabatan" class="hidden text-[10px] text-amber-600 font-bold mt-1">*Sebagai Pejabat/Admin Desa, wilayah tugas Anda hanya dapat diubah oleh Pusat.</p>
+                    </div>
+
+                    <button type="submit" id="btnSimpan" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95 mt-4 text-lg">
+                        Simpan Perubahan
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+    <Footer />
+
+    <script>
+        import { supabase } from '../lib/supabase.js';
+
+        let profilUser = null;
+
+        // 🔥 FUNGSI STERILISASI (ANTI-XSS) 🔥
+        function steril(teks) {
+            if (!teks) return '';
+            return String(teks).replace(/[&<>'"]/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[char] || char));
+        }
+
+        async function initProfil() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = '/'; return; }
+
+            document.getElementById('inputEmail').value = session.user.email;
+
+            // Ambil data profil
+            const { data: profil } = await supabase.from('profil_user').select('*').eq('id', session.user.id).single();
+            if (profil) {
+                profilUser = profil;
+                
+                // Isi Form
+                document.getElementById('inputNama').value = steril(profil.nama_lengkap);
+                document.getElementById('inputNik').value = steril(profil.nik);
+                
+                const selectRT = document.getElementById('inputRT');
+                if (profil.wilayah_rt) selectRT.value = steril(profil.wilayah_rt);
+
+                // 🔥 LOGIKA KUNCI JABATAN 🔥
+                // Kalau dia RT atau Admin, kunci dropdown RT-nya!
+                if (profil.role === 'rt_rw' || profil.role === 'admin') {
+                    selectRT.disabled = true;
+                    selectRT.classList.add('bg-gray-100', 'text-gray-400', 'cursor-not-allowed', 'border-gray-100');
+                    document.getElementById('infoJabatan').classList.remove('hidden');
+                }
+
+                // Logika Tombol Kembali (Biar pintar sesuai role)
+                const btnKembali = document.getElementById('btnKembali');
+                if (profil.role === 'admin') btnKembali.href = '/admin';
+                else if (profil.role === 'rt_rw') btnKembali.href = '/rt';
+                else btnKembali.href = '/warga';
+            }
+        }
+
+        document.getElementById('formProfil').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSimpan');
+            btn.disabled = true; btn.innerText = "Menyimpan...";
+
+            // Siapkan bungkus data yang mau dikirim
+            let dataUpdate = {
+                nama_lengkap: steril(document.getElementById('inputNama').value.trim()),
+                nik: steril(document.getElementById('inputNik').value.trim())
+            };
+
+            // Warga bebas ganti RT (karena bisa pindah rumah), 
+            // tapi kalau RT/Admin, kita JANGAN ikut sertakan wilayah_rt ke database biar aman.
+            if (profilUser.role === 'warga') {
+                dataUpdate.wilayah_rt = document.getElementById('inputRT').value;
+            }
+
+            const { error } = await supabase.from('profil_user').update(dataUpdate).eq('id', profilUser.id);
+
+            btn.disabled = false; btn.innerText = "Simpan Perubahan";
+
+            if (error) {
+                alert('Gagal menyimpan profil: ' + error.message);
+            } else {
+                alert('Profil berhasil diperbarui!');
+                window.location.reload();
+            }
+        });
+
+        initProfil();
+    </script>
+</body>
+</html>

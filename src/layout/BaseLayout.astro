@@ -1,0 +1,29 @@
+---
+// src/layouts/BaseLayout.astro
+import '../global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+// Menangkap properti title dari halaman yang memanggil layout ini
+const { title = "Desa Mulyamekar Smart Village" } = Astro.props;
+---
+
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    
+    <link rel="icon" href="/favicon.ico" />
+    
+    </head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    
+    <Header />
+    
+    <slot />
+    
+    <Footer />
+<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>  
+</body>
+</html>

@@ -1,0 +1,411 @@
+---
+// src/pages/admin/apbdes.astro
+import '../../global.css';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const kategoriAPBDes = ['Pendapatan', 'Belanja', 'Pembiayaan'];
+---
+
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kelola Keuangan APBDes - Admin Mulyamekar</title>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    <Header />
+    
+    <main class="flex-grow pt-10 pb-20">
+        <div class="container mx-auto px-4 max-w-6xl">
+            <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                <div>
+                    <a href="/admin" class="text-teal-600 hover:text-amber-600 text-sm font-bold mb-2 inline-flex items-center gap-1 transition-colors">
+                        &larr; Kembali ke Dashboard
+                    </a>
+                    <h1 class="text-3xl font-extrabold text-teal-950">Kelola APBDes</h1>
+                    <p class="text-gray-500 mt-1">Transparansi Anggaran Pendapatan dan Belanja Desa Mulyamekar.</p>
+                </div>
+                <button onclick="bukaModalTambah()" class="bg-teal-600 hover:bg-teal-700 text-white font-extrabold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Tambah APBDes
+                </button>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h2 class="text-xl font-bold text-teal-950">Daftar Rekapitulasi</h2>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-gray-500">Filter:</span>
+                        <select id="filterTahun" class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-teal-800 outline-none focus:ring-2 focus:ring-teal-500 shadow-sm cursor-pointer">
+                            <option value="semua">Semua Tahun</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-white border-b border-gray-100 text-teal-900">
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider">Tahun & Kategori</th>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider w-2/5">Rincian Item</th>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider text-right">Keuangan (Rp)</th>
+                                <th class="p-4 font-bold text-xs uppercase tracking-wider text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableData" class="divide-y divide-gray-100 text-sm">
+                            <tr><td colspan="4" class="p-8 text-center text-gray-400 animate-pulse">Memuat data APBDes...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="modalForm" class="fixed inset-0 z-[80] bg-gray-900/80 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="modalFormBox" class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl transform scale-95 transition-transform duration-300 max-h-[90vh] flex flex-col overflow-hidden border-t-8 border-teal-600">
+            
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                <div>
+                    <h3 id="modalTitle" class="text-xl font-black text-teal-950">Tambah Data APBDes</h3>
+                    <p class="text-xs text-gray-500 mt-1">Masukkan rincian dengan teliti.</p>
+                </div>
+                <button onclick="tutupModalForm()" class="text-gray-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-full transition-colors font-bold w-10 h-10 flex items-center justify-center">✖</button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto hide-scrollbar bg-white">
+                <form id="formApbdes" class="space-y-5">
+                    <input type="hidden" id="editId">
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Tahun Anggaran *</label>
+                            <input type="number" id="inputTahun" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 text-sm outline-none transition-all" placeholder="Misal: 2026">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Kategori *</label>
+                            <select id="inputKategori" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 text-sm font-bold text-teal-900 outline-none transition-all cursor-pointer">
+                                <option value="">-- Pilih --</option>
+                                {kategoriAPBDes.map(kat => <option value={kat}>{kat}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Total Pagu Anggaran (Rp) *</label>
+                        <input type="number" id="inputAnggaran" required min="0" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 text-sm font-mono outline-none transition-all" placeholder="Tanpa titik/koma. Misal: 15000000">
+                    </div>
+
+                    <div class="bg-teal-50/50 p-5 rounded-2xl border border-teal-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="block text-sm font-black text-teal-900">Rincian Pengeluaran / Pemasukan</label>
+                            <span class="text-[10px] font-bold bg-teal-100 text-teal-700 px-2 py-1 rounded-md">Wajib Diisi</span>
+                        </div>
+                        
+                        <div id="rincianContainer" class="space-y-4 mb-4">
+                            </div>
+                        
+                        <button type="button" onclick="tambahRincian()" class="w-full bg-white hover:bg-teal-50 text-teal-600 font-extrabold py-3 rounded-xl text-sm transition-all border-2 border-teal-200 border-dashed hover:border-teal-400 flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Tambah Baris Rincian
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-800 p-4 rounded-xl flex justify-between items-center shadow-inner">
+                        <label class="text-sm font-bold text-gray-300">Total Realisasi Terhitung :</label>
+                        <input type="number" id="inputRealisasi" readonly class="w-1/2 bg-transparent text-right text-emerald-400 font-mono text-lg font-black outline-none" placeholder="0">
+                    </div>
+
+                </form>
+            </div>
+
+            <div class="p-5 border-t border-gray-100 bg-gray-50 flex gap-3 shrink-0">
+                <button type="button" onclick="tutupModalForm()" class="w-1/3 bg-white hover:bg-gray-100 text-gray-600 font-bold py-3 rounded-xl transition-all border border-gray-200 text-sm">Batal</button>
+                <button type="submit" form="formApbdes" id="btnSimpan" class="w-2/3 bg-teal-600 hover:bg-teal-700 text-white font-black py-3 rounded-xl transition-all shadow-md active:scale-95 text-sm">Simpan APBDes</button>
+            </div>
+        </div>
+    </div>
+
+    <Footer />
+
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+
+    <script>
+        import { supabase } from '../../lib/supabase.js';
+
+        let dataGlobal = [];
+        let rincianList = []; 
+        
+        const formatRp = (angka) => new Intl.NumberFormat('id-ID').format(angka || 0);
+        
+        function steril(teks) {
+            if (!teks) return '';
+            return String(teks).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char] || char));
+        }
+
+        async function initPage() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = '/login'; return; }
+
+            const { data: profil, error } = await supabase.from('profil_user').select('role').eq('id', session.user.id).single();
+            if (error || !profil || profil.role !== 'admin') {
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error','Akses Ditolak!');
+                window.location.href = '/'; return;
+            }
+
+            loadData();
+        }
+
+        // ==========================================
+        // KONTROL MODAL (POP-UP)
+        // ==========================================
+        window.bukaModalTambah = () => {
+            document.getElementById('editId').value = '';
+            document.getElementById('inputTahun').value = new Date().getFullYear();
+            document.getElementById('inputKategori').value = '';
+            document.getElementById('inputAnggaran').value = '';
+            document.getElementById('modalTitle').innerText = 'Tambah Data APBDes';
+            rincianList = [{ nama: '', harga: '' }]; // Default 1 baris kosong
+            renderRincian();
+            tampilkanModal();
+        };
+
+        window.tampilkanModal = () => {
+            document.body.classList.add('overflow-hidden');
+            const m = document.getElementById('modalForm');
+            const b = document.getElementById('modalFormBox');
+            m.classList.remove('hidden');
+            setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+        };
+
+        window.tutupModalForm = () => {
+            document.body.classList.remove('overflow-hidden');
+            const m = document.getElementById('modalForm');
+            const b = document.getElementById('modalFormBox');
+            m.classList.add('opacity-0');
+            b.classList.remove('scale-100'); b.classList.add('scale-95');
+            setTimeout(() => { m.classList.add('hidden'); }, 300);
+        };
+
+        // ==========================================
+        // 🔥 LOGIKA RINCIAN DINAMIS (UI BARU) 🔥
+        // ==========================================
+        function renderRincian() {
+            const container = document.getElementById('rincianContainer');
+            container.innerHTML = '';
+            let totalRealisasi = 0;
+
+            if (rincianList.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-500 italic text-center py-4">Belum ada rincian yang ditambahkan.</p>`;
+            } else {
+                rincianList.forEach((item, index) => {
+                    totalRealisasi += parseInt(item.harga || 0);
+                    // UI Card per Item
+                    container.innerHTML += `
+                        <div class="bg-white border-2 border-teal-100 p-4 rounded-xl relative shadow-sm group hover:border-teal-300 transition-all">
+                            <button type="button" onclick="hapusRincian(${index})" class="absolute top-3 right-3 text-rose-400 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-full w-7 h-7 flex items-center justify-center font-bold transition-colors" title="Hapus baris ini">✖</button>
+                            
+                            <div class="mb-3 pr-8">
+                                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nama Item / Keperluan</label>
+                                <input type="text" placeholder="Misal: Pembelian Semen 10 Sak" value="${item.nama}" oninput="updateRincian(${index}, 'nama', this.value)" required class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:ring-2 focus:ring-teal-400 outline-none transition-all">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Total Biaya (Rp)</label>
+                                <input type="number" placeholder="Misal: 500000" value="${item.harga}" oninput="updateRincian(${index}, 'harga', this.value)" required min="0" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-gray-800 focus:ring-2 focus:ring-teal-400 outline-none transition-all">
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            // Hitung otomatis ke kotak hitam di bawah
+            document.getElementById('inputRealisasi').value = totalRealisasi;
+        }
+
+        window.tambahRincian = () => {
+            rincianList.push({ nama: '', harga: '' });
+            renderRincian();
+        };
+
+        window.updateRincian = (index, key, value) => {
+            rincianList[index][key] = value;
+            if(key === 'harga') {
+                let total = rincianList.reduce((sum, item) => sum + (parseInt(item.harga) || 0), 0);
+                document.getElementById('inputRealisasi').value = total;
+            }
+        };
+
+        window.hapusRincian = (index) => {
+            rincianList.splice(index, 1);
+            renderRincian();
+        };
+
+        // ==========================================
+        // LOGIKA TABEL & DATABASE
+        // ==========================================
+        async function loadData() {
+            const { data, error } = await supabase.from('apbdes').select('*').order('tahun', { ascending: false }).order('kategori', { ascending: true });
+            const tbody = document.getElementById('tableData');
+            const filterTahun = document.getElementById('filterTahun');
+            const tahunTerpilih = filterTahun.value;
+
+            if (error) { tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-500">Gagal memuat: ${error.message}</td></tr>`; return; }
+            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500">Belum ada data APBDes.</td></tr>`; return; }
+
+            dataGlobal = data;
+
+            const tahunUnik = [...new Set(data.map(item => item.tahun))];
+            if(filterTahun.options.length === 1) { 
+                tahunUnik.forEach(t => filterTahun.innerHTML += `<option value="${t}">Tahun ${t}</option>`);
+            }
+
+            let dataTampil = data;
+            if (tahunTerpilih !== 'semua') dataTampil = data.filter(d => d.tahun.toString() === tahunTerpilih);
+
+            if(dataTampil.length === 0) {
+                 tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500">Tidak ada data di tahun terpilih.</td></tr>`; return;
+            }
+
+            let html = '';
+            dataTampil.forEach(item => {
+                let badgeKat = item.kategori === 'Pendapatan' ? 'bg-emerald-100 text-emerald-700' : (item.kategori === 'Belanja' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700');
+
+                let rincianHTML = '';
+                try {
+                    const parsed = JSON.parse(item.uraian);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        rincianHTML = '<div class="space-y-2 mt-2">';
+                        parsed.forEach(r => {
+                            rincianHTML += `
+                            <div class="flex justify-between items-end border-b border-gray-100 pb-1">
+                                <span class="text-xs font-semibold text-gray-700">${steril(r.nama)}</span>
+                                <span class="text-[11px] text-teal-700 font-mono font-bold bg-teal-50 px-2 py-0.5 rounded">Rp ${formatRp(r.harga)}</span>
+                            </div>`;
+                        });
+                        rincianHTML += '</div>';
+                    } else {
+                        rincianHTML = `<p class="font-bold text-gray-800 text-xs">${steril(item.uraian)}</p>`;
+                    }
+                } catch(e) {
+                    rincianHTML = `<p class="font-bold text-gray-800 text-xs">${steril(item.uraian)}</p>`;
+                }
+
+                html += `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="p-4 align-top w-40 shrink-0">
+                            <span class="font-bold text-teal-900 text-sm block mb-1">Tahun ${item.tahun}</span>
+                            <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold ${badgeKat} uppercase tracking-wider block text-center">${steril(item.kategori)}</span>
+                        </td>
+                        <td class="p-4 align-top">
+                            <p class="font-bold text-gray-400 text-[10px] uppercase tracking-wider">Daftar Rincian:</p>
+                            ${rincianHTML}
+                        </td>
+                        <td class="p-4 align-top text-right font-mono w-48 shrink-0">
+                            <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                <p class="text-gray-400 text-[10px] uppercase font-sans font-bold">Pagu Anggaran</p>
+                                <p class="text-gray-800 font-bold mb-2 text-sm">${formatRp(item.anggaran)}</p>
+                                <p class="text-gray-400 text-[10px] uppercase font-sans font-bold">Total Realisasi</p>
+                                <p class="text-teal-600 font-black text-sm">${formatRp(item.realisasi)}</p>
+                            </div>
+                        </td>
+                        <td class="p-4 align-top text-center w-24 shrink-0">
+                            <div class="space-y-2">
+                                <button onclick="editData('${item.id}')" class="w-full bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold py-2 px-2 rounded-xl transition-colors text-xs border border-amber-200">Edit</button>
+                                <button onclick="hapusData('${item.id}')" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 px-2 rounded-xl transition-colors text-xs border border-red-200">Hapus</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        document.getElementById('filterTahun').addEventListener('change', loadData);
+
+        // FORM SUBMIT (CREATE / UPDATE)
+        document.getElementById('formApbdes').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSimpan');
+            
+            if(rincianList.length === 0 && !confirm('Anda belum memasukkan rincian apapun. Lanjutkan?')) return;
+
+            btn.disabled = true; btn.innerText = "Menyimpan...";
+
+            const id = document.getElementById('editId').value;
+            const uraianString = JSON.stringify(rincianList);
+
+            const payload = {
+                tahun: parseInt(document.getElementById('inputTahun').value),
+                kategori: document.getElementById('inputKategori').value,
+                uraian: uraianString, 
+                anggaran: parseInt(document.getElementById('inputAnggaran').value),
+                realisasi: parseInt(document.getElementById('inputRealisasi').value) || 0
+            };
+
+            let error;
+            if (id) {
+                const res = await supabase.from('apbdes').update(payload).eq('id', id); error = res.error;
+            } else {
+                const res = await supabase.from('apbdes').insert([payload]); error = res.error;
+            }
+
+            btn.disabled = false; btn.innerText = "Simpan APBDes";
+
+            if (error) {
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error','Gagal menyimpan: ' + error.message);
+                else alert('Gagal menyimpan: ' + error.message);
+            } else {
+                tutupModalForm();
+                loadData();
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('success','Berhasil!','Data APBDes tersimpan!');
+            }
+        });
+
+        window.editData = (id) => {
+            const item = dataGlobal.find(d => d.id === id);
+            if (item) {
+                document.getElementById('modalTitle').innerText = 'Edit Data APBDes';
+                document.getElementById('editId').value = item.id;
+                document.getElementById('inputTahun').value = item.tahun;
+                document.getElementById('inputKategori').value = item.kategori;
+                document.getElementById('inputAnggaran').value = item.anggaran;
+                
+                try {
+                    rincianList = JSON.parse(item.uraian);
+                    if(!Array.isArray(rincianList)) rincianList = [{nama: item.uraian, harga: item.realisasi}];
+                } catch(e) {
+                    rincianList = [{nama: item.uraian, harga: item.realisasi}];
+                }
+                
+                renderRincian();
+                tampilkanModal();
+            }
+        };
+
+        window.hapusData = async (id) => {
+            let yakin = false;
+            if(typeof showConfirmAlert !== 'undefined') {
+                yakin = await showConfirmAlert('Konfirmasi Hapus', 'Yakin ingin menghapus data ini?');
+            } else {
+                yakin = confirm('Yakin ingin menghapus data ini?');
+            }
+
+            if (yakin) {
+                const { error } = await supabase.from('apbdes').delete().eq('id', id);
+                if (error) {
+                    if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Gagal Menghapus', error.message);
+                } else {
+                    if(typeof showCustomAlert !== 'undefined') await showCustomAlert('success', 'Terhapus!', 'Data APBDes berhasil dihapus.');
+                    loadData();
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

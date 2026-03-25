@@ -1,0 +1,90 @@
+---
+// src/components/BeritaDesa.astro
+import { supabase } from '../lib/supabase.js';
+
+// 1. Tarik data berita (Sama seperti sebelumnya)
+const { data: berita, error } = await supabase
+  .from('berita')
+  .select('*')
+  .eq('is_published', true)
+  .order('created_at', { ascending: false })
+  .limit(3);
+
+if (error) {
+  console.error("Gagal menarik data Berita:", error);
+}
+
+// 2. Fungsi format tanggal (Sama seperti sebelumnya)
+const formatTanggal = (dateString) => {
+  const options = { day: 'numeric', month: 'long', year: 'numeric' };
+  return new Date(dateString).toLocaleDateString('id-ID', options);
+};
+---
+
+<section id="berita" class="min-h-screen flex flex-col justify-center py-20 max-md:landscape:py-16 max-md:landscape:min-h-[450px] bg-white relative overflow-hidden">
+  <div class="container mx-auto px-4 max-w-6xl">
+    
+    <div class="flex flex-col md:flex-row justify-between items-end mb-12 max-md:landscape:mb-6 border-b-2 border-gray-100 pb-6 max-md:landscape:pb-3 gap-6 max-md:landscape:gap-3"
+         data-aos="fade-up"> <div>
+        <h2 class="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-2">Pusat Informasi</h2>
+        <h3 class="text-3xl md:text-4xl font-extrabold text-teal-950 max-md:landscape:text-2xl">Kabar Mulyamekar</h3>
+        <p class="text-gray-500 mt-2 max-md:landscape:text-sm">Berita, pengumuman, dan liputan kegiatan terbaru.</p>
+      </div>
+      <a href="/informasi" class="shrink-0 bg-white hover:bg-teal-50 text-teal-700 font-bold py-2.5 px-6 max-md:landscape:py-2 max-md:landscape:px-4 rounded-full transition-colors text-sm border-2 border-teal-600 max-md:landscape:text-xs hover:scale-105 transform">
+        Semua Berita
+      </a>
+    </div>
+
+    {error || !berita || berita.length === 0 ? (
+      <div class="text-center py-10 bg-gray-50 text-gray-500 rounded-xl" data-aos="fade-up">Belum ada berita yang diterbitkan.</div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-md:landscape:gap-4 max-md:landscape:grid-cols-3">
+        
+        {/* PERUBAHAN DI SINI: Masukkan (item, index) agar error hilang */}
+        {berita.map((item, index) => (
+          
+          <article 
+            class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 group flex flex-col"
+            data-aos="fade-up" // Efek muncul dari bawah
+            data-aos-delay={index * 150} // Delay bergantian (index 0=0ms, 1=150ms, 2=300ms)
+          >
+            
+            <div class="relative h-52 max-md:landscape:h-32 overflow-hidden">
+              <div class="absolute inset-0 bg-teal-900/20 group-hover:bg-transparent transition-colors z-10"></div>
+              <img 
+                src={item.gambar_url} 
+                alt={item.judul} 
+                class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+              />
+              <span class="absolute top-4 left-4 z-20 bg-amber-500 text-teal-950 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
+                {item.kategori}
+              </span>
+            </div>
+
+            <div class="p-6 max-md:landscape:p-3 flex flex-col flex-grow">
+              <div class="flex items-center gap-2 text-gray-400 text-xs mb-3 max-md:landscape:mb-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span>{formatTanggal(item.created_at)}</span>
+              </div>
+              
+              <h4 class="text-xl md:text-2xl max-md:landscape:text-xs font-bold text-gray-900 mb-3 max-md:landscape:mb-1 group-hover:text-teal-700 transition-colors line-clamp-2 leading-snug">
+                <a href={`/berita/${item.slug}`}>{item.judul}</a>
+              </h4>
+              
+              <p class="text-gray-600 text-sm leading-relaxed mb-6 max-md:landscape:hidden line-clamp-3 flex-grow">
+                {item.ringkasan}
+              </p>
+              
+              <a href={`/berita/${item.slug}`} class="mt-auto inline-flex items-center gap-2 text-teal-600 font-bold text-sm max-md:landscape:text-[10px] hover:text-amber-600 transition-colors">
+                Baca 
+                <svg class="w-4 h-4 max-md:landscape:w-3 max-md:landscape:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+              </a>
+            </div>
+
+          </article>
+        ))}
+      </div>
+    )}
+
+  </div>
+</section>

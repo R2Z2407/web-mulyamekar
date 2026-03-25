@@ -1,0 +1,312 @@
+---
+// src/pages/toko/index.astro
+import '../../global.css';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+---
+
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Seller Center - Toko UMKM Mulyamekar</title>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    <Header />
+    
+    <main class="flex-grow pt-24 pb-20">
+        <div class="container mx-auto px-4 max-w-6xl">
+            
+            <div class="bg-gradient-to-r from-orange-600 to-amber-500 rounded-3xl p-8 text-white shadow-xl mb-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden border border-orange-400/50">
+                <div class="absolute -right-20 -top-20 w-64 h-64 bg-orange-400 rounded-full opacity-30 blur-3xl"></div>
+                
+                <div class="flex items-center gap-6 relative z-10 w-full md:w-auto">
+                    <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center text-4xl shadow-inner border border-white/40 backdrop-blur-sm shrink-0">🏪</div>
+                    <div>
+                        <span class="inline-block px-3 py-1 bg-white/20 text-white font-bold rounded-full text-[10px] uppercase tracking-widest mb-2 border border-white/30 backdrop-blur">Toko Tervalidasi ✅</span>
+                        <h1 class="text-2xl md:text-3xl font-black tracking-tight" id="namaToko">Memuat Toko...</h1>
+                        <p class="text-orange-50 text-sm mt-1" id="pemilikToko">Pemilik: ...</p>
+                    </div>
+                </div>
+
+                <div class="relative z-10 flex flex-wrap justify-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+                    <a href="/warga" class="bg-white/20 hover:bg-white/30 text-white border border-white/50 px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm text-sm">
+                        &larr; Kembali
+                    </a>
+                    <button onclick="bukaModalProduk()" class="bg-white text-orange-600 hover:bg-orange-50 px-5 py-2.5 rounded-xl font-black transition-all shadow-lg text-sm flex items-center gap-2 transform hover:scale-105">
+                        + Tambah Produk
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 min-h-[400px]">
+                <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8 border-b border-gray-50 pb-4">
+                    <div>
+                        <h2 class="text-xl font-black text-gray-800 flex items-center gap-2">📦 Daftar Dagangan Anda</h2>
+                        <p class="text-sm text-gray-500 mt-1">Kelola produk yang tampil di halaman Pasar Desa umum.</p>
+                    </div>
+                </div>
+
+                <div id="gridProduk" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                    <div class="col-span-full text-center py-10 text-gray-400 font-bold animate-pulse">Memuat katalog...</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="modalProduk" class="fixed inset-0 z-[80] bg-gray-900/80 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="modalProdukBox" class="bg-white rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300 max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-orange-50 rounded-t-3xl shrink-0">
+                <div>
+                    <h3 class="text-xl font-black text-orange-900">Tambah Dagangan</h3>
+                    <p class="text-xs text-orange-600 mt-1">Upload foto menarik biar jualan makin laris!</p>
+                </div>
+                <button onclick="tutupModalProduk()" class="text-orange-400 hover:text-orange-600 bg-white p-2 rounded-full shadow-sm font-bold">✖</button>
+            </div>
+            <div class="p-6 overflow-y-auto hide-scrollbar">
+                <form id="formProduk" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Nama Produk / Jasa *</label>
+                        <input type="text" id="prod_nama" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all" placeholder="Contoh: Keripik Pisang Keju">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Harga (Rp) *</label>
+                            <input type="number" id="prod_harga" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all" placeholder="15000">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Kategori *</label>
+                            <select id="prod_kategori" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-gray-700 transition-all">
+                                <option value="Makanan">Makanan/Minuman</option>
+                                <option value="Kerajinan">Kerajinan Tangan</option>
+                                <option value="Pertanian">Hasil Pertanian/Ternak</option>
+                                <option value="Jasa">Jasa</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-orange-50 border border-orange-100 p-4 rounded-xl mt-4">
+                        <label class="block text-xs font-bold text-orange-900 mb-2">Upload Foto Produk (Wajib) *</label>
+                        <input type="file" id="prod_foto" required accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-orange-600 file:text-white cursor-pointer hover:file:bg-orange-700 transition-all">
+                        <p id="statusUpload" class="text-xs font-bold text-orange-600 mt-2 hidden">Memproses gambar...</p>
+                    </div>
+
+                    <button type="submit" id="btnSimpanProduk" class="w-full bg-orange-600 text-white font-black py-4 rounded-xl shadow-lg hover:bg-orange-700 mt-4 transition-all active:scale-95">
+                        Simpan & Tayangkan Produk
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <Footer />
+
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+
+    <script>
+        import { supabase } from '../../lib/supabase.js';
+        const IMGBB_API_KEY = import.meta.env.PUBLIC_IMGBB_API_KEY;
+        
+        let tokoSaya = null; 
+        let currentUser = null; // 🔥 IDENTITAS USER DITAMBAHKAN 🔥
+
+        const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        
+        function steril(teks) {
+            if (!teks) return '';
+            return String(teks).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char] || char));
+        }
+
+        async function initSellerCenter() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = '/login'; return; }
+            
+            currentUser = session.user; // Simpan sesi user yang lagi login
+
+            const { data: toko, error } = await supabase.from('umkm_toko').select('*').eq('user_id', currentUser.id).single();
+            if (error || !toko || toko.status !== 'Disetujui') {
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Akses Ditolak', 'Anda belum memiliki toko yang diverifikasi.');
+                else alert('Akses Ditolak. Anda belum memiliki toko yang diverifikasi.');
+                window.location.href = '/warga';
+                return;
+            }
+
+            tokoSaya = toko;
+            document.getElementById('namaToko').innerText = steril(toko.nama_toko);
+            document.getElementById('pemilikToko').innerText = `Pemilik: ${steril(toko.nama_pemilik)} | WA: ${steril(toko.no_wa)}`;
+
+            loadProduk();
+        }
+
+        // ================= KONTROL MODAL =================
+        window.bukaModalProduk = () => {
+            document.body.classList.add('overflow-hidden');
+            const m = document.getElementById('modalProduk'); const b = document.getElementById('modalProdukBox');
+            m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+        };
+        
+        window.tutupModalProduk = () => {
+            document.body.classList.remove('overflow-hidden');
+            const m = document.getElementById('modalProduk'); const b = document.getElementById('modalProdukBox');
+            m.classList.add('opacity-0'); b.classList.remove('scale-100'); b.classList.add('scale-95'); setTimeout(() => { m.classList.add('hidden'); document.getElementById('formProduk').reset(); }, 300);
+        };
+
+        // ================= LOAD DAFTAR PRODUK =================
+        async function loadProduk() {
+            const grid = document.getElementById('gridProduk');
+            const { data, error } = await supabase.from('umkm_produk').select('*').eq('toko_id', tokoSaya.id).order('created_at', { ascending: false });
+            
+            if (error || !data || data.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-gray-50 border border-dashed border-gray-200 p-12 rounded-3xl text-center">
+                        <span class="text-5xl block mb-3">📦</span>
+                        <h3 class="text-lg font-bold text-gray-700">Belum Ada Dagangan</h3>
+                        <p class="text-sm text-gray-500 mt-1">Klik tombol "+ Tambah Produk" di atas untuk mulai berjualan.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            data.forEach(p => {
+                const bgClass = p.is_active ? 'bg-white' : 'bg-gray-100 opacity-75 grayscale-[50%]';
+                const labelAktif = p.is_active 
+                    ? `<span class="bg-emerald-500 text-white px-2 py-0.5 rounded text-[9px] font-bold shadow-sm">🟢 TAYANG</span>`
+                    : `<span class="bg-gray-400 text-white px-2 py-0.5 rounded text-[9px] font-bold shadow-sm">⚪ DISEMBUNYIKAN</span>`;
+
+                const btnToggleLabel = p.is_active ? 'Sembunyikan' : 'Tayangkan';
+                const btnToggleClass = p.is_active ? 'text-amber-600 bg-amber-50 hover:bg-amber-100' : 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100';
+
+                html += `
+                <div class="${bgClass} rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group transition-all">
+                    <div class="relative w-full h-40 bg-gray-200 overflow-hidden shrink-0">
+                        <img src="${p.foto_url}" class="w-full h-full object-cover">
+                        <div class="absolute top-2 right-2">${labelAktif}</div>
+                        <div class="absolute bottom-2 left-2 bg-white/90 px-2 py-0.5 rounded text-[9px] font-bold text-orange-600 backdrop-blur">${p.kategori}</div>
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow">
+                        <h3 class="font-extrabold text-gray-800 line-clamp-2 mb-1 leading-tight text-sm">${steril(p.nama_produk)}</h3>
+                        <span class="font-black text-orange-600 mb-3 block text-sm">${formatRupiah(p.harga)}</span>
+                        
+                        <div class="mt-auto grid grid-cols-2 gap-2 pt-3 border-t border-gray-100">
+                            <button onclick="toggleProduk('${p.id}', ${p.is_active})" class="font-bold py-1.5 rounded-lg text-[10px] ${btnToggleClass} transition-colors border border-transparent">
+                                ${btnToggleLabel}
+                            </button>
+                            <button onclick="hapusProduk('${p.id}')" class="font-bold py-1.5 rounded-lg text-[10px] text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors border border-transparent">
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            grid.innerHTML = html;
+        }
+
+        // ================= AKSI PRODUK =================
+        window.toggleProduk = async (id, currentStatus) => {
+            const newStatus = !currentStatus;
+            const { error } = await supabase.from('umkm_produk').update({ is_active: newStatus }).eq('id', id);
+            if (!error) loadProduk();
+        };
+
+        window.hapusProduk = async (id) => {
+            const yakin = typeof showConfirmAlert !== 'undefined' 
+                ? await showConfirmAlert('Konfirmasi Hapus', 'Yakin ingin menghapus dagangan ini permanen?')
+                : confirm('Yakin ingin menghapus dagangan ini permanen?');
+
+            if(yakin) {
+                const { error } = await supabase.from('umkm_produk').delete().eq('id', id);
+                if (!error) loadProduk();
+            }
+        };
+
+        // ================= KOMPRESI FOTO (Canvas API) =================
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image(); img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let { width, height } = img;
+                        if (width > 600) { height = Math.round((height * 600) / width); width = 600; } 
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        canvas.toBlob((blob) => resolve(new File([blob], "dagangan.jpg", { type: 'image/jpeg' })), 'image/jpeg', 0.8);
+                    };
+                };
+            });
+        }
+
+        async function uploadKeImgBB(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+            const data = await res.json();
+            return data.data.url;
+        }
+
+        // ================= SUBMIT TAMBAH PRODUK (ANTI RLS ERROR) =================
+        document.getElementById('formProduk').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSimpanProduk');
+            const statusLabel = document.getElementById('statusUpload');
+            const file = document.getElementById('prod_foto').files[0];
+
+            btn.disabled = true; btn.innerText = "Memproses...";
+            statusLabel.classList.remove('hidden');
+
+            try {
+                statusLabel.innerText = "Mengecilkan ukuran foto...";
+                const fileKompres = await compressImage(file);
+                
+                statusLabel.innerText = "Mengupload foto ke server...";
+                const fotoUrl = await uploadKeImgBB(fileKompres);
+
+                statusLabel.innerText = "Menyimpan ke katalog...";
+                
+                // 🔥 KUNCI RLS: Tambahkan user_id ke payload! 🔥
+                const payload = {
+                    user_id: currentUser.id, // Supabase RLS butuh ini!
+                    toko_id: tokoSaya.id,
+                    nama_produk: document.getElementById('prod_nama').value,
+                    kategori: document.getElementById('prod_kategori').value,
+                    harga: parseInt(document.getElementById('prod_harga').value),
+                    foto_url: fotoUrl,
+                    is_active: true
+                };
+
+                const { error } = await supabase.from('umkm_produk').insert([payload]);
+                if (error) throw error;
+
+                tutupModalProduk();
+                loadProduk(); 
+                
+                if(typeof showCustomAlert !== 'undefined') {
+                    await showCustomAlert('success', 'Berhasil', 'Produk Anda berhasil ditambahkan ke Pasar Desa!');
+                } else {
+                    alert('Produk berhasil ditambahkan!');
+                }
+
+            } catch (err) {
+                console.error("Gagal Menyimpan Produk:", err);
+                if(typeof showCustomAlert !== 'undefined') {
+                    showCustomAlert('error', 'Gagal Menambah Produk', err.message);
+                } else {
+                    alert('Gagal: ' + err.message);
+                }
+            } finally {
+                btn.disabled = false; btn.innerText = "Simpan & Tayangkan Produk";
+                statusLabel.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', initSellerCenter);
+    </script>
+</body>
+</html>

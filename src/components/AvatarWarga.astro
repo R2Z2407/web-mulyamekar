@@ -1,0 +1,11 @@
+---
+// src/components/AvatarWarga.astro
+const { id = "", className = "w-10 h-10", alt = "Foto Profil" } = Astro.props;
+---
+
+<img 
+    id={id} 
+    src="https://ui-avatars.com/api/?name=Memuat&background=0D8B93&color=fff" 
+    class={`rounded-full object-cover shadow-inner border border-white/40 bg-slate-100 foto-profil-global ${className}`} 
+    alt={alt} 
+/>

@@ -1,0 +1,38 @@
+---
+// src/pages/warga/index.astro
+import BaseLayout from '../../layout/BaseLayout.astro';
+
+// 🔥 IMPORT SEMUA KOMPONEN YANG UDAH DIPISAH 🔥
+import TampilanWarga from '../../components/TampilanWarga.astro';
+import TampilanRT from '../../components/TampilanRT.astro';
+import ModalDashboard from '../../components/ModalDashboard.astro';
+import ScriptDashboard from '../../components/ScriptDashboard.astro';
+---
+
+<BaseLayout title="Dashboard Warga & RT - Desa Mulyamekar">
+    <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <main class="flex-grow pt-24 pb-20 bg-gray-50">
+        <div class="container mx-auto px-4 max-w-6xl">
+            
+            <div id="kontrolModeRT" class="hidden mb-6 flex justify-end">
+                <div class="bg-white px-4 py-2 rounded-full shadow-sm border border-amber-200 flex items-center gap-3">
+                    <span class="text-sm font-bold text-gray-600">Mode Warga</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleMode" class="sr-only peer" onchange="gantiMode(this.checked)">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500 shadow-inner"></div>
+                    </label>
+                    <span class="text-sm font-bold text-amber-600">Mode RT/RW</span>
+                </div>
+            </div>
+
+            <TampilanWarga />
+            <TampilanRT />
+
+        </div>
+    </main>
+
+    <ModalDashboard />
+
+    <ScriptDashboard />
+</BaseLayout>

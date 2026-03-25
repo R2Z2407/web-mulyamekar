@@ -1,0 +1,317 @@
+---
+// src/pages/admin/aduan.astro
+import '../../global.css';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+---
+
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kelola Aduan Warga - Admin Mulyamekar</title>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    <Header />
+    
+    <main class="flex-grow pt-24 pb-20">
+        <div class="container mx-auto px-4 max-w-7xl">
+            <div class="mb-8 flex flex-col md:flex-row justify-between items-end gap-4">
+                <div>
+                    <a href="/admin" class="text-teal-600 font-bold text-sm hover:text-amber-600 transition-colors">&larr; Kembali ke Dashboard</a>
+                    <h1 class="text-3xl font-extrabold text-teal-950 mt-2">Kelola Aduan Warga</h1>
+                    <p class="text-sm text-gray-500">Pantau dan tindak lanjuti laporan masalah dari warga.</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                
+                <div class="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Daftar Pengaduan Masuk</h2>
+                    </div>
+                    <div class="relative w-full sm:w-72">
+                        <input type="text" id="searchAduan" placeholder="Cari pelapor / judul aduan..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all shadow-sm">
+                        <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-teal-50 text-teal-900 border-b border-teal-100">
+                            <tr>
+                                <th class="p-4 font-bold text-sm w-32">Tanggal</th>
+                                <th class="p-4 font-bold text-sm">Pelapor & NIK</th>
+                                <th class="p-4 font-bold text-sm">Detail Laporan & Lokasi</th>
+                                <th class="p-4 font-bold text-sm text-center">Foto Bukti</th>
+                                <th class="p-4 font-bold text-sm text-center">Status</th>
+                                <th class="p-4 font-bold text-sm text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableAduan" class="divide-y divide-gray-100 text-sm">
+                            <tr><td colspan="6" class="p-8 text-center text-gray-400 italic animate-pulse">Memuat data aduan...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="paginationAduan" class="px-6 py-4 bg-gray-50 border-t border-gray-100"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalStatus" class="fixed inset-0 z-[60] bg-gray-900/60 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="modalBox" class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-teal-900">Tindak Lanjut Aduan</h3>
+                <button id="btnTutupModal" class="text-gray-400 hover:text-red-500 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form id="formStatus" class="space-y-4">
+                <input type="hidden" id="editAduanId">
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Ubah Status Laporan *</label>
+                    <select id="inputStatus" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-bold">
+                        <option value="Menunggu">🟠 Menunggu (Belum dicek)</option>
+                        <option value="Diproses">🔵 Diproses (Sedang ditangani)</option>
+                        <option value="Selesai">🟢 Selesai (Masalah teratasi)</option>
+                        <option value="Ditolak">🔴 Ditolak (Laporan palsu/spam)</option>
+                    </select>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100">
+                    <button type="submit" id="btnSimpanStatus" class="w-full bg-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:bg-teal-700 transition-all active:scale-95">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalFoto" class="fixed inset-0 z-[70] bg-gray-900/90 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="tutupFoto()">
+        <img id="imgPreview" src="" class="max-w-full max-h-[90vh] rounded-xl shadow-2xl transform scale-95 transition-transform duration-300">
+    </div>
+
+    <Footer />
+
+    <script>
+        import { supabase } from '../../lib/supabase.js';
+        
+        const itemsPerPage = 6;
+        let dataGlobal = [];
+        let rawAduan = [];
+        let filteredAduan = [];
+
+        function steril(teks) {
+            if (!teks) return '';
+            return String(teks).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char] || char));
+        }
+
+        // 🔥 PERBAIKAN 1: PAGINATION MODEL TAB ANGKA (1, 2, 3...) 🔥
+        function createPaginationUI(pageSekarang, totalData) {
+            const totalPages = Math.ceil(totalData / itemsPerPage) || 1;
+            if (totalPages <= 1) return ''; 
+
+            let html = '<div class="flex justify-center gap-2 w-full">';
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === pageSekarang) {
+                    html += `<button class="w-10 h-10 rounded-xl bg-teal-600 text-white font-black shadow-md transform scale-110 transition-transform">${i}</button>`;
+                } else {
+                    html += `<button onclick="gantiHalaman(${i})" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-500 hover:border-teal-400 hover:text-teal-600 font-bold shadow-sm transition-colors">${i}</button>`;
+                }
+            }
+            html += '</div>';
+            return html;
+        }
+
+        window.gantiHalaman = (page) => renderAduan(page);
+
+        async function initPage() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = '/login'; return; }
+
+            const { data: profil } = await supabase.from('profil_user').select('role').eq('id', session.user.id).single();
+            if (!profil || profil.role !== 'admin') {
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Akses Ditolak', 'Khusus Admin Desa.');
+                window.location.href = '/'; return;
+            }
+            loadAduan();
+        }
+
+        async function loadAduan() {
+            const { data, error } = await supabase.from('aduan_warga').select('*').order('created_at', { ascending: false });
+            
+            if (error) {
+                document.getElementById('tableAduan').innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Gagal memuat: ${error.message}</td></tr>`;
+                return;
+            }
+            
+            dataGlobal = data || [];
+            rawAduan = data || [];
+            filteredAduan = rawAduan;
+            renderAduan(1);
+        }
+
+        function renderAduan(page) {
+            const tbody = document.getElementById('tableAduan');
+            const paginasiContainer = document.getElementById('paginationAduan');
+            
+            if (filteredAduan.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="6" class="p-12 text-center text-gray-400 font-medium">Belum ada aduan masuk.</td></tr>`; 
+                paginasiContainer.innerHTML = '';
+                return; 
+            }
+
+            const start = (page - 1) * itemsPerPage;
+            const dataTampil = filteredAduan.slice(start, start + itemsPerPage);
+
+            let html = '';
+            dataTampil.forEach(item => {
+                const tgl = new Date(item.created_at).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+                
+                let badgeClass = "bg-amber-100 text-amber-700 border-amber-200";
+                if(item.status === 'Diproses') badgeClass = "bg-blue-100 text-blue-700 border-blue-200";
+                if(item.status === 'Selesai') badgeClass = "bg-emerald-100 text-emerald-700 border-emerald-200";
+                if(item.status === 'Ditolak') badgeClass = "bg-rose-100 text-rose-700 border-rose-200";
+
+                let fotoHTML = item.foto_url 
+                    ? `<img src="${item.foto_url}" onclick="lihatFoto('${item.foto_url}')" class="w-16 h-16 object-cover rounded-xl border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity shadow-sm mx-auto" title="Klik untuk memperbesar">`
+                    : `<span class="text-[10px] text-gray-400 italic block">Tanpa Foto</span>`;
+
+                // 🔥 PERBAIKAN 2: SULAP TEKS "(Maps: lat, lng)" JADI LINK GOOGLE MAPS 🔥
+                let deskripsiHTML = steril(item.deskripsi);
+                deskripsiHTML = deskripsiHTML.replace(
+                    /\(Maps:\s*(-?\d+\.\d+),\s*(-?\d+\.\d+)\)/g,
+                    '<a href="https://www.google.com/maps/search/?api=1&query=$1,$2" target="_blank" class="text-blue-600 font-bold underline bg-blue-50 px-2 py-0.5 rounded-lg ml-1 hover:bg-blue-100 transition-colors inline-flex items-center gap-1">🗺️ Buka di Google Maps</a>'
+                );
+
+                html += `
+                <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
+                    <td class="p-4 text-xs text-gray-500 font-medium align-top">${tgl}</td>
+                    <td class="p-4 align-top">
+                        <p class="font-bold text-teal-950">${steril(item.nama_pelapor)}</p>
+                        <p class="text-[10px] text-teal-600 font-bold mt-1">${steril(item.wilayah_rt)}</p>
+                    </td>
+                    <td class="p-4 align-top max-w-sm">
+                        <span class="font-bold text-rose-700 text-[10px] uppercase tracking-wider mb-1 bg-rose-50 px-2 py-0.5 rounded border border-rose-100 block w-max">${steril(item.kategori)}</span>
+                        <p class="font-bold text-gray-900 text-sm mt-1">${steril(item.judul)}</p>
+                        <p class="text-xs text-gray-700 leading-relaxed mt-1 whitespace-pre-wrap">${deskripsiHTML}</p>
+                    </td>
+                    <td class="p-4 text-center align-top">
+                        ${fotoHTML}
+                    </td>
+                    <td class="p-4 text-center align-top">
+                        <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border shadow-sm ${badgeClass}">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td class="p-4 text-center align-top">
+                        <div class="flex flex-col gap-1">
+                            <button onclick="bukaModal('${item.id}')" class="text-teal-600 font-bold text-[10px] bg-teal-50 px-3 py-1.5 rounded-lg border border-teal-200 hover:bg-teal-600 hover:text-white shadow-sm transition-all w-full">
+                                STATUS
+                            </button>
+                            <button onclick="hapusAduan('${item.id}')" class="text-red-600 font-bold text-[10px] bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-600 hover:text-white shadow-sm transition-all w-full">
+                                HAPUS
+                            </button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            
+            tbody.innerHTML = html;
+            paginasiContainer.innerHTML = createPaginationUI(page, filteredAduan.length);
+        }
+
+        // --- SEARCH EVENT ---
+        document.getElementById('searchAduan').addEventListener('input', (e) => {
+            const keyword = e.target.value.toLowerCase();
+            filteredAduan = rawAduan.filter(a => 
+                (a.nama_pelapor || '').toLowerCase().includes(keyword) || 
+                (a.judul || '').toLowerCase().includes(keyword) ||
+                (a.kategori || '').toLowerCase().includes(keyword)
+            );
+            renderAduan(1);
+        });
+
+        // --- PREVIEW FOTO BESAR ---
+        window.lihatFoto = (url) => {
+            const modalF = document.getElementById('modalFoto');
+            const imgP = document.getElementById('imgPreview');
+            imgP.src = url;
+            modalF.classList.remove('hidden');
+            setTimeout(() => { modalF.classList.remove('opacity-0'); imgP.classList.remove('scale-95'); imgP.classList.add('scale-100'); }, 10);
+        };
+        
+        window.tutupFoto = () => {
+            const modalF = document.getElementById('modalFoto');
+            const imgP = document.getElementById('imgPreview');
+            modalF.classList.add('opacity-0'); imgP.classList.remove('scale-100'); imgP.classList.add('scale-95');
+            setTimeout(() => { modalF.classList.add('hidden'); imgP.src=''; }, 300);
+        };
+
+        // --- LOGIKA MODAL STATUS ---
+        const modal = document.getElementById('modalStatus');
+        const modalBox = document.getElementById('modalBox');
+
+        window.bukaModal = (id) => {
+            const item = dataGlobal.find(d => d.id === id);
+            if (!item) return;
+
+            document.getElementById('editAduanId').value = item.id;
+            document.getElementById('inputStatus').value = item.status;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modalBox.classList.remove('scale-95'); modalBox.classList.add('scale-100'); }, 10);
+        };
+
+        const tutupModal = () => {
+            modal.classList.add('opacity-0'); modalBox.classList.remove('scale-100'); modalBox.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        };
+
+        document.getElementById('btnTutupModal').addEventListener('click', tutupModal);
+
+        document.getElementById('formStatus').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editAduanId').value;
+            const statusBaru = document.getElementById('inputStatus').value;
+            
+            const btn = document.getElementById('btnSimpanStatus');
+            btn.disabled = true; btn.innerText = "Menyimpan...";
+
+            const { error } = await supabase.from('aduan_warga').update({ status: statusBaru }).eq('id', id);
+
+            btn.disabled = false; btn.innerText = "Simpan Perubahan";
+
+            if (error) {
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Gagal', error.message);
+                else alert(error.message);
+            } else {
+                tutupModal();
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('success', 'Berhasil', 'Status aduan diperbarui!');
+                loadAduan();
+            }
+        });
+
+        window.hapusAduan = async (id) => {
+            const yakin = typeof showConfirmAlert !== 'undefined' 
+                ? await showConfirmAlert('Peringatan Hapus', 'Yakin ingin menghapus laporan aduan ini secara permanen?')
+                : confirm('Hapus data ini?');
+
+            if (yakin) {
+                const { error } = await supabase.from('aduan_warga').delete().eq('id', id);
+                if (!error) {
+                    if(typeof showCustomAlert !== 'undefined') await showCustomAlert('success', 'Terhapus', 'Data aduan dihapus.');
+                    loadAduan();
+                } else {
+                    if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Gagal', error.message);
+                }
+            }
+        };
+
+        initPage();
+    </script>
+</body>
+</html>

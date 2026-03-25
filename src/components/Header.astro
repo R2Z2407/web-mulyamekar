@@ -1,0 +1,231 @@
+---
+// src/components/Header.astro
+import AuthModal from './AuthModal.astro';
+import AvatarWarga from './AvatarWarga.astro'; // 🔥 IMPORT AVATAR DI SINI 🔥
+const navItems = [
+  { name: 'Beranda', url: '/' },
+  { name: 'Profil', url: '/profil' },
+  { name: 'Pemerintahan', url: '/pemerintahan' },
+  { name: 'Informasi', url: '/informasi' },
+];
+---
+
+<header class="bg-teal-700 text-white shadow-md sticky top-0 z-50 w-full">
+  <div class="container mx-auto px-4 py-3 flex justify-between items-center relative z-50">
+    
+    <a href="/" class="flex items-center gap-3 relative z-50 group">
+      <img 
+        src="https://i.ibb.co.com/S7Wv5qST/logo-header.png" 
+        alt="Logo Desa Mulyamekar" 
+        class="w-10 h-10 object-contain rounded-full shadow-inner border border-white/40 group-hover:scale-105 transition-transform"
+      />
+      <div>
+        <h1 class="text-lg font-bold leading-tight tracking-wide">Desa Mulyamekar</h1>
+        <p class="text-[10px] text-teal-200 uppercase tracking-wider">Kab. Purwakarta</p>
+      </div>
+    </a>
+
+    <nav class="hidden md:flex gap-5 lg:gap-6 items-center">
+      {navItems.map((item) => (
+        <a href={item.url} class="text-sm font-medium hover:text-amber-400 transition-colors">
+          {item.name}
+        </a>
+      ))}
+      
+      <a href="/layanan" class="bg-amber-500 hover:bg-amber-600 text-teal-950 px-5 py-2 rounded-full text-sm font-bold transition-transform hover:scale-105 shadow-sm ml-2">
+        Layanan Surat
+      </a>
+
+      <button id="btnNavLogin" onclick="bukaAuthModal()" class="hidden text-sm font-bold border-2 border-white hover:bg-white hover:text-teal-700 px-5 py-1.5 rounded-full transition-colors shadow-sm ml-2">
+        Masuk / Daftar
+      </button>
+
+      <div id="navProfile" class="hidden items-center gap-4 border-l border-teal-600 pl-5 ml-2">
+        <a href="#" id="linkDashboard" class="flex items-center gap-2 group cursor-pointer" title="Buka Dashboard Saya">
+          
+          <AvatarWarga id="headerAvatarDesktop" className="w-8 h-8 group-hover:ring-2 group-hover:ring-amber-400 transition-all" />
+          
+          <div class="flex flex-col">
+            <span id="userName" class="text-sm font-bold leading-tight group-hover:text-amber-400 transition-colors max-w-[100px] truncate">Memuat...</span>
+            <span id="userRole" class="text-[10px] text-teal-200 uppercase tracking-wider">Role</span>
+          </div>
+        </a>
+        <button id="btnNavLogout" class="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold transition-colors shadow-sm">
+          Keluar
+        </button>
+      </div>
+    </nav>
+
+    <button id="mobile-menu-btn" class="md:hidden relative p-2 text-white hover:text-amber-400 focus:outline-none w-10 h-10 z-50">
+      <div class="absolute inset-0 flex flex-col items-center justify-center gap-1.5 transform transition-all duration-300 origin-center">
+        <span id="line-1" class="w-6 h-0.5 bg-current transform transition-all duration-300 origin-center"></span>
+        <span id="line-2" class="w-6 h-0.5 bg-current transform transition-all duration-300 origin-center"></span>
+        <span id="line-3" class="w-6 h-0.5 bg-current transform transition-all duration-300 origin-center"></span>
+      </div>
+    </button>
+  </div>
+
+  <div id="mobile-menu-overlay" class="fixed inset-0 bg-teal-950/95 backdrop-blur-md z-40 transform translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] md:hidden flex flex-col items-center pt-24 pb-8 overflow-y-auto">
+    <nav id="mobile-nav-links" class="flex flex-col items-center space-y-6 w-full px-8 opacity-0 transform translate-y-8 transition-all duration-500 delay-200 mt-auto mb-auto">
+      {navItems.map((item) => (
+        <a href={item.url} class="text-2xl font-bold text-white hover:text-amber-400 transition-colors tracking-wide">
+          {item.name}
+        </a>
+      ))}
+      <div class="w-20 h-0.5 bg-teal-600/50 my-4 rounded-full"></div>
+      
+      <a href="/layanan" class="w-full max-w-xs text-center bg-amber-500 hover:bg-amber-600 text-teal-950 py-3 rounded-full text-lg font-extrabold shadow-xl transition-transform active:scale-95">
+        Layanan Surat
+      </a>
+
+      <button id="btnMobileLogin" onclick="bukaAuthModal(); document.getElementById('mobile-menu-btn').click();" class="hidden w-full max-w-xs text-center border-2 border-white hover:bg-white text-white hover:text-teal-950 py-2.5 rounded-full text-lg font-bold transition-colors">
+        Masuk / Daftar
+      </button>
+
+      <div id="mobileProfile" class="hidden flex-col items-center w-full max-w-xs gap-3">
+        <a href="#" id="mobileLinkDashboard" class="flex items-center gap-3 bg-teal-800 p-4 rounded-2xl w-full">
+          
+          <AvatarWarga id="headerAvatarMobile" className="w-10 h-10 border-2 border-white/50" />
+          
+          <div class="flex flex-col text-left">
+            <span id="mobileUserName" class="text-white font-bold text-lg leading-tight">Memuat...</span>
+            <span id="mobileUserRole" class="text-teal-300 text-xs uppercase font-bold tracking-wider">Role</span>
+          </div>
+        </a>
+        <button id="btnMobileLogout" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors shadow-md">
+          Keluar dari Akun
+        </button>
+      </div>
+
+    </nav>
+  </div>
+
+  <AuthModal />
+</header>
+
+<script>
+  import { supabase } from '../lib/supabase.js';
+
+  // --- LOGIKA MENU HAMBURGER MOBILE ---
+  const btn = document.getElementById('mobile-menu-btn');
+  const overlay = document.getElementById('mobile-menu-overlay');
+  const navLinks = document.getElementById('mobile-nav-links');
+  const [line1, line2, line3] = ['line-1', 'line-2', 'line-3'].map(id => document.getElementById(id));
+  let isOpen = false;
+
+  if (btn && overlay && navLinks) {
+    btn.addEventListener('click', () => {
+      isOpen = !isOpen;
+      if (isOpen) {
+        document.body.style.overflow = 'hidden';
+        line1.classList.add('translate-y-2', 'rotate-45');
+        line2.classList.add('opacity-0', 'translate-x-3');
+        line3.classList.add('-translate-y-2', '-rotate-45');
+        overlay.classList.remove('translate-x-full');
+        overlay.classList.add('translate-x-0');
+        setTimeout(() => {
+          navLinks.classList.remove('opacity-0', 'translate-y-8');
+          navLinks.classList.add('opacity-100', 'translate-y-0');
+        }, 100);
+      } else {
+        document.body.style.overflow = '';
+        line1.classList.remove('translate-y-2', 'rotate-45');
+        line2.classList.remove('opacity-0', 'translate-x-3');
+        line3.classList.remove('-translate-y-2', '-rotate-45');
+        navLinks.classList.remove('opacity-100', 'translate-y-0');
+        navLinks.classList.add('opacity-0', 'translate-y-8');
+        overlay.classList.remove('translate-x-0');
+        overlay.classList.add('translate-x-full');
+      }
+    });
+  }
+
+  // --- LOGIKA AUTENTIKASI HEADER (UI DINAMIS) ---
+  async function checkHeaderAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const btnNavLogin = document.getElementById('btnNavLogin');
+    const navProfile = document.getElementById('navProfile');
+    const linkDashboard = document.getElementById('linkDashboard');
+    
+    const btnMobileLogin = document.getElementById('btnMobileLogin');
+    const mobileProfile = document.getElementById('mobileProfile');
+    const mobileLinkDashboard = document.getElementById('mobileLinkDashboard');
+
+    if (session) {
+      // 🔥 PERUBAHAN 3: TARIK DATA AVATAR DARI SUPABASE 🔥
+      const { data: profil } = await supabase.from('profil_user').select('nama_lengkap, role, avatar_url, jenis_kelamin').eq('id', session.user.id).single();
+      
+      if (profil) {
+        let targetUrl = '/warga';
+        let namaRole = 'Warga Desa';
+        
+        if (profil.role === 'admin') { 
+            targetUrl = '/admin'; 
+            namaRole = 'Admin Desa'; 
+        } else if (profil.role === 'rt_rw') { 
+            targetUrl = '/warga'; 
+            namaRole = 'Ketua RT/RW'; 
+        }
+
+        const namaPendek = profil.nama_lengkap ? profil.nama_lengkap.split(' ')[0] : 'User';
+
+        // Set Avatar di Header (Kalo belum upload, pake Dicebear sesuai gender)
+        // Set Avatar di Header
+        let finalAvatar = profil.avatar_url;
+
+        // 🔥 LOGIKA KHUSUS ADMIN 🔥
+        if (profil.role === 'admin') {
+            // Kalau dia Admin, paksa pakai Logo Desa Mulyamekar
+            finalAvatar = 'https://i.ibb.co.com/S7Wv5qST/logo-header.png';
+        } 
+        // Kalau Warga/RT dan belum punya foto, pakai Dicebear
+        else if (!finalAvatar) {
+            const gender = profil.jenis_kelamin === 'Perempuan' ? 'Perempuan' : 'Laki-laki'; 
+            finalAvatar = gender === 'Perempuan' 
+                ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${profil.nama_lengkap}&backgroundColor=ffdfbf&clothing=blazerAndShirt&hair=longButNotTooLong`
+                : `https://api.dicebear.com/7.x/avataaars/svg?seed=${profil.nama_lengkap}&backgroundColor=b6e3f4&clothing=blazerAndSweater&hair=shortHairShortFlat`;
+        }
+
+        // Terapkan Avatar ke Header
+        if(document.getElementById('headerAvatarDesktop')) document.getElementById('headerAvatarDesktop').src = finalAvatar;
+        if(document.getElementById('headerAvatarMobile')) document.getElementById('headerAvatarMobile').src = finalAvatar;
+
+        // Update UI Desktop
+        if(btnNavLogin) btnNavLogin.classList.add('hidden');
+        if(navProfile) {
+            navProfile.classList.remove('hidden');
+            navProfile.classList.add('flex');
+            document.getElementById('userName').innerText = namaPendek;
+            document.getElementById('userRole').innerText = namaRole;
+            document.getElementById('linkDashboard').href = targetUrl;
+        }
+
+        // Update UI Mobile
+        if(btnMobileLogin) btnMobileLogin.classList.add('hidden');
+        if(mobileProfile) {
+            mobileProfile.classList.remove('hidden');
+            mobileProfile.classList.add('flex');
+            document.getElementById('mobileUserName').innerText = namaPendek;
+            document.getElementById('mobileUserRole').innerText = namaRole;
+            document.getElementById('mobileLinkDashboard').href = targetUrl;
+        }
+      }
+    } else {
+      if(btnNavLogin) btnNavLogin.classList.remove('hidden');
+      if(navProfile) { navProfile.classList.add('hidden'); navProfile.classList.remove('flex'); }
+      if(btnMobileLogin) btnMobileLogin.classList.remove('hidden');
+      if(mobileProfile) { mobileProfile.classList.add('hidden'); mobileProfile.classList.remove('flex'); }
+    }
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    window.location.href = '/'; 
+  }
+
+  document.getElementById('btnNavLogout')?.addEventListener('click', handleLogout);
+  document.getElementById('btnMobileLogout')?.addEventListener('click', handleLogout);
+
+  document.addEventListener('DOMContentLoaded', checkHeaderAuth);
+</script>

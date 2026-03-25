@@ -1,0 +1,140 @@
+---
+// src/components/StatistikDesa.astro
+import { supabase } from '../lib/supabase.js';
+
+// Tarik data statistik, urutkan
+const { data: statistik, error } = await supabase
+  .from('statistik_desa')
+  .select('*')
+  .order('urutan', { ascending: true });
+
+if (error) {
+  console.error("Gagal menarik data Statistik:", error);
+}
+
+// Fungsi pembantu format ribuan
+const formatRibuan = (angka) => {
+  return new Intl.NumberFormat('id-ID').format(angka);
+};
+
+// 🔥 FUNGSI PEMETAAN BOOTSTRAP ICON OTOMATIS 🔥
+const getIconClass = (label) => {
+  if (!label) return 'bi-pin-fill';
+  const l = label.toLowerCase();
+  
+  if (l === 'total penduduk') return 'bi-people-fill';
+  if (l === 'kepala keluarga (kk)') return 'bi-house-heart-fill';
+  if (l === 'warga laki-laki') return 'bi-gender-male';
+  if (l === 'warga perempuan') return 'bi-gender-female';
+  if (l === 'kelahiran / bayi') return 'bi-baby';
+  if (l === 'warga bekerja') return 'bi-briefcase-fill';
+  if (l === 'tidak/belum bekerja') return 'bi-cup-hot';
+  if (l === 'pelajar & mahasiswa') return 'bi-book-fill';
+  if (l === 'pensiunan') return 'bi-person-badge';
+
+  if (l.includes('luas') || l.includes('wilayah')) return 'bi-map-fill';
+  if (l.includes('rt') || l.includes('rw')) return 'bi-building-fill';
+  if (l.includes('masjid') || l.includes('ibadah')) return 'bi-moon-stars-fill';
+  if (l.includes('sekolah') || l.includes('pendidikan')) return 'bi-mortarboard-fill';
+  if (l.includes('posyandu') || l.includes('kesehatan')) return 'bi-hospital-fill';
+  if (l.includes('umkm') || l.includes('usaha') || l.includes('toko')) return 'bi-shop';
+
+  return 'bi-bar-chart-fill';
+};
+---
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<section id="statistik" class="py-20 max-md:landscape:py-16 bg-teal-950 text-white relative overflow-hidden">
+  
+  <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/connected.png')]"></div>
+
+  <div class="container mx-auto px-4 max-w-6xl relative z-10">
+    
+    <div class="text-center max-w-2xl mx-auto mb-12" data-aos="fade-up">
+      <h2 class="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">Informasi Penduduk</h2>
+      <h3 class="text-3xl md:text-4xl font-extrabold leading-tight">Mulyamekar Dalam Angka</h3>
+      <p class="text-teal-200 mt-4 text-sm">Geser kartu di bawah ini untuk melihat ringkasan data demografi desa terbaru.</p>
+    </div>
+
+    {error || !statistik || statistik.length === 0 ? (
+      <div class="text-center py-10 bg-teal-900 rounded-xl text-teal-300 font-medium">Data statistik belum tersedia.</div>
+    ) : (
+      <>
+        <div class="flex overflow-x-auto gap-6 pb-8 pt-4 px-2 custom-scrollbar snap-x snap-mandatory cursor-grab active:cursor-grabbing">
+          {statistik.map((item, index) => (
+            
+            <div 
+              class="flex-none w-[240px] md:w-[280px] snap-center bg-teal-900 border border-teal-800 p-8 max-md:p-6 rounded-3xl flex flex-col items-center text-center shadow-lg transition-all duration-300 hover:border-amber-400 hover:shadow-amber-900/50 hover:-translate-y-2 group"
+              data-aos="fade-up"
+              data-aos-delay={index * 50} 
+            >
+              <div class="w-16 h-16 rounded-full bg-teal-800 text-amber-400 flex items-center justify-center mb-6 border-4 border-teal-700 transition-all duration-300 group-hover:bg-amber-100 group-hover:border-amber-200 group-hover:text-amber-700 shadow-inner">
+                <i class={`bi ${getIconClass(item.label)} text-3xl`}></i>
+              </div>
+              
+              <span class="text-xs font-semibold text-teal-300 uppercase tracking-wider mb-2 group-hover:text-amber-300 transition-colors line-clamp-1">
+                {item.label}
+              </span>
+              
+              <div class="flex items-baseline gap-1 mt-auto">
+                <h4 class="text-4xl md:text-5xl font-extrabold text-white transition-all duration-300 group-hover:scale-110">
+                  {formatRibuan(item.nilai)}
+                </h4>
+                <span class="text-[10px] md:text-xs text-teal-400 font-medium group-hover:text-white transition-colors">
+                  {item.satuan}
+                </span>
+              </div>
+            </div>
+
+          ))}
+        </div>
+
+        <div class="mt-8 text-center" data-aos="zoom-in">
+            <a href="/data-desa" class="inline-flex items-center gap-3 bg-amber-500 hover:bg-amber-600 text-teal-950 font-black px-8 py-4 rounded-full transition-all hover:scale-105 shadow-xl shadow-amber-500/20 text-sm tracking-wide group">
+                <i class="bi bi-bar-chart-line-fill text-lg group-hover:-translate-y-1 transition-transform"></i>
+                Buka Portal Data & Infografis Desa
+            </a>
+        </div>
+      </>
+    )}
+
+  </div>
+</section>
+
+<style>
+  /* Menghaluskan scroll behavior */
+  .custom-scrollbar {
+    scroll-behavior: smooth;
+  }
+  
+  /* Ukuran Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar { 
+    height: 8px; /* Ketebalan horizontal */
+  }
+  
+  /* Track (Jalur Scrollbar) */
+  .custom-scrollbar::-webkit-scrollbar-track { 
+    background: rgba(255, 255, 255, 0.05); 
+    border-radius: 10px; 
+    margin: 0 10px; /* Jarak dari tepi layar */
+  }
+  
+  /* Thumb (Pegangan Scrollbar) */
+  .custom-scrollbar::-webkit-scrollbar-thumb { 
+    background: rgba(251, 191, 36, 0.7); /* Warna Amber transparan */
+    border-radius: 10px; 
+    transition: all 0.3s ease;
+  }
+  
+  /* Saat Thumb Dihhover */
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { 
+    background: rgba(245, 158, 11, 1); /* Warna Amber solid */
+  }
+
+  /* Untuk Firefox */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(251, 191, 36, 0.7) rgba(255, 255, 255, 0.05);
+  }
+</style>

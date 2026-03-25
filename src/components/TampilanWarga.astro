@@ -1,0 +1,135 @@
+---
+// src/components/TampilanWarga.astro
+// Komponen khusus untuk mode dashboard Warga biasa
+import AvatarWarga from './AvatarWarga.astro';
+---
+
+<div id="tampilanWarga" class="block animate-fadeIn relative">
+    <div class="bg-gradient-to-r from-teal-800 to-teal-600 rounded-3xl p-8 text-white shadow-xl mb-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden border border-teal-500/30">
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-teal-400 rounded-full opacity-20 blur-3xl"></div>
+        
+        <div class="flex items-center gap-6 relative z-10 w-full md:w-auto">
+            <div class="relative w-20 h-20 shrink-0">
+                <AvatarWarga className="w-20 h-20 border-2" />
+            </div>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-black tracking-tight" id="namaWarga">Memuat...</h1>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <span class="bg-teal-900/50 px-3 py-1 rounded-full text-xs font-mono font-bold border border-teal-500/50 shadow-sm" id="nikWarga">...</span>
+                    <span class="bg-teal-900/50 px-3 py-1 rounded-full text-xs font-bold border border-teal-500/50 shadow-sm" id="wilayahWarga">...</span>
+                    <span class="bg-teal-900/50 px-3 py-1 rounded-full text-xs font-bold border border-teal-500/50 shadow-sm hidden" id="genderWarga">...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="relative z-10 flex flex-wrap justify-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+            <button onclick="bukaModalProfil()" class="bg-white/20 hover:bg-white/30 text-white border border-white/50 px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm text-sm flex items-center gap-2">⚙️ Edit Profil</button>
+            <button id="btnLogoutWarga" class="bg-red-500/90 hover:bg-red-600 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm text-sm">Keluar</button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <a href="/layanan" class="bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl border border-gray-100 transition-all hover:-translate-y-1 group flex flex-col h-full">
+            <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">📄</div>
+            <h3 class="text-lg font-black text-gray-800 mb-2">Layanan E-Surat</h3>
+            <p class="text-gray-500 text-sm leading-relaxed mb-6 flex-grow">Buat pengajuan Surat Keterangan langsung dari HP Anda.</p>
+        </a>
+
+        <a href="/aduan" class="bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl border border-gray-100 transition-all hover:-translate-y-1 group flex flex-col h-full">
+            <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:bg-rose-600 group-hover:text-white transition-colors">📢</div>
+            <h3 class="text-lg font-black text-gray-800 mb-2">Lapor Aduan</h3>
+            <p class="text-gray-500 text-sm leading-relaxed mb-6 flex-grow">Laporkan infrastruktur rusak atau masalah lingkungan desa.</p>
+        </a>
+
+        <div class="bg-gradient-to-br from-orange-500 to-amber-500 rounded-3xl p-6 text-white shadow-sm hover:shadow-xl transition-all flex flex-col h-full relative overflow-hidden group">
+            <h3 class="text-lg font-black relative z-10 mb-2 shadow-sm">Pasar Desa (UMKM)</h3>
+            <p id="teksUmkmDesc" class="text-orange-50 text-sm leading-relaxed mb-6 flex-grow relative z-10">Mengecek status toko Anda...</p>
+            <div id="aksiUmkm" class="relative z-10 border-t border-white/20 pt-4"></div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 border-b border-gray-50 pb-4">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">📋</span>
+                <h2 class="text-xl font-black text-gray-800">Riwayat Pengajuan Surat Anda</h2>
+            </div>
+            <div class="relative w-full sm:w-64">
+                <input type="text" id="searchRiwayat" placeholder="Cari surat..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all">
+                <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+        </div>
+        
+        <div id="riwayatContainer" class="space-y-4">
+            <div class="text-center py-10 text-gray-400 animate-pulse font-bold">Memuat data riwayat...</div>
+        </div>
+        <div id="paginationWarga"></div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 border-t-4 border-t-rose-500">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 border-b border-gray-50 pb-4">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">📢</span>
+                <h2 class="text-xl font-black text-gray-800">Pantau Aduan Anda</h2>
+            </div>
+            <div class="relative w-full sm:w-64">
+                <input type="text" id="searchRiwayatAduan" placeholder="Cari aduan yang diajukan..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 outline-none transition-all">
+                <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+        </div>
+        
+        <div id="riwayatAduanContainer" class="space-y-4">
+            <div class="text-center py-10 text-gray-400 animate-pulse font-bold">Memuat data aduan Anda...</div>
+        </div>
+        <div id="paginationAduanWarga"></div>
+    </div>
+
+    <div id="modalProfil" class="fixed inset-0 z-[100] bg-slate-900/80 hidden items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="modalProfilBox" class="bg-white rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden flex flex-col relative">
+            
+            <button onclick="tutupModalProfil()" class="absolute top-4 right-4 z-20 text-white bg-black/20 hover:bg-black/40 p-2 rounded-full transition-colors flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div class="h-28 bg-gradient-to-r from-teal-500 to-teal-700 relative">
+                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+            </div>
+
+            <div class="px-8 pb-8 relative">
+                <div class="flex justify-center -mt-14 mb-6 relative z-10">
+                    <div class="relative group cursor-pointer" onclick="document.getElementById('uploadFotoProfil').click()">
+                        <img id="imgModalProfil" src="" alt="Foto Profil" class="w-28 h-28 rounded-full object-cover border-4 border-white shadow-lg bg-white transition-transform duration-300 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-slate-900/50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300">
+                            <i class="bi bi-camera-fill text-white text-3xl"></i>
+                        </div>
+                        <div id="loadingUpload" class="absolute inset-0 bg-white/80 rounded-full hidden items-center justify-center backdrop-blur-sm">
+                            <i class="bi bi-arrow-repeat animate-spin text-teal-600 text-3xl"></i>
+                        </div>
+                    </div>
+                    <input type="file" id="uploadFotoProfil" accept="image/jpeg, image/png, image/webp" class="hidden">
+                </div>
+
+                <form id="formEditProfil" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Nama Lengkap</label>
+                        <input type="text" id="inputEditNama" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none text-sm font-bold text-slate-900">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">NIK KTP (Permanen)</label>
+                        <input type="text" id="inputEditNik" disabled class="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold font-mono text-slate-500 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">Jenis Kelamin</label>
+                        <input type="text" id="inputEditGender" disabled class="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed">
+                        <p class="text-[10px] text-teal-600 font-medium mt-1"><i class="bi bi-check-circle-fill"></i> Terdeteksi otomatis dari NIK</p>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 flex justify-end gap-3">
+                        <button type="button" onclick="tutupModalProfil()" class="px-5 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors">Batal</button>
+                        <button type="submit" id="btnSimpanProfil" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition-all active:scale-95">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,36 @@
+---
+// src/components/Hero.astro
+---
+<section id="home" class="min-h-screen flex items-center justify-center pt-24 pb-12 bg-white overflow-hidden">
+  <div class="container mx-auto px-4 max-w-7xl">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-md:landscape:gap-6">
+      
+      <div class="space-y-6 max-md:landscape:space-y-3" data-aos="fade-up" data-aos-delay="100">
+        <h1 class="text-4xl md:text-6xl max-md:landscape:text-3xl font-extrabold text-teal-950 leading-tight">
+          Selamat Datang di Portal <span class="text-amber-500">Desa Mulyamekar</span>
+        </h1>
+        <p class="text-lg md:text-xl max-md:landscape:text-base text-gray-600 leading-relaxed max-w-2xl">
+          Pusat informasi dan layanan digital resmi Pemerintah Desa Mulyamekar. Mewujudkan tata kelola desa yang transparan, akuntabel, dan inovatif.
+        </p>
+        <div class="flex flex-wrap gap-4 pt-4 max-md:landscape:pt-2">
+          <a href="/layanan" class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-3.5 px-8 max-md:landscape:py-2.5 max-md:landscape:px-6 rounded-full transition-all text-base max-md:landscape:text-sm shadow-md hover:shadow-lg">
+            Ajukan Surat Online
+          </a>
+          <a href="/informasi" class="bg-white hover:bg-teal-50 text-teal-700 font-bold py-3.5 px-8 max-md:landscape:py-2.5 max-md:landscape:px-6 rounded-full transition-all text-base max-md:landscape:text-sm border border-teal-200 shadow-sm">
+            Kabar Desa
+          </a>
+        </div>
+      </div>
+
+      <div class="relative max-md:landscape:max-w-xs max-md:landscape:mx-auto" data-aos="fade-left" data-aos-delay="300">
+        <div class="absolute -inset-4 bg-teal-100/50 rounded-full blur-3xl opacity-70"></div>
+        <img 
+          src="https://images.unsplash.com/photo-1596401349880-997f37f3743c?q=80&w=600&h=600&auto=format&fit=crop" 
+          alt="Balai Desa Mulyamekar" 
+          class="w-full h-auto rounded-3xl shadow-2xl relative z-10 aspect-square object-cover border-8 border-white"
+        />
+      </div>
+
+    </div>
+  </div>
+</section>

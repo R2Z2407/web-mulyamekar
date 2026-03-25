@@ -1,0 +1,89 @@
+---
+// src/pages/berita/[slug].astro
+import '../../global.css';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { supabase } from '../../lib/supabase.js';
+
+// 1. Kasih tau Astro URL apa aja yang tersedia berdasarkan data di Supabase
+export async function getStaticPaths() {
+  const { data: berita } = await supabase.from('berita').select('slug');
+  
+  // Kalau belum ada berita, balikin array kosong biar nggak error
+  if (!berita) return [];
+
+  return berita.map((b) => ({
+    params: { slug: b.slug },
+  }));
+}
+
+// 2. Ambil parameter slug dari URL saat ini
+const { slug } = Astro.params;
+
+// 3. Tarik isi berita spesifik dari Supabase berdasarkan slug
+const { data: artikel } = await supabase
+  .from('berita')
+  .select('*')
+  .eq('slug', slug)
+  .single();
+
+// 4. Format Tanggal
+const formatTanggal = (dateString) => {
+  const options = { day: 'numeric', month: 'long', year: 'numeric' };
+  return new Date(dateString).toLocaleDateString('id-ID', options);
+};
+---
+
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{artikel.judul} - Desa Mulyamekar</title>
+  </head>
+  <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    
+    <Header />
+    
+    <main class="flex-grow pt-24 pb-20">
+      <div class="container mx-auto px-4 max-w-4xl">
+        
+        <a href="/informasi" class="inline-flex items-center gap-2 text-teal-600 hover:text-amber-600 font-semibold mb-8 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+          Kembali ke Daftar Berita
+        </a>
+
+        <article class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 p-8 md:p-12">
+          <div class="mb-8 text-center">
+            <span class="inline-block bg-amber-100 text-amber-700 font-bold px-4 py-1.5 rounded-full text-sm mb-4">
+              {artikel.kategori}
+            </span>
+            <h1 class="text-3xl md:text-5xl font-extrabold text-teal-950 mb-6 leading-tight">
+              {artikel.judul}
+            </h1>
+            <div class="flex items-center justify-center gap-2 text-gray-500 text-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              <span>Diterbitkan pada {formatTanggal(artikel.created_at)}</span>
+            </div>
+          </div>
+
+          <div class="w-full h-64 md:h-96 rounded-2xl overflow-hidden mb-10 shadow-sm">
+            <img src={artikel.gambar_url} alt={artikel.judul} class="w-full h-full object-cover" />
+          </div>
+
+          <div class="prose prose-lg prose-teal max-w-none text-gray-700 leading-loose">
+            <p class="text-xl font-medium text-gray-600 mb-6 italic border-l-4 border-amber-400 pl-4">
+              {artikel.ringkasan}
+            </p>
+            <p>
+              {artikel.konten || "Konten lengkap berita belum ditambahkan oleh administrator desa. Silakan periksa kembali beberapa saat lagi."}
+            </p>
+          </div>
+        </article>
+
+      </div>
+    </main>
+    
+    <Footer />
+
+  </body>
+</html>

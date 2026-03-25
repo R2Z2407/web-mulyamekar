@@ -1,0 +1,378 @@
+---
+// src/pages/layanan.astro
+import '../global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import AuthModal from '../components/AuthModal.astro';
+---
+
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Layanan E-Surat - Mulyamekar</title>
+    <script is:inline src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    <Header />
+    
+   <main id="mainContent" class="flex-grow pb-20 hidden">
+        <section class="bg-teal-950 text-white py-16 mb-10 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+            <div class="absolute -right-20 -top-20 w-96 h-96 bg-teal-800 rounded-full blur-3xl opacity-50"></div>
+            <div class="container mx-auto px-4 max-w-4xl relative z-10 text-center">
+                <span class="inline-block px-4 py-1.5 bg-amber-500 text-teal-950 font-bold rounded-full text-xs tracking-widest uppercase mb-4 shadow-sm">Pelayanan Digital</span>
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4">Pengajuan E-Surat</h1>
+                <p class="text-teal-100 max-w-2xl mx-auto text-lg">Urus administrasi persuratan Anda dari rumah. Cepat, mudah, dan transparan.</p>
+            </div>
+        </section>
+
+        <div class="container mx-auto px-4 max-w-4xl">
+            <div class="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100 relative">
+                
+                <form id="formSurat" class="space-y-8">
+                    
+                    <div>
+                        <h3 class="text-lg font-bold text-teal-900 mb-4 border-b border-gray-100 pb-2">1. Pilih Jenis Layanan</h3>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Jenis Surat yang Dibutuhkan *</label>
+                        <select id="inputJenisSurat" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-bold text-teal-900 transition-all">
+                            <option value="">-- Pilih Jenis Surat --</option>
+                            <option value="Surat Keterangan Usaha (SKU)">Surat Keterangan Usaha (SKU)</option>
+                            <option value="Surat Keterangan Domisili">Surat Keterangan Domisili</option>
+                            <option value="Surat Keterangan Kelahiran">Surat Keterangan Kelahiran</option>
+                            <option value="Surat Keterangan Kematian">Surat Keterangan Kematian</option>
+                            <option value="Surat Keterangan Tidak Mampu (SKTM)">Surat Keterangan Tidak Mampu (SKTM)</option>
+                        </select>
+                    </div>
+
+                    <div id="sectionDataDiri" class="hidden opacity-0 transition-opacity duration-500">
+                        <h3 class="text-lg font-bold text-teal-900 mb-4 border-b border-gray-100 pb-2 flex justify-between items-center">
+                            <span>2. Identitas Pemohon</span>
+                            <span class="text-[10px] bg-teal-100 text-teal-700 px-2 py-1 rounded-full uppercase">Didukung AI OCR</span>
+                        </h3>
+
+                        <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-6">
+                            <p class="text-xs text-blue-800 font-bold mb-2">🤖 Fitur Auto-Fill KTP</p>
+                            <p class="text-xs text-blue-600 mb-3">Upload foto KTP Anda, sistem AI kami akan otomatis mengompres gambar dan membaca data NIK, Nama, serta Alamat untuk memudahkan pengisian.</p>
+                            <input type="file" id="uploadKtpOcr" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all cursor-pointer">
+                            <div id="ocrStatus" class="mt-2 text-xs font-bold text-amber-600 hidden animate-pulse">Sedang memindai KTP dengan AI... Mohon tunggu.</div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">NIK (16 Digit) *</label>
+                                <input type="text" id="inputNik" required pattern="[0-9]{16}" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" placeholder="Masukkan 16 digit NIK">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Nama Lengkap Sesuai KTP *</label>
+                                <input type="text" id="inputNama" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" placeholder="Nama lengkap">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Alamat Lengkap *</label>
+                                <textarea id="inputAlamat" required rows="2" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" placeholder="Contoh: Kp. Mulyamekar RT 01 / RW 02"></textarea>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Keperluan Pembuatan Surat *</label>
+                                <textarea id="inputKeperluan" required rows="2" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" placeholder="Contoh: Syarat pendaftaran masuk sekolah anak."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="sectionBerkas" class="hidden opacity-0 transition-opacity duration-500">
+                        <h3 class="text-lg font-bold text-teal-900 mb-4 border-b border-gray-100 pb-2">3. Upload Berkas Persyaratan</h3>
+                        <p class="text-xs text-amber-600 font-bold mb-4 bg-amber-50 p-3 rounded-lg border border-amber-100">
+                            * Sistem otomatis mengompres foto Anda agar hemat kuota.
+                        </p>
+                        
+                        <div id="tempatUploadDinams" class="space-y-4">
+                            </div>
+                    </div>
+
+                    <div id="submitContainer" class="hidden pt-6 border-t border-gray-100">
+                        <button type="submit" id="btnKirim" class="w-full bg-teal-600 text-white font-extrabold py-4 px-6 rounded-xl shadow-lg hover:bg-teal-700 transition-all active:scale-95 text-lg">
+                            Kirim Pengajuan Surat
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </main>
+
+    <AuthModal />
+    <Footer /> <script>
+        import { supabase } from '../lib/supabase.js';
+
+        async function cekAksesMasuk() {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session) {
+                // Kalau TIDAK login, kasih alert dan tendang ke beranda
+                if(typeof showCustomAlert !== 'undefined') {
+                    await showCustomAlert('error', 'Akses Ditolak!', 'Anda harus Masuk/Daftar terlebih dahulu untuk menggunakan layanan E-Surat.');
+                } else {
+                    alert('Akses Ditolak! Anda harus login terlebih dahulu.');
+                }
+                window.location.href = '/'; // Lempar kembali ke beranda
+                return;
+            }
+
+            // Kalau UDAH login, baru tampilkan isi halamannya
+            document.getElementById('mainContent').classList.remove('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', cekAksesMasuk);
+
+        // --- KONFIGURASI BERKAS DINAMIS ---
+        // Atur persyaratan apa saja untuk tiap jenis surat
+        const aturanBerkas = {
+            'Surat Keterangan Usaha (SKU)': ['Foto KTP', 'Foto KK', 'Foto Tempat Usaha'],
+            'Surat Keterangan Domisili': ['Foto KTP', 'Foto KK', 'Surat Pengantar RT'],
+            'Surat Keterangan Kelahiran': ['Foto KTP Ayah', 'Foto KTP Ibu', 'Foto KK', 'Surat Lahir RS/Bidan'],
+            'Surat Keterangan Kematian': ['Foto KTP Pelapor', 'Foto KTP Almarhum', 'Foto KK', 'Surat Kematian Dokter'],
+            'Surat Keterangan Tidak Mampu (SKTM)': ['Foto KTP', 'Foto KK', 'Foto Rumah Tampak Depan']
+        };
+
+        // --- ELEMEN UI ---
+        const selectJenis = document.getElementById('inputJenisSurat');
+        const sectionDataDiri = document.getElementById('sectionDataDiri');
+        const sectionBerkas = document.getElementById('sectionBerkas');
+        const tempatUploadDinams = document.getElementById('tempatUploadDinams');
+        const submitContainer = document.getElementById('submitContainer');
+        const uploadKtpOcr = document.getElementById('uploadKtpOcr');
+        const ocrStatus = document.getElementById('ocrStatus');
+
+        // Menampung file yang sudah dikompres
+        let fileBerkasSiap = {}; 
+
+        // --- LOGIKA JENIS SURAT BERUBAH ---
+        selectJenis.addEventListener('change', (e) => {
+            const jenis = e.target.value;
+            fileBerkasSiap = {}; // reset
+
+            if (jenis) {
+                // Tampilkan form lanjutan
+                sectionDataDiri.classList.remove('hidden');
+                sectionBerkas.classList.remove('hidden');
+                submitContainer.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    sectionDataDiri.classList.remove('opacity-0');
+                    sectionBerkas.classList.remove('opacity-0');
+                }, 50);
+
+                // Generate Field Upload Dinamis
+                const listSyarat = aturanBerkas[jenis] || ['Foto KTP'];
+                let htmlUpload = '';
+                
+                listSyarat.forEach((syarat, index) => {
+                    const fieldId = `file_${index}`;
+                    htmlUpload += `
+                        <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl">
+                            <label class="block text-sm font-bold text-gray-800 mb-2">${syarat} *</label>
+                            <input type="file" required accept="image/*" id="${fieldId}" data-nama="${syarat}" class="input-berkas block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-gray-200 file:text-gray-700 hover:file:bg-gray-300 transition-all cursor-pointer">
+                            <p class="text-[10px] text-gray-400 mt-2 status-compress" id="status_${fieldId}"></p>
+                        </div>
+                    `;
+                });
+                tempatUploadDinams.innerHTML = htmlUpload;
+
+                // Pasang event listener kompresi ke setiap field yang baru dibuat
+                document.querySelectorAll('.input-berkas').forEach(input => {
+                    input.addEventListener('change', async (event) => {
+                        const file = event.target.files[0];
+                        const fieldId = event.target.id;
+                        const statusEl = document.getElementById(`status_${fieldId}`);
+                        if (file) {
+                            statusEl.innerText = "⏳ Sedang mengompres gambar...";
+                            statusEl.classList.add('text-amber-500');
+                            try {
+                                const compressedFile = await compressImage(file);
+                                fileBerkasSiap[fieldId] = compressedFile;
+                                const hemat = (((file.size - compressedFile.size) / file.size) * 100).toFixed(0);
+                                statusEl.innerText = `✅ Selesai dikompres! (Ukuran turun ${hemat}%)`;
+                                statusEl.classList.replace('text-amber-500', 'text-emerald-500');
+                            } catch (err) {
+                                statusEl.innerText = `❌ Gagal memproses gambar.`;
+                            }
+                        }
+                    });
+                });
+
+            } else {
+                sectionDataDiri.classList.add('hidden', 'opacity-0');
+                sectionBerkas.classList.add('hidden', 'opacity-0');
+                submitContainer.classList.add('hidden');
+            }
+        });
+
+        // --- FUNGSI AUTO COMPRESS (CANVAS API) ---
+        // Memaksa gambar maksimal resolusi 1200px dan kualitas JPEG 70% (Biasa hasilnya dibawah 300kb)
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1200;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > MAX_WIDTH) {
+                            height = Math.round((height * MAX_WIDTH) / width);
+                            width = MAX_WIDTH;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Output jadi JPEG dengan kualitas 0.7 (70%)
+                        canvas.toBlob((blob) => {
+                            if (!blob) return reject(new Error('Canvas to Blob failed'));
+                            // Bungkus ulang jadi File object
+                            const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' });
+                            resolve(newFile);
+                        }, 'image/jpeg', 0.7);
+                    };
+                    img.onerror = (err) => reject(err);
+                };
+                reader.onerror = (err) => reject(err);
+            });
+        }
+
+        // --- FUNGSI AI OCR (TESSERACT JS) UNTUK KTP ---
+        uploadKtpOcr.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            ocrStatus.classList.remove('hidden');
+            
+            try {
+                // Kompres dulu biar AI ngebacanya lebih enteng & cepat
+                const compressedKtp = await compressImage(file);
+                
+                // Mulai Tesseract AI
+                const worker = await Tesseract.createWorker('ind');
+                const ret = await worker.recognize(compressedKtp);
+                const text = ret.data.text;
+                await worker.terminate();
+
+                ocrStatus.classList.add('hidden');
+
+                // Regex Pemulung Data KTP (Sederhana)
+                // Cari angka 16 digit untuk NIK
+                const nikMatch = text.match(/\b\d{16}\b/);
+                if (nikMatch) document.getElementById('inputNik').value = nikMatch[0];
+
+                // Coba ambil nama (Biasanya setelah baris NIK atau ada kata NAMA)
+                const baris = text.split('\n');
+                let namaKetemu = false;
+                baris.forEach((barisTeks) => {
+                    if (barisTeks.toUpperCase().includes('NAMA')) {
+                        let nama = barisTeks.replace(/NAMA/i, '').replace(/[:;-]/g, '').trim();
+                        if(nama) document.getElementById('inputNama').value = nama;
+                        namaKetemu = true;
+                    }
+                    if (barisTeks.toUpperCase().includes('ALAMAT')) {
+                        let alamat = barisTeks.replace(/ALAMAT/i, '').replace(/[:;-]/g, '').trim();
+                        document.getElementById('inputAlamat').value = alamat;
+                    }
+                });
+
+                if(typeof showCustomAlert !== 'undefined') {
+                    await showCustomAlert('success', 'Pemindaian Selesai', 'Data berhasil diekstrak! Silakan perbaiki jika ada ejaan yang salah terbaca oleh AI.');
+                }
+
+            } catch (err) {
+                ocrStatus.classList.add('hidden');
+                console.error("OCR Error:", err);
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Pemindaian Gagal', 'Pastikan foto KTP jelas dan tidak blur.');
+            }
+        });
+
+        // --- FUNGSI SUBMIT KE SUPABASE ---
+        document.getElementById('formSurat').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Cek apakah user udah login (Opsional: kalau warga wajib login dulu)
+            const { data: { session } } = await supabase.auth.getSession();
+            const userId = session ? session.user.id : null; 
+
+            const btn = document.getElementById('btnKirim');
+            btn.disabled = true; btn.innerText = "Mengunggah Berkas...";
+
+            try {
+                // 1. Upload semua berkas ke Supabase Storage (bucket: berkas_layanan)
+                let urlsPersyaratan = {};
+                const inputElements = document.querySelectorAll('.input-berkas');
+                
+                for (let i = 0; i < inputElements.length; i++) {
+                    const el = inputElements[i];
+                    const namaSyarat = el.getAttribute('data-nama');
+                    const fileSiap = fileBerkasSiap[el.id];
+                    
+                    if (fileSiap) {
+                        const fileExt = fileSiap.name.split('.').pop();
+                        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                        
+                        // Upload ke Bucket 'berkas_layanan'
+                        const { data: uploadData, error: uploadError } = await supabase.storage
+                            .from('berkas_layanan')
+                            .upload(`layanan/${fileName}`, fileSiap);
+
+                        if (uploadError) throw uploadError;
+
+                        // Ambil Public URL
+                        const { data: { publicUrl } } = supabase.storage.from('berkas_layanan').getPublicUrl(`layanan/${fileName}`);
+                        urlsPersyaratan[namaSyarat] = publicUrl;
+                    }
+                }
+
+                btn.innerText = "Mengirim Pengajuan...";
+
+                // 2. Simpan ke Tabel `pengajuan_surat` (Tabel asli lu)
+                const payload = {
+    nik: document.getElementById('inputNik').value,
+    nama_lengkap: document.getElementById('inputNama').value,
+    jenis_surat: selectJenis.value,
+    
+    // 🔥 PISAHKAN ALAMAT DAN KEPERLUAN SESUAI DATABASE BARU 🔥
+    alamat: document.getElementById('inputAlamat').value,
+    keperluan: document.getElementById('inputKeperluan').value,
+    
+    file_persyaratan: JSON.stringify(urlsPersyaratan),
+    status: 'Menunggu',
+    status_rt: 'Menunggu ACC RT',
+    user_id: userId
+};
+
+                const { error: dbError } = await supabase.from('pengajuan_surat').insert([payload]);
+                if (dbError) throw dbError;
+
+                btn.disabled = false; btn.innerText = "Kirim Pengajuan Surat";
+                
+                if(typeof showCustomAlert !== 'undefined') {
+                    await showCustomAlert('success', 'Pengajuan Berhasil', 'Surat Anda telah masuk ke sistem desa. Silakan tunggu proses validasi RT & Desa.');
+                } else {
+                    alert('Berhasil!');
+                }
+
+                // Reset Form
+                document.getElementById('formSurat').reset();
+                selectJenis.dispatchEvent(new Event('change'));
+
+            } catch (err) {
+                btn.disabled = false; btn.innerText = "Kirim Pengajuan Surat";
+                console.error(err);
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Sistem Sibuk', err.message);
+            }
+        });
+    </script>
+</body>
+</html>

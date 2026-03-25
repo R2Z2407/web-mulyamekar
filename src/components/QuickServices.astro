@@ -1,0 +1,65 @@
+---
+// src/components/QuickServices.astro
+const services = [
+  {
+    icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+    title: 'Persuratan Online',
+    description: 'Ajukan surat pengantar RT/RW, kelahiran, kematian, dll dari rumah.',
+    url: '/layanan'
+  },
+  {
+    icon: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z',
+    title: 'Aduan Warga',
+    description: 'Laporkan masalah infrastruktur atau keluhan layanan secara anonim.',
+    url: '/aduan'
+  },
+  {
+    icon: 'M13 10V3L4 14h7v7l9-11h-7z',
+    title: 'Cek Bansos',
+    description: 'Cek daftar penerima bantuan sosial (BLT, PKH) tahun ini.',
+    url: '/bansos'
+  },
+  {
+    icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
+    title: 'Berita & Kegiatan',
+    description: 'Informasi terbaru tentang kegiatan desa dan pengumuman penting.',
+    url: '/informasi'
+  }
+];
+---
+
+<section id="layanan" class="min-h-screen flex flex-col justify-center py-20 max-md:landscape:py-16 max-md:landscape:min-h-[400px] bg-gray-50">
+  <div class="container mx-auto px-4">
+    
+    <div class="text-center max-w-2xl mx-auto mb-16 max-md:landscape:mb-8">
+      <h2 class="text-xs font-bold uppercase tracking-widest text-amber-600 mb-2">Akses Cepat</h2>
+      <p class="text-3xl md:text-4xl font-extrabold text-teal-900 leading-tight max-md:landscape:text-2xl">Pelayanan Desa Di Ujung Jari</p>
+      <div class="w-24 h-1.5 bg-amber-400 mx-auto mt-6 max-md:landscape:mt-4 rounded-full"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-md:landscape:grid-cols-2 max-md:landscape:gap-4">
+      {services.map((service, index) => (
+        <a href={service.url} 
+           data-aos="fade-up" 
+           data-aos-delay={index * 100} 
+           class="group bg-white p-8 max-md:landscape:p-6 rounded-3xl shadow-sm border border-gray-100/50 flex flex-col items-center text-center transition-all duration-300 hover:shadow-2xl hover:border-teal-100 hover:-translate-y-2">
+          
+          <div class="w-20 h-20 max-md:landscape:w-16 max-md:landscape:h-16 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mb-8 max-md:landscape:mb-4 border-4 border-teal-100 transition-all duration-300 group-hover:bg-amber-100 group-hover:border-amber-200 group-hover:text-amber-700">
+            <svg class="w-10 h-10 max-md:landscape:w-8 max-md:landscape:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={service.icon}></path>
+            </svg>
+          </div>
+          
+          <h3 class="text-xl max-md:landscape:text-lg font-bold text-gray-950 mb-3 max-md:landscape:mb-2 group-hover:text-teal-800 transition-colors">
+            {service.title}
+          </h3>
+          <p class="text-gray-600 text-sm leading-relaxed mb-6 max-md:landscape:mb-4 flex-grow">
+            {service.description}
+          </p>
+          
+        </a>
+      ))}
+    </div>
+
+  </div>
+</section>
