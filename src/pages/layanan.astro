@@ -1,20 +1,10 @@
 ---
 // src/pages/layanan.astro
-import '../global.css';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-
+import BaseLayout from '../layout/BaseLayout.astro';
 ---
 
-<html lang="id">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Layanan E-Surat - Mulyamekar</title>
+<BaseLayout title="Layanan E-Surat - Mulyamekar">
     <script is:inline src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-</head>
-<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
-    <Header />
     
    <main id="mainContent" class="flex-grow pb-20 hidden">
         <section class="bg-teal-950 text-white py-16 mb-10 relative overflow-hidden">
@@ -99,8 +89,7 @@ import Footer from '../components/Footer.astro';
             </div>
         </div>
     </main>
-
-    <Footer /> <script>
+    <script>
         import { supabase } from '../lib/supabase.js';
 
         async function cekAksesMasuk() {
@@ -373,5 +362,4 @@ import Footer from '../components/Footer.astro';
             }
         });
     </script>
-</body>
-</html>
+</BaseLayout>
