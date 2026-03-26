@@ -1,19 +1,9 @@
 ---
 // src/pages/bansos.astro
-import '../global.css';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import AuthModal from '../components/AuthModal.astro';
+import BaseLayout from '../layout/BaseLayout.astro';
 ---
 
-<html lang="id">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Transparansi Bansos - Mulyamekar</title>
-</head>
-<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
-    <Header />
+<BaseLayout title="Transparansi Bansos - Mulyamekar">
     
     <main class="flex-grow pb-20">
         <section class="bg-teal-950 text-white py-16 mb-10 relative overflow-hidden">
@@ -57,9 +47,6 @@ import AuthModal from '../components/AuthModal.astro';
 
         </div>
     </main>
-
-    <AuthModal />
-    <Footer />
 
     <style>
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -301,5 +288,4 @@ import AuthModal from '../components/AuthModal.astro';
 
         document.addEventListener('DOMContentLoaded', initBansos);
     </script>
-</body>
-</html>
+</Baselayout>
