@@ -80,11 +80,45 @@
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) { window.location.href = '/'; return; }
         currentUser = session.user;
-        
+
         const { data: profil, error } = await supabase.from('profil_user').select('*').eq('id', currentUser.id).single();
         if (error || !profil) { window.location.href = '/'; return; }
-        if (profil.role === 'admin') { window.location.href = '/admin'; return; } 
+        if (profil.role === 'admin') { window.location.href = '/admin'; return; }
 
+        // 🔥 1. CEK STEMPEL SAAT HALAMAN DIBUKA 🔥
+        const localToken = localStorage.getItem('mulyamekar_session');
+        if (profil.active_token && profil.active_token !== localToken) {
+            // Token beda! Berarti akun ini udah dipakai login di perangkat lain.
+            await supabase.auth.signOut();
+            localStorage.removeItem('mulyamekar_session');
+            if(typeof showCustomAlert !== 'undefined') {
+                await showCustomAlert('warning', 'Sesi Berakhir', 'Akun Anda sedang digunakan di perangkat lain!');
+            } else {
+                alert('Sesi Berakhir: Akun sedang digunakan di perangkat lain.');
+            }
+            window.location.href = '/';
+            return; // Hentikan proses render dashboard
+        }
+
+        // 🔥 2. SATPAM REALTIME (TENDANG OTOMATIS) 🔥
+        supabase.channel('patroli-sesi')
+            .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'profil_user', filter: `id=eq.${currentUser.id}` },
+            async (payload) => {
+                const newToken = payload.new.active_token;
+                // Kalau ada update token di database dan beda sama yang di HP ini -> TENDANG!
+                if (newToken && newToken !== localStorage.getItem('mulyamekar_session')) {
+                    await supabase.auth.signOut();
+                    localStorage.removeItem('mulyamekar_session');
+                    alert('Sesi Berakhir! Seseorang baru saja login menggunakan akun Anda di perangkat lain.');
+                    window.location.href = '/';
+                }
+            }
+            )
+            .subscribe();
+
+        // Lanjut proses render dashboard jika aman...
         profilWarga = profil;
 
         // 🔥 REVISI: LOGIKA HACKER NIK (MUTLAK DARI NIK) 🔥

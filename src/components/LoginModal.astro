@@ -125,7 +125,14 @@
                 if(!email || !password) throw new Error('Email dan Password wajib diisi!');
                 const { data, error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
+
+                // 🔥 SINGLE ACTIVE SESSION: Buat Stempel & Simpan 🔥
+                const sessionToken = crypto.randomUUID(); // Bikin kode acak unik
+                localStorage.setItem('mulyamekar_session', sessionToken); // Simpan di browser HP/Laptop ini
                 
+                // Update stempel terbaru ke database profil_user
+                await supabase.from('profil_user').update({ active_token: sessionToken }).eq('id', data.user.id);
+
                 const { data: profil } = await supabase.from('profil_user').select('role').eq('id', data.user.id).single();
                 window.location.href = (profil && profil.role === 'admin') ? '/admin' : '/warga';
             } else {
