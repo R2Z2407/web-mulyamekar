@@ -1,0 +1,100 @@
+---
+// src/components/statistik/StatistikRingkasan.astro
+const { totalPenduduk, totalKK, wargaBekerja, stats } = Astro.props;
+
+const getVal = (label) => {
+    const item = stats.find(s => s.label.toLowerCase() === label.toLowerCase());
+    return item ? parseInt(item.nilai) || 0 : 0;
+};
+const laki = getVal('warga laki-laki');
+const perempuan = getVal('warga perempuan');
+---
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="md:col-span-2 bg-gradient-to-br from-teal-700 to-teal-900 rounded-[2.5rem] p-8 md:p-10 text-white shadow-xl shadow-teal-900/20 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300" data-aos="fade-up" data-aos-delay="100">
+        <div class="absolute -right-10 -top-10 w-64 h-64 bg-teal-400 rounded-full opacity-20 blur-3xl group-hover:opacity-40 transition-opacity"></div>
+        <div class="relative z-10 h-full flex flex-col justify-between">
+            <div class="flex justify-between items-start">
+                <div>
+                    <div class="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 mb-4">
+                        <i class="bi bi-people-fill text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-teal-100 font-bold text-sm uppercase tracking-widest">Total Populasi Aktif</h3>
+                </div>
+                <span class="bg-amber-400 text-teal-950 font-black text-[10px] px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-teal-900 animate-pulse"></span> Live
+                </span>
+            </div>
+            <div class="mt-8">
+                <h2 class="text-6xl md:text-7xl font-black tracking-tighter drop-shadow-md">{new Intl.NumberFormat('id-ID').format(totalPenduduk)}</h2>
+                <p class="text-teal-200 font-medium text-lg mt-2">Jiwa terdaftar di Mulyamekar</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="md:col-span-1 bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-200 flex flex-col hover:shadow-lg transition-shadow" data-aos="fade-up" data-aos-delay="200">
+        <div class="flex justify-between items-center mb-4">
+            <h4 class="text-slate-800 font-black text-sm">Komposisi Gender</h4>
+            <i class="bi bi-gender-ambiguous text-slate-300"></i>
+        </div>
+        <div id="chartGender" class="relative flex-grow min-h-[160px] flex items-center justify-center w-full"></div>
+    </div>
+
+    <div class="flex flex-col gap-6 md:col-span-1" data-aos="fade-up" data-aos-delay="300">
+        <div class="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-200 flex-grow flex flex-col justify-center hover:shadow-lg transition-shadow relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-24 h-24 bg-amber-50 rounded-bl-full -z-0"></div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-lg"><i class="bi bi-house-heart-fill"></i></div>
+                    <h4 class="text-slate-500 font-bold text-xs uppercase tracking-wider">Kepala Keluarga</h4>
+                </div>
+                <p class="text-3xl font-black text-slate-800 mt-2">{new Intl.NumberFormat('id-ID').format(totalKK)} <span class="text-sm font-bold text-slate-400">KK</span></p>
+            </div>
+        </div>
+        <div class="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-200 flex-grow flex flex-col justify-center hover:shadow-lg transition-shadow relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-24 h-24 bg-emerald-50 rounded-bl-full -z-0"></div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-lg"><i class="bi bi-briefcase-fill"></i></div>
+                    <h4 class="text-slate-500 font-bold text-xs uppercase tracking-wider">Rasio Pekerja</h4>
+                </div>
+                <p class="text-3xl font-black text-slate-800 mt-2">{totalPenduduk > 0 ? Math.round((wargaBekerja / totalPenduduk) * 100) : 0}% <span class="text-sm font-bold text-slate-400">Aktif</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script is:inline define:vars={{ laki, perempuan }}>
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            const container = d3.select("#chartGender");
+            container.selectAll("*").remove();
+
+            const data = [
+                { label: 'Laki-laki', value: laki, color: '#0ea5e9' },
+                { label: 'Perempuan', value: perempuan, color: '#ec4899' }
+            ];
+
+            const width = container.node().clientWidth || 200;
+            const height = 180;
+            const radius = Math.min(width, height) / 2;
+
+            const svg = container.append("svg").attr("viewBox", `0 0 ${width} ${height}`).style("max-width", "100%").style("height", "auto").append("g").attr("transform", `translate(${width / 2},${height / 2})`);
+            const pie = d3.pie().value(d => d.value).sort(null);
+            const arc = d3.arc().innerRadius(radius * 0.6).outerRadius(radius * 0.9);
+            const arcHover = d3.arc().innerRadius(radius * 0.6).outerRadius(radius); 
+
+            const path = svg.datum(data).selectAll("path").data(pie).enter().append("path").attr("fill", d => d.data.color).attr("d", arc).attr("stroke", "white").attr("stroke-width", "2px");
+
+            const tt = d3.select("#d3Tooltip"); // Diambil dari main layout
+            path.on("mouseover", function(event, d) {
+                d3.select(this).transition().duration(200).attr("d", arcHover);
+                const percent = Math.round((d.data.value / (data[0].value + data[1].value)) * 100);
+                if(tt) tt.style("display", "block").html(`${d.data.label}: <span class="text-teal-300">${d.data.value}</span> (${percent}%)`);
+            }).on("mousemove", function(event) { if(tt) tt.style("left", (event.pageX) + "px").style("top", (event.pageY - 15) + "px"); })
+            .on("mouseout", function(event, d) { d3.select(this).transition().duration(200).attr("d", arc); if(tt) tt.style("display", "none"); });
+
+            path.transition().duration(1500).attrTween("d", function(d) { const i = d3.interpolate(d.startAngle+0.1, d.endAngle); return function(t) { d.endAngle = i(t); return arc(d); }});
+        }, 100);
+    });
+</script>

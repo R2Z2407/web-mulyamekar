@@ -5,6 +5,8 @@ import BaseLayout from '../../layout/BaseLayout.astro';
 
 <BaseLayout title="Data Penduduk (Dukcapil) - Admin Mulyamekar">
     <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <main class="flex-grow pt-24 pb-20 bg-[#F8FAFC]">
         <div class="container mx-auto px-4 max-w-[1400px]">
@@ -25,6 +27,11 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                         Sistem manajemen data warga dengan <span class="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">🛡️ Enkripsi AES-256</span>.
                     </p>
                 </div>
+                <input type="file" id="fileImport" accept=".csv" class="hidden" onchange="prosesImportCSV(event)">
+                <button onclick="document.getElementById('fileImport').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3.5 rounded-xl font-bold transition-all shadow-emerald-600/30 shadow-lg active:scale-95 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        Import CS
+                </button>
                 <button onclick="bukaModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-bold transition-all shadow-blue-600/30 shadow-lg active:scale-95 flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Tambah Data Warga
@@ -691,5 +698,58 @@ import BaseLayout from '../../layout/BaseLayout.astro';
         };
 
         initPage();
+        window.prosesImportCSV = async (event) => {
+    const file = event.target.files[0];
+    if(!file) return;
+
+    if(typeof showCustomAlert !== 'undefined') {
+        showCustomAlert('info', 'Memproses...', 'Sedang mengenkripsi & memasukkan data...');
+    } else {
+        alert('Sedang memproses data, mohon tunggu...');
+    }
+
+    Papa.parse(file, {
+        header: true, // Baris pertama file CSV harus berupa nama kolom
+        skipEmptyLines: true,
+        complete: async function(results) {
+            const dataCSV = results.data;
+            if(dataCSV.length === 0) return alert('File CSV kosong atau format salah!');
+
+            // Mapping & Enkripsi data otomatis
+            const payloads = dataCSV.map(row => {
+                return {
+                    no_kk: encrypt(row.no_kk),
+                    nik: encrypt(row.nik),
+                    nama_lengkap: row.nama_lengkap, // Biasanya nama tidak dienkripsi agar bisa dicari
+                    tempat_lahir: row.tempat_lahir,
+                    tanggal_lahir: encrypt(row.tanggal_lahir),
+                    jenis_kelamin: row.jenis_kelamin,
+                    alamat: encrypt(row.alamat),
+                    rw: row.rw,
+                    rt: row.rt,
+                    pekerjaan: row.pekerjaan,
+                    pendidikan: row.pendidikan,
+                    status_warga: row.status_warga,
+                    no_telp: encrypt(row.no_telp)
+                };
+            });
+
+            // Tembak sekaligus ke Supabase (Batch Insert)
+            const { error } = await supabase.from('data_penduduk').insert(payloads);
+            
+            event.target.value = ''; // Reset file input
+
+            if (error) {
+                if(typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
+                else alert('Gagal Import: ' + error.message);
+            } else {
+                if(typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Berhasil', `Berhasil import ${payloads.length} data warga!`);
+                else alert(`Berhasil mengimport ${payloads.length} data warga!`);
+                
+                loadData(); // Refresh tabel langsung!
+            }
+        }
+    });
+};
     </script>
 </BaseLayout>

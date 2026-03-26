@@ -1,19 +1,9 @@
 ---
 // src/pages/transparansi.astro
-import '../global.css';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
+import BaseLayout from '../layout/BaseLayout.astro';
 ---
 
-<html lang="id">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Transparansi APBDes - Mulyamekar</title>
-</head>
-<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
-    <Header />
-    
+<BaseLayout title="Transparansi APBDes - Portal Resmi Desa Mulyamekar">
     <main class="flex-grow pb-24">
         
         <section class="bg-teal-950 text-white pt-16 pb-24 relative overflow-hidden rounded-b-[3rem] shadow-sm mb-12">
@@ -45,7 +35,7 @@ import Footer from '../components/Footer.astro';
                 <div class="p-8 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/50">
                     <div>
                         <h2 class="text-2xl font-extrabold text-teal-950">Rincian Alokasi Dana</h2>
-                        <p class="text-sm text-gray-500 mt-1">Detail pendapatan, belanja, dan pembiayaan desa.</p>
+                        <p class="text-sm text-gray-500 mt-1">Klik pada setiap item kegiatan untuk melihat rincian pengeluaran.</p>
                     </div>
                 </div>
                 
@@ -59,55 +49,54 @@ import Footer from '../components/Footer.astro';
 
         </div>
     </main>
-    <Footer />
 
     <script>
         import { supabase } from '../lib/supabase.js';
 
-        // Fungsi Format Rupiah
         const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
-
-        // Fungsi Sterilisasi Anti-Hacker
+        
         function steril(teks) {
             if (!teks) return '';
-            return String(teks).replace(/[&<>'"]/g, char => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-            }[char] || char));
+            return String(teks).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char] || char));
         }
+
+        // FUNGSI BUKA TUTUP AKORDION
+        window.toggleRincian = (id) => {
+            const el = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                el.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        };
 
         async function loadAPBDes() {
             try {
-                // 1. Tarik SEMUA data APBDes terlebih dahulu
                 const { data, error } = await supabase.from('apbdes').select('*').order('tahun', { ascending: false });
-                
                 if (error) throw error;
 
-                // 2. Cek apakah database kosong
                 if (!data || data.length === 0) {
                     document.getElementById('labelTahun').innerText = new Date().getFullYear();
-                    document.getElementById('ringkasanContainer').innerHTML = `<div class="col-span-3 text-center py-10 bg-white shadow-sm rounded-3xl text-gray-500 border border-gray-100">Data APBDes belum dipublikasikan oleh Pemerintah Desa.</div>`;
+                    document.getElementById('ringkasanContainer').innerHTML = `<div class="col-span-3 text-center py-10 bg-white shadow-sm rounded-3xl text-gray-500 border border-gray-100">Data belum dipublikasikan.</div>`;
                     document.getElementById('rincianContainer').innerHTML = `<div class="text-center py-10 text-gray-500">Belum ada rincian data.</div>`;
                     return;
                 }
 
-                // 3. Cari TAHUN TERBARU yang ada di database
                 const tahunTerbaru = data[0].tahun;
                 document.getElementById('labelTahun').innerText = tahunTerbaru;
-
-                // 4. Saring data khusus untuk tahun terbaru tersebut
                 const dataTahunIni = data.filter(d => d.tahun === tahunTerbaru);
-
-                // Variabel untuk menghitung total
+                
                 let rekap = {
                     Pendapatan: { anggaran: 0, realisasi: 0, warna: 'emerald' },
                     Belanja: { anggaran: 0, realisasi: 0, warna: 'amber' },
                     Pembiayaan: { anggaran: 0, realisasi: 0, warna: 'blue' }
                 };
-
-                let htmlRincian = '<div class="grid lg:grid-cols-2 gap-8">';
                 
-                // 5. Kelompokkan berdasarkan Kategori yang ada
-                const kategoriUnik = ['Pendapatan', 'Belanja', 'Pembiayaan']; // Urutan tetap biar rapi
+                let htmlRincian = '<div class="grid lg:grid-cols-2 gap-6">';
+                const kategoriUnik = ['Pendapatan', 'Belanja', 'Pembiayaan'];
 
                 kategoriUnik.forEach(kat => {
                     const itemKategori = dataTahunIni.filter(d => d.kategori === kat);
@@ -115,36 +104,116 @@ import Footer from '../components/Footer.astro';
                     if(itemKategori.length > 0) {
                         const warnaTema = rekap[kat].warna;
                         htmlRincian += `
-                            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                                <div class="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
-                                    <div class="w-10 h-10 rounded-xl bg-${warnaTema}-100 text-${warnaTema}-600 flex items-center justify-center font-bold">
+                            <div class="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 shadow-sm">
+                                <div class="flex items-center gap-3 mb-6 border-b border-gray-200 pb-4">
+                                    <div class="w-10 h-10 rounded-xl bg-${warnaTema}-100 text-${warnaTema}-600 flex items-center justify-center font-bold shadow-sm">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </div>
                                     <h3 class="text-xl font-extrabold text-gray-800">${kat}</h3>
                                 </div>
                                 <div class="space-y-4">
                         `;
-
-                        itemKategori.forEach(item => {
-                            // Hitung total untuk ringkasan atas
+                        
+                        itemKategori.forEach((item, index) => {
                             rekap[kat].anggaran += item.anggaran;
                             rekap[kat].realisasi += item.realisasi;
 
                             const persentase = item.anggaran > 0 ? Math.round((item.realisasi / item.anggaran) * 100) : 0;
                             const persenAman = persentase > 100 ? 100 : persentase;
 
+                            // 🌟 LOGIKA INDIKATOR STATUS 🌟
+                            let statusText, statusColor, statusIcon;
+                            if (kat === 'Pendapatan') {
+                                if (persentase >= 100) { statusText = 'Target Terlampaui'; statusColor = 'emerald'; statusIcon = '🌟'; }
+                                else if (persentase >= 75) { statusText = 'Hampir Memenuhi Target'; statusColor = 'blue'; statusIcon = '🔵'; }
+                                else if (persentase > 0) { statusText = 'Masih Jauh dari Target'; statusColor = 'amber'; statusIcon = '🟡'; }
+                                else { statusText = 'Belum Ada Pemasukan'; statusColor = 'gray'; statusIcon = '⏳'; }
+                            } else { // Belanja & Pembiayaan
+                                if (persentase > 100) { statusText = 'Anggaran Membengkak'; statusColor = 'rose'; statusIcon = '⚠️'; }
+                                else if (persentase === 100) { statusText = 'Tepat Sasaran'; statusColor = 'emerald'; statusIcon = '✅'; }
+                                else if (persentase >= 50) { statusText = 'Penyerapan Sedang'; statusColor = 'blue'; statusIcon = '🔵'; }
+                                else if (persentase > 0) { statusText = 'Kurang Terserap'; statusColor = 'amber'; statusIcon = '🟡'; }
+                                else { statusText = 'Belum Ada Realisasi'; statusColor = 'gray'; statusIcon = '⏳'; }
+                            }
+
+                            // 🌟 LOGIKA PARSER JSON & JUDUL 🌟
+                            // Jika uraian berisi JSON, kita cari kolom lain buat dijadikan judul.
+                            let judulUraian = steril(item.uraian);
+                            let htmlListRincian = '';
+
+                            try {
+                                let dataRincian = null;
+                                if (item.uraian && typeof item.uraian === 'string' && item.uraian.trim().startsWith('[')) {
+                                    dataRincian = JSON.parse(item.uraian);
+                                    // Fallback Title (Kalau uraian kepakai JSON, cari nama_kegiatan/judul di db)
+                                    judulUraian = steril(item.nama_kegiatan || item.nama_program || item.judul || item.bidang || 'Detail Kegiatan / Program');
+                                } else if (item.rincian && typeof item.rincian === 'string' && item.rincian.trim().startsWith('[')) {
+                                    dataRincian = JSON.parse(item.rincian);
+                                }
+
+                                if (Array.isArray(dataRincian) && dataRincian.length > 0) {
+                                    htmlListRincian = '<div class="mt-4 space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-inner">';
+                                    dataRincian.forEach(detail => {
+                                        const namaDetail = detail.nama || detail.uraian || 'Item Kegiatan';
+                                        const hargaDetail = detail.harga || detail.anggaran || 0;
+                                        htmlListRincian += `
+                                            <div class="flex justify-between items-center gap-3 border-b border-slate-200/60 pb-2 last:border-0 last:pb-0">
+                                                <div class="flex items-start gap-2 text-[11px] text-slate-600 font-bold leading-tight">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-${warnaTema}-400 mt-1 shrink-0"></span>
+                                                    <span>${steril(namaDetail)}</span>
+                                                </div>
+                                                <span class="text-[10px] font-bold text-slate-800 bg-white px-2 py-1 rounded shadow-sm border border-slate-200 shrink-0">
+                                                    ${formatRp(hargaDetail)}
+                                                </span>
+                                            </div>
+                                        `;
+                                    });
+                                    htmlListRincian += '</div>';
+                                }
+                            } catch(e) {
+                                console.warn("Bukan JSON:", e);
+                            }
+
+                            // ID UNIK UNTUK AKORDION
+                            const accordionId = `rincian-${index}-${kat}`;
+
                             htmlRincian += `
-                                <div class="group">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h4 class="font-bold text-gray-700 text-sm group-hover:text-${warnaTema}-600 transition-colors">${steril(item.uraian)}</h4>
-                                        <span class="text-xs font-extrabold text-${warnaTema}-600 bg-${warnaTema}-50 px-2 py-1 rounded-md ml-4 shrink-0">${persenAman}%</span>
+                                <div class="group flex flex-col justify-between bg-white p-4 md:p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all">
+                                    
+                                    <div class="cursor-pointer flex justify-between items-start gap-4" onclick="toggleRincian('${accordionId}')">
+                                        <div class="flex-grow">
+                                            <h4 class="font-extrabold text-gray-800 text-sm group-hover:text-${warnaTema}-600 transition-colors leading-snug">${judulUraian}</h4>
+                                            
+                                            <div class="inline-flex items-center gap-1.5 mt-2 text-[9px] md:text-[10px] font-bold text-${statusColor}-700 bg-${statusColor}-50 px-2 py-1 rounded-md border border-${statusColor}-100">
+                                                <span>${statusIcon}</span> ${statusText}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex flex-col items-end shrink-0 gap-2">
+                                            <span class="text-[11px] font-black text-${warnaTema}-600 bg-${warnaTema}-50 px-2.5 py-1 rounded-lg border border-${warnaTema}-100">
+                                                ${persenAman}%
+                                            </span>
+                                            <svg id="icon-${accordionId}" class="w-5 h-5 text-gray-400 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
                                     </div>
-                                    <div class="flex justify-between text-[11px] mb-2 font-mono">
-                                        <span class="text-gray-500">Anggaran: <span class="font-bold text-gray-700">${formatRp(item.anggaran)}</span></span>
-                                        <span class="text-gray-500">Realisasi: <span class="font-bold text-${warnaTema}-700">${formatRp(item.realisasi)}</span></span>
-                                    </div>
-                                    <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                                        <div class="bg-${warnaTema}-500 h-2 rounded-full transition-all duration-1000" style="width: ${persenAman}%"></div>
+
+                                    <div id="${accordionId}" class="hidden mt-4 pt-4 border-t border-gray-50 transition-all">
+                                        ${htmlListRincian}
+
+                                        <div class="mt-4 flex justify-between text-[11px] mb-2 font-mono bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                                            <span class="text-gray-500 flex flex-col">
+                                                <span class="text-[9px] uppercase tracking-wider mb-0.5 font-bold">Anggaran</span>
+                                                <span class="font-bold text-gray-800">${formatRp(item.anggaran)}</span>
+                                            </span>
+                                            <span class="text-gray-500 flex flex-col text-right">
+                                                <span class="text-[9px] uppercase tracking-wider mb-0.5 font-bold">Realisasi</span>
+                                                <span class="font-bold text-${warnaTema}-700">${formatRp(item.realisasi)}</span>
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden shadow-inner">
+                                            <div class="bg-${warnaTema}-500 h-2.5 rounded-full transition-all duration-1000" style="width: ${persenAman}%"></div>
+                                        </div>
                                     </div>
                                 </div>
                             `;
@@ -153,19 +222,17 @@ import Footer from '../components/Footer.astro';
                         htmlRincian += `</div></div>`;
                     }
                 });
-
+                
                 htmlRincian += '</div>';
                 document.getElementById('rincianContainer').innerHTML = htmlRincian;
 
-                // 6. Cetak Ringkasan Atas (3 Kartu)
+                // 6. Cetak Ringkasan Atas
                 let htmlRingkasan = '';
                 Object.keys(rekap).forEach(kat => {
                     const dataRekap = rekap[kat];
                     const persenTotal = dataRekap.anggaran > 0 ? Math.round((dataRekap.realisasi / dataRekap.anggaran) * 100) : 0;
                     
-                    // Custom style untuk tiap kartu
-                    let bgClass = '';
-                    let iconClass = '';
+                    let bgClass = ''; let iconClass = '';
                     if(kat === 'Pendapatan') { bgClass = 'from-emerald-500 to-teal-600'; iconClass = 'text-emerald-100'; }
                     if(kat === 'Belanja') { bgClass = 'from-amber-400 to-orange-500'; iconClass = 'text-amber-100'; }
                     if(kat === 'Pembiayaan') { bgClass = 'from-blue-500 to-indigo-600'; iconClass = 'text-blue-100'; }
@@ -178,12 +245,12 @@ import Footer from '../components/Footer.astro';
                             </div>
                             <h3 class="text-2xl md:text-3xl font-extrabold mb-6 relative z-10">${formatRp(dataRekap.anggaran)}</h3>
                             
-                            <div class="bg-black/15 p-4 rounded-2xl backdrop-blur-sm relative z-10">
+                            <div class="bg-black/15 p-4 rounded-2xl backdrop-blur-sm relative z-10 shadow-inner">
                                 <div class="flex justify-between text-xs mb-2 font-medium">
                                     <span class="text-white/80">Realisasi</span>
                                     <span class="font-bold">${formatRp(dataRekap.realisasi)}</span>
                                 </div>
-                                <div class="w-full bg-black/20 rounded-full h-1.5 mb-2">
+                                <div class="w-full bg-black/20 rounded-full h-1.5 mb-2 shadow-inner">
                                     <div class="bg-white h-1.5 rounded-full" style="width: ${persenTotal > 100 ? 100 : persenTotal}%"></div>
                                 </div>
                                 <div class="text-right text-[10px] font-bold text-white/90">${persenTotal}% Tercapai</div>
@@ -195,12 +262,10 @@ import Footer from '../components/Footer.astro';
                 document.getElementById('ringkasanContainer').innerHTML = htmlRingkasan;
 
             } catch (error) {
-                console.error("Error APBDes:", error);
                 document.getElementById('ringkasanContainer').innerHTML = `<div class="col-span-3 text-center text-red-500 font-bold bg-white p-6 rounded-2xl shadow-sm">Gagal memuat data: ${error.message}</div>`;
             }
         }
 
         loadAPBDes();
     </script>
-</body>
-</html>
+</BaseLayout>

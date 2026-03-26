@@ -1,0 +1,186 @@
+---
+// src/components/LoginModal.astro
+---
+
+<div id="loginModal" class="fixed inset-0 z-[100] bg-slate-900/80 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+    <div id="loginModalBox" class="bg-white rounded-3xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden flex flex-col">
+        
+        <div class="bg-gradient-to-r from-teal-600 to-teal-800 p-6 text-white flex justify-between items-center relative overflow-hidden">
+            <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            <div class="relative z-10">
+                <h3 class="text-2xl font-black tracking-tight" id="loginTitle">Masuk Akun</h3>
+                <p class="text-teal-100 text-sm mt-1" id="loginDesc">Layanan Digital Desa Mulyamekar</p>
+            </div>
+            <button type="button" onclick="tutupLoginModal()" class="relative z-10 text-teal-100 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="p-6 md:p-8">
+            <form id="loginForm" class="space-y-5" novalidate>
+                
+                <div id="fieldResetNik" class="hidden animate-fadeIn">
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">NIK KTP (16 Digit)</label>
+                    <div class="relative">
+                        <i class="bi bi-credit-card-2-front absolute left-4 top-3.5 text-slate-400 text-lg"></i>
+                        <input type="text" id="loginNik" maxlength="16" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-sm font-bold font-mono tracking-widest text-slate-900 placeholder-slate-400" placeholder="16 Digit Angka">
+                    </div>
+                </div>
+
+                <div id="fieldResetTglLahir" class="hidden animate-fadeIn">
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Tanggal Lahir (Sesuai KTP)</label>
+                    <div class="relative">
+                        <i class="bi bi-calendar-date absolute left-4 top-3.5 text-slate-400 text-lg"></i>
+                        <input type="date" id="loginTglLahir" class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-sm font-bold text-slate-900 placeholder-slate-400">
+                    </div>
+                </div>
+
+                <div id="fieldLoginEmail">
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Alamat Email</label>
+                    <div class="relative">
+                        <i class="bi bi-envelope absolute left-4 top-3.5 text-slate-400 text-lg"></i>
+                        <input type="email" id="loginEmail" class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-sm font-bold text-slate-900 placeholder-slate-400" placeholder="email@anda.com">
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider" id="labelLoginPassword">Kata Sandi</label>
+                        <button type="button" onclick="setModeLogin('reset')" id="btnLupaSandi" class="text-xs font-bold text-teal-600 hover:text-teal-800 transition-colors">Lupa Sandi?</button>
+                    </div>
+                    <div class="relative">
+                        <i class="bi bi-shield-lock absolute left-4 top-3.5 text-slate-400 text-lg"></i>
+                        <input type="password" id="loginPassword" class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-sm font-bold text-slate-900 placeholder-slate-400" placeholder="Minimal 6 karakter">
+                    </div>
+                </div>
+
+                <button type="submit" id="btnLoginSubmit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-black py-3.5 rounded-xl shadow-md shadow-teal-600/20 transition-all active:scale-95 flex justify-center items-center gap-2">
+                    Masuk Sekarang <i class="bi bi-arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="mt-6 text-center border-t border-slate-100 pt-6">
+                <p class="text-sm text-slate-500 font-medium" id="loginToggleText">
+                    Belum punya akun warga? <button type="button" onclick="tutupLoginModal(); setTimeout(() => bukaRegisterModal(), 300);" class="text-teal-600 font-bold hover:text-teal-800 hover:underline">Daftar di sini</button>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    import { supabase } from '../lib/supabase.js';
+
+    let isResetMode = false;
+
+    window.bukaLoginModal = () => {
+        const m = document.getElementById('loginModal');
+        const b = document.getElementById('loginModalBox');
+        setModeLogin('login');
+        m.classList.remove('hidden');
+        setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+    };
+
+    window.tutupLoginModal = () => {
+        const m = document.getElementById('loginModal');
+        const b = document.getElementById('loginModalBox');
+        m.classList.add('opacity-0'); b.classList.remove('scale-100'); b.classList.add('scale-95');
+        setTimeout(() => { m.classList.add('hidden'); document.getElementById('loginForm').reset(); }, 300);
+    };
+
+    window.setModeLogin = (mode) => {
+        isResetMode = (mode === 'reset');
+        
+        document.getElementById('loginTitle').innerText = isResetMode ? "Reset Kata Sandi" : "Masuk Akun";
+        document.getElementById('loginDesc').innerText = isResetMode ? "Validasi Identitas KTP Anda" : "Layanan Digital Desa Mulyamekar";
+        document.getElementById('btnLoginSubmit').innerHTML = isResetMode ? "Reset Sandi <i class='bi bi-shield-lock'></i>" : "Masuk <i class='bi bi-arrow-right'></i>";
+        
+        document.getElementById('loginToggleText').innerHTML = isResetMode 
+            ? `Ingat kata sandi? <button type="button" onclick="setModeLogin('login')" class="text-teal-600 font-bold hover:text-teal-800 hover:underline">Kembali Masuk</button>`
+            : `Belum punya akun? <button type="button" onclick="tutupLoginModal(); setTimeout(() => bukaRegisterModal(), 300);" class="text-teal-600 font-bold hover:text-teal-800 hover:underline">Daftar di sini</button>`;
+
+        document.getElementById('fieldResetNik').classList.toggle('hidden', !isResetMode);
+        document.getElementById('fieldResetTglLahir').classList.toggle('hidden', !isResetMode);
+        document.getElementById('fieldLoginEmail').classList.toggle('hidden', isResetMode);
+        document.getElementById('btnLupaSandi').classList.toggle('hidden', isResetMode);
+        document.getElementById('labelLoginPassword').innerText = isResetMode ? "Kata Sandi Baru" : "Kata Sandi";
+    };
+
+    document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const nik = document.getElementById('loginNik').value.trim();
+        const tglLahir = document.getElementById('loginTglLahir').value;
+        const btn = document.getElementById('btnLoginSubmit');
+
+        btn.disabled = true;
+        btn.innerHTML = "Memproses... <i class='bi bi-hourglass-split animate-spin'></i>";
+
+        try {
+            if (!isResetMode) {
+                // =========================
+                // PROSES LOGIN
+                // =========================
+                if(!email || !password) throw new Error('Email dan Password wajib diisi!');
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                
+                const { data: profil } = await supabase.from('profil_user').select('role').eq('id', data.user.id).single();
+                window.location.href = (profil && profil.role === 'admin') ? '/admin' : '/warga';
+            } else {
+                // =========================
+                // PROSES RESET SANDI (DETEKTIF MODE 🕵️‍♂️)
+                // =========================
+                console.log("🕵️ [RESET 1] Tombol Reset Diklik!");
+                console.log(`🕵️ [RESET 2] Data Terbaca -> NIK: '${nik}' (Panjang: ${nik.length}) | TglLahir: '${tglLahir}' | PassBaru: '${password}'`);
+                
+                // Cek apakah browser beku di sini karena ada data kosong
+                if (!nik || !tglLahir || !password) {
+                    console.error("❌ ERROR: Ada kotak input yang tidak terbaca JS!");
+                    debugger;
+                }
+
+                if (nik.length !== 16) {
+                    console.error(`❌ [RESET 3] Validasi Gagal: NIK bukan 16 digit. (Hanya ${nik.length} digit)`);
+                    debugger;
+                    throw new Error("NIK harus 16 digit!");
+                }
+                if (!tglLahir) throw new Error("Tanggal Lahir wajib diisi!");
+                if (password.length < 6) throw new Error("Kata sandi baru minimal 6 karakter!");
+
+                console.log("🕵️ [RESET 4] Validasi Frontend Lolos. Menembak Edge Function 'reset-sandi'...");
+                debugger; // ❄️ BROWSER BEKU SEBELUM NEMBAK SUPABASE
+
+                const { data: hasilReset, error: invokeErr } = await supabase.functions.invoke('reset-sandi', {
+                    body: { nik: nik, tanggalLahir: tglLahir, passwordBaru: password }
+                });
+
+                console.log("🕵️ [RESET 5] Balasan dari Edge Function Supabase:", hasilReset);
+
+                if (invokeErr) {
+                    console.error("❌ [RESET 6] Edge Function Crash/Error Jaringan:", invokeErr);
+                    debugger; // ❄️ BROWSER BEKU KALAU EDGE FUNCTION MATI
+                    throw new Error("Sistem sedang sibuk, coba lagi nanti.");
+                }
+                
+                if (hasilReset && hasilReset.status !== 'sukses') {
+                    console.warn("⚠️ [RESET 7] Ditolak Supabase (Bisa karena NIK salah / Tanggal lahir ga cocok):", hasilReset.pesan);
+                    debugger; // ❄️ BROWSER BEKU KALAU DITOLAK
+                    throw new Error(hasilReset.pesan);
+                }
+
+                console.log("✅ [RESET 8] SUSAH RESET SUKSES!");
+                showCustomAlert('success', 'Sandi Diperbarui', 'Kata sandi berhasil direset! Silakan masuk.');
+                document.getElementById('loginForm').reset();
+                setModeLogin('login'); 
+            }
+        } catch (error) {
+            console.error("❌ [ERROR UTAMA]:", error);
+            showCustomAlert('error', 'Gagal', error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = isResetMode ? "Reset Sandi <i class='bi bi-shield-lock'></i>" : "Masuk <i class='bi bi-arrow-right'></i>";
+        }
+    });
+</script>

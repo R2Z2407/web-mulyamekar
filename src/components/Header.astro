@@ -1,6 +1,7 @@
 ---
 // src/components/Header.astro
-import AuthModal from './AuthModal.astro';
+import LoginModal from './LoginModal.astro';
+import RegisterModal from './RegisterModal.astro';
 import AvatarWarga from './AvatarWarga.astro'; // 🔥 IMPORT AVATAR DI SINI 🔥
 const navItems = [
   { name: 'Beranda', url: '/' },
@@ -36,7 +37,7 @@ const navItems = [
         Layanan Surat
       </a>
 
-      <button id="btnNavLogin" onclick="bukaAuthModal()" class="hidden text-sm font-bold border-2 border-white hover:bg-white hover:text-teal-700 px-5 py-1.5 rounded-full transition-colors shadow-sm ml-2">
+      <button id="btnNavLogin" onclick="bukaLoginModal()" class="hidden text-sm font-bold border-2 border-white hover:bg-white hover:text-teal-700 px-5 py-1.5 rounded-full transition-colors shadow-sm ml-2">
         Masuk / Daftar
       </button>
 
@@ -78,7 +79,7 @@ const navItems = [
         Layanan Surat
       </a>
 
-      <button id="btnMobileLogin" onclick="bukaAuthModal(); document.getElementById('mobile-menu-btn').click();" class="hidden w-full max-w-xs text-center border-2 border-white hover:bg-white text-white hover:text-teal-950 py-2.5 rounded-full text-lg font-bold transition-colors">
+      <button id="btnMobileLogin" onclick="bukaLoginModal(); document.getElementById('mobile-menu-btn').click();" class="hidden w-full max-w-xs text-center border-2 border-white hover:bg-white text-white hover:text-teal-950 py-2.5 rounded-full text-lg font-bold transition-colors">
         Masuk / Daftar
       </button>
 
@@ -100,7 +101,8 @@ const navItems = [
     </nav>
   </div>
 
-  <AuthModal />
+  <LoginModal />
+  <RegisterModal />
 </header>
 
 <script>

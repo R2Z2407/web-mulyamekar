@@ -99,6 +99,28 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                 const { data: dbPenduduk, error: errPenduduk } = await supabase.from('data_penduduk').select('*');
                 if (errPenduduk) throw errPenduduk;
 
+                // 1.5 Ambil data Master Wilayah untuk RT/RW
+                const { data: dbWilayah, error: errWilayah } = await supabase.from('master_wilayah').select('nomor_rt, nomor_rw');
+                if (errWilayah) throw errWilayah;
+
+                let rt = 0;
+                let rw = 0;
+                if (dbWilayah && dbWilayah.length > 0) {
+                    // Jumlah RT = Total keseluruhan baris data
+                    rt = dbWilayah.length; 
+                    
+                    // KUMPULKAN DAN CARI RW TERTINGGI
+                    const kumpulanRW = dbWilayah.map(item => {
+                        // Ambil langsung dari kolom nomor_rw
+                        // Angka 10 di belakang penting agar "09" dibaca 9, bukan 0 atau error
+                        return parseInt(item.nomor_rw, 10) || 0;
+                    });
+
+                    // Tangkap angka paling besar
+                    rw = Math.max(...kumpulanRW); 
+                }
+
+                // 2. Siapkan Wadah Metrik
                 // 2. Siapkan Wadah Metrik
                 let metrics = { 
                     total_penduduk: 0, 
@@ -109,7 +131,9 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                     bekerja: 0, 
                     tidak_bekerja: 0, 
                     pelajar: 0, 
-                    pensiunan: 0 
+                    pensiunan: 0,
+                    rt: rt, // <--- TAMBAHKAN INI
+                    rw: rw  // <--- TAMBAHKAN INI
                 };
                 
                 const kkSet = new Set();
@@ -170,7 +194,9 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                     { label: 'Warga Bekerja', satuan: 'Jiwa', key: 'bekerja', urutan: 6, icon: '💼' },
                     { label: 'Tidak/Belum Bekerja', satuan: 'Jiwa', key: 'tidak_bekerja', urutan: 7, icon: '🛋️' },
                     { label: 'Pelajar & Mahasiswa', satuan: 'Jiwa', key: 'pelajar', urutan: 8, icon: '🎓' },
-                    { label: 'Pensiunan', satuan: 'Jiwa', key: 'pensiunan', urutan: 9, icon: '👴' }
+                    { label: 'Pensiunan', satuan: 'Jiwa', key: 'pensiunan', urutan: 9, icon: '👴' },
+                    { label: 'Jumlah RT', satuan: 'RT', key: 'rt', urutan: 10, icon: '🏘️' },
+                    { label: 'Jumlah RW', satuan: 'RW', key: 'rw', urutan: 11, icon: '🏘️' }
                 ];
 
                 let finalStats = [...(dbStatistik || [])];

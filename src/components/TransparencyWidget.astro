@@ -1,6 +1,7 @@
 ---
 // src/components/TransparencyWidget.astro
 import { supabase } from '../lib/supabase.js';
+import ModalRincian from './ModalRincianAPBDes.astro';
 
 // 1. Tarik semua data APBDes
 const { data: allData, error } = await supabase
@@ -81,7 +82,7 @@ const getVisuals = (kategori) => {
           const visual = getVisuals(item.kategori);
           
           return (
-            <div class="bg-gray-50 rounded-3xl p-6 md:p-8 max-md:landscape:p-4 border border-gray-100 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 group" data-aos="fade-up" data-aos-delay={index * 150}>
+            <div onclick={`bukaModalRincian('${item.kategori}')`} class="cursor-pointer bg-gray-50 rounded-3xl p-6 md:p-8 max-md:landscape:p-4 border border-gray-100 shadow-sm hover:shadow-xl hover:border-teal-200 transition-all hover:-translate-y-2 group" data-aos="fade-up" data-aos-delay={index * 150}>
               <div class="flex items-center gap-4 mb-8 max-md:landscape:mb-4">
                 <div class={`w-14 h-14 max-md:landscape:w-10 max-md:landscape:h-10 rounded-2xl flex items-center justify-center text-white shadow-inner ${visual.color}`}>
                   <svg class="w-7 h-7 max-md:landscape:w-5 max-md:landscape:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,3 +122,5 @@ const getVisuals = (kategori) => {
 
   </div>
 </section>
+
+<ModalRincian />

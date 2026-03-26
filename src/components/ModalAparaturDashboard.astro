@@ -1,0 +1,218 @@
+---
+// src/components/ModalAparaturDashboard.astro
+---
+
+<div id="modalAparatur" class="fixed inset-0 z-[100] bg-slate-900/80 hidden items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300 overflow-y-auto">
+    
+    <div id="modalAparaturBox" class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col my-8">
+        
+        <div class="bg-gradient-to-r from-teal-600 to-teal-800 p-6 text-white flex justify-between items-center rounded-t-3xl relative overflow-hidden">
+            <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            <div class="relative z-10">
+                <h3 class="text-2xl font-black tracking-tight" id="formTitle">Tambah Aparatur</h3>
+                <p class="text-teal-100 text-sm mt-1" id="formDesc">Isi detail aparatur SOTK Desa Mulyamekar</p>
+            </div>
+            <button type="button" onclick="tutupModalAparatur()" class="relative z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-teal-100 hover:text-white transition-colors text-lg font-bold leading-none">
+    ✕
+</button>
+        </div>
+
+        <div class="p-6 md:p-8">
+            <form id="formAparatur" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <input type="hidden" id="editId">
+                <input type="hidden" id="foto_url_lama"> 
+                
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Nama Lengkap & Gelar *</label>
+                    <input type="text" id="nama" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all font-bold text-gray-900" placeholder="Contoh: Budi Santoso, S.E.">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Jabatan (SOTK) *</label>
+                    <div class="relative">
+                        <select id="jabatan" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none appearance-none cursor-pointer font-bold text-gray-800 transition-all">
+                            <option value="" disabled selected>-- Pilih Jabatan / Role --</option>
+                            <option value="Kepala Desa">Kepala Desa</option>
+                            <option value="Sekretaris Desa">Sekretaris Desa</option>
+                            
+                            <optgroup label="Sekretariat (3 Pilar)">
+                                <option value="Kaur Tata Usaha & Umum">Kaur Tata Usaha & Umum</option>
+                                <option value="Kaur Keuangan">Kaur Keuangan</option>
+                                <option value="Kaur Perencanaan">Kaur Perencanaan</option>
+                            </optgroup>
+                            
+                            <optgroup label="Pelaksana Teknis (3 Pilar)">
+                                <option value="Kasi Pemerintahan">Kasi Pemerintahan</option>
+                                <option value="Kasi Kesejahteraan">Kasi Kesejahteraan</option>
+                                <option value="Kasi Pelayanan">Kasi Pelayanan</option>
+                            </optgroup>
+                            
+                            <optgroup label="Kewilayahan (3 Pilar)">
+                                <option value="Kepala Dusun I">Kepala Dusun I</option>
+                                <option value="Kepala Dusun II">Kepala Dusun II</option>
+                                <option value="Kepala Dusun III">Kepala Dusun III</option>
+                                <option value="Ketua RW">Ketua RW</option>
+                            </optgroup>
+
+                            <optgroup label="Lainnya">
+                                <option value="Staf Desa">Staf Desa</option>
+                                <option value="Operator IT">Operator IT</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Urutan Tampil *</label>
+                    <input type="number" id="urutan" required min="1" class="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl outline-none font-bold text-gray-500 cursor-not-allowed" placeholder="Otomatis" readonly title="Diisi otomatis berdasarkan jabatan">
+                </div>
+
+                <div class="bg-blue-50 border border-blue-100 p-5 rounded-xl md:col-span-2 mt-2">
+                    <label class="block text-sm font-bold text-blue-900 mb-2">Upload Foto Profil <span class="text-xs font-normal text-blue-700">(Opsional)</span></label>
+                    <input type="file" id="input_file_foto" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all cursor-pointer">
+                    <p id="statusUpload" class="text-xs font-bold text-amber-600 mt-2 hidden"></p>
+                </div>
+
+                <div class="md:col-span-2 flex justify-end gap-3 mt-4 pt-6 border-t border-slate-100">
+                    <button type="button" onclick="tutupModalAparatur()" class="px-6 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">Batal</button>
+                    <button type="submit" id="btnSimpanAparatur" class="px-8 py-3 bg-teal-600 text-white font-black rounded-xl shadow-md shadow-teal-600/20 hover:bg-teal-700 transition-colors active:scale-95">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    import { supabase } from '../lib/supabase.js';
+    const IMGBB_API_KEY = import.meta.env.PUBLIC_IMGBB_API_KEY;
+
+    // KONTROL TAMPILAN MODAL
+    window.bukaModalAparatur = () => {
+        const m = document.getElementById('modalAparatur');
+        const b = document.getElementById('modalAparaturBox');
+        
+        document.getElementById('formAparatur').reset();
+        document.getElementById('editId').value = '';
+        document.getElementById('foto_url_lama').value = '';
+        document.getElementById('formTitle').innerText = 'Tambah Aparatur';
+        document.getElementById('formDesc').innerText = 'Isi detail aparatur SOTK Desa Mulyamekar';
+        document.getElementById('btnSimpanAparatur').innerText = 'Simpan Data';
+        document.getElementById('statusUpload').classList.add('hidden');
+
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+    };
+
+    window.tutupModalAparatur = () => {
+        const m = document.getElementById('modalAparatur');
+        const b = document.getElementById('modalAparaturBox');
+        m.classList.add('opacity-0'); 
+        b.classList.remove('scale-100'); 
+        b.classList.add('scale-95');
+        setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
+    };
+
+    window.bukaModalEditAparatur = (item) => {
+        bukaModalAparatur(); // Buka modalnya dulu
+        
+        setTimeout(() => {
+            document.getElementById('formTitle').innerText = 'Edit Aparatur';
+            document.getElementById('formDesc').innerText = 'Perbarui data jabatan atau foto';
+            document.getElementById('btnSimpanAparatur').innerText = 'Update Data';
+
+            document.getElementById('editId').value = item.id;
+            document.getElementById('nama').value = item.nama;
+            
+            // Logika Anti-Ngeblank Jabatan Lama
+            const selectJabatan = document.getElementById('jabatan');
+            let optionExists = Array.from(selectJabatan.options).some(opt => opt.value === item.jabatan);
+            if(!optionExists && item.jabatan) {
+                const newOpt = new Option(item.jabatan + ' (Lama)', item.jabatan);
+                selectJabatan.add(newOpt);
+            }
+            
+            document.getElementById('jabatan').value = item.jabatan;
+            document.getElementById('urutan').value = item.urutan;
+            document.getElementById('foto_url_lama').value = item.foto_url || '';
+        }, 50); // Jeda dikit biar form ke-reset dulu baru diisi
+    };
+
+    // LOGIKA URUTAN OTOMATIS
+    document.getElementById('jabatan')?.addEventListener('change', (e) => {
+        const val = e.target.value;
+        const urutanInput = document.getElementById('urutan');
+        if (val === 'Kepala Desa') urutanInput.value = 1;
+        else if (val === 'Sekretaris Desa') urutanInput.value = 2;
+        else if (val.includes('Kaur')) urutanInput.value = 3;
+        else if (val.includes('Kasi')) urutanInput.value = 4;
+        else if (val.includes('Dusun') || val.includes('RW')) urutanInput.value = 5;
+        else urutanInput.value = 6; 
+    });
+
+    // FUNGSI UPLOAD GAMBAR
+    async function uploadKeImgBB(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+        const data = await response.json();
+        if (data.success) return data.data.url;
+        throw new Error("Gagal mengupload foto ke server ImgBB.");
+    }
+
+    // PROSES SIMPAN FORM
+    document.getElementById('formAparatur')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('editId').value;
+        const btn = document.getElementById('btnSimpanAparatur');
+        const fileInput = document.getElementById('input_file_foto');
+        const statusUp = document.getElementById('statusUpload');
+        
+        btn.disabled = true; 
+        let finalImageUrl = document.getElementById('foto_url_lama').value; 
+
+        try {
+            if (fileInput.files.length > 0) {
+                btn.innerText = "Mengupload Foto...";
+                statusUp.innerText = "⏳ Sedang mengupload ke server...";
+                statusUp.classList.remove('hidden');
+                
+                finalImageUrl = await uploadKeImgBB(fileInput.files[0]);
+                statusUp.innerText = "✅ Foto berhasil diupload!";
+                statusUp.classList.replace('text-amber-600', 'text-emerald-600');
+            }
+
+            btn.innerText = "Menyimpan Data...";
+            const payload = {
+                nama: document.getElementById('nama').value,
+                jabatan: document.getElementById('jabatan').value, 
+                foto_url: finalImageUrl, 
+                urutan: parseInt(document.getElementById('urutan').value)
+            };
+
+            let error;
+            if (id) {
+                const res = await supabase.from('aparatur').update(payload).eq('id', id);
+                error = res.error;
+            } else {
+                const res = await supabase.from('aparatur').insert([payload]);
+                error = res.error;
+            }
+
+            if (error) throw error;
+            
+            // Beritahu halaman utama untuk memuat ulang tabel
+            window.dispatchEvent(new Event('refreshDataAparatur'));
+            
+            if(typeof showCustomAlert !== 'undefined') await showCustomAlert('success', 'Berhasil', id ? 'Data diperbarui!' : 'Data ditambahkan!');
+            tutupModalAparatur();
+
+        } catch (err) {
+            if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Gagal', err.message);
+            else alert('Error: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = id ? 'Update Data' : 'Simpan Data';
+        }
+    });
+</script>

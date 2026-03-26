@@ -1,0 +1,180 @@
+---
+// src/components/ModalRincianAPBDes.astro
+---
+
+<div id="modalRincianApbdes" class="fixed inset-0 z-[100] bg-slate-900/80 hidden items-center justify-center p-3 md:p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+    
+    <div id="modalRincianApbdesBox" class="bg-gray-50 rounded-2xl md:rounded-3xl w-full max-w-2xl max-h-[90vh] shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col overflow-hidden border border-gray-100">
+        
+        <div id="headerModalRincian" class="bg-white p-4 md:p-6 flex justify-between items-center border-b border-gray-200 shrink-0">
+            <div>
+                <h3 class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500 mb-1" id="titleTahunModal">Tahun Anggaran 2026</h3>
+                <h2 class="text-lg md:text-2xl font-black text-gray-900 leading-tight" id="titleKategoriModal">Memuat...</h2>
+            </div>
+            <button type="button" onclick="tutupModalRincian()" class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors shrink-0">
+                <i class="bi bi-x-lg font-bold text-sm md:text-base"></i>
+            </button>
+        </div>
+
+        <div class="p-4 md:p-6 overflow-y-auto flex-grow scrollbar-hide">
+            <div id="wadahListRincian" class="space-y-4 md:space-y-6">
+                <div class="text-center py-10 flex flex-col items-center">
+                    <i class="bi bi-arrow-repeat animate-spin text-3xl md:text-4xl text-gray-300 mb-4 inline-block"></i>
+                    <span class="text-gray-500 font-medium text-xs md:text-sm">Menarik data rincian terbaru...</span>
+                </div>
+            </div>
+
+            <div class="mt-6 md:mt-8 text-center pt-5 md:pt-6 border-t border-gray-200/60 hidden" id="wadahTombolLihatSemua">
+                <a href="/transparansi" class="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-bold py-2.5 px-6 md:py-3 md:px-8 rounded-xl shadow-sm hover:bg-gray-50 hover:text-teal-600 transition-all active:scale-95 text-xs md:text-sm">
+                    Lihat Seluruh Rincian <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Biar scrollbar di dalam modal nggak terlalu tebal di Windows/Android */
+    .scrollbar-hide::-webkit-scrollbar { width: 4px; }
+    .scrollbar-hide::-webkit-scrollbar-track { background: transparent; }
+    .scrollbar-hide::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+    .scrollbar-hide:hover::-webkit-scrollbar-thumb { background: #d1d5db; }
+</style>
+
+<script>
+    import { supabase } from '../lib/supabase.js';
+
+    const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+    const steril = (teks) => {
+        if (!teks) return '';
+        return String(teks).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char] || char));
+    };
+
+    const temaWarna = {
+        Pendapatan: { text: 'text-emerald-700', badgeBg: 'bg-emerald-50', badgeText: 'text-emerald-600', bar: 'bg-emerald-500', dot: 'bg-emerald-400', border: 'border-emerald-100' },
+        Belanja: { text: 'text-rose-700', badgeBg: 'bg-rose-50', badgeText: 'text-rose-600', bar: 'bg-rose-500', dot: 'bg-rose-400', border: 'border-rose-100' },
+        Pembiayaan: { text: 'text-amber-700', badgeBg: 'bg-amber-50', badgeText: 'text-amber-600', bar: 'bg-amber-500', dot: 'bg-amber-400', border: 'border-amber-100' },
+        Default: { text: 'text-teal-700', badgeBg: 'bg-teal-50', badgeText: 'text-teal-600', bar: 'bg-teal-500', dot: 'bg-teal-400', border: 'border-teal-100' }
+    };
+
+    window.bukaModalRincian = async (kategori) => {
+        // 🔥 KUNCI SCROLL BACKGROUND 🔥
+        document.body.classList.add('overflow-hidden');
+
+        const m = document.getElementById('modalRincianApbdes');
+        const b = document.getElementById('modalRincianApbdesBox');
+        
+        document.getElementById('titleKategoriModal').innerText = 'Top 3 ' + kategori;
+        document.getElementById('wadahListRincian').innerHTML = `
+            <div class="text-center py-10 flex flex-col items-center">
+                <i class="bi bi-arrow-repeat animate-spin text-3xl md:text-4xl text-gray-300 mb-4 inline-block"></i>
+                <span class="text-gray-500 font-medium text-xs md:text-sm">Menarik data rincian terbaru...</span>
+            </div>`;
+        document.getElementById('wadahTombolLihatSemua').classList.add('hidden');
+
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+
+        try {
+            const { data, error } = await supabase
+                .from('apbdes')
+                .select('*')
+                .eq('tahun', 2026)
+                .eq('kategori', kategori)
+                .order('anggaran', { ascending: false })
+                .limit(3);
+
+            if (error) throw error;
+
+            const wadah = document.getElementById('wadahListRincian');
+            const tema = temaWarna[kategori] || temaWarna.Default;
+
+            if (!data || data.length === 0) {
+                wadah.innerHTML = `<div class="text-center py-10 bg-white rounded-2xl border border-gray-100 shadow-sm"><p class="text-gray-500 font-medium text-xs md:text-sm">Belum ada rincian alokasi dana untuk tahun 2026.</p></div>`;
+                return;
+            }
+
+            let htmlRender = '';
+
+            data.forEach(item => {
+                const persentase = item.anggaran > 0 ? Math.round((item.realisasi / item.anggaran) * 100) : 0;
+                const persenAman = persentase > 100 ? 100 : persentase;
+
+                let judulUraian = steril(item.nama_kegiatan || item.nama_program || item.judul || item.bidang || steril(item.uraian));
+                let htmlListRincian = '';
+
+                try {
+                    let dataRincian = null;
+                    if (item.uraian && item.uraian.trim().startsWith('[')) dataRincian = JSON.parse(item.uraian);
+                    else if (item.rincian && item.rincian.trim().startsWith('[')) dataRincian = JSON.parse(item.rincian);
+
+                    if (Array.isArray(dataRincian) && dataRincian.length > 0) {
+                        htmlListRincian = '<div class="mt-3 md:mt-4 space-y-2 bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-100 shadow-inner">';
+                        dataRincian.forEach(detail => {
+                            const namaDetail = detail.nama || detail.uraian || 'Item Kegiatan';
+                            const hargaDetail = detail.harga || detail.anggaran || 0;
+                            htmlListRincian += `
+                                <div class="flex justify-between items-center gap-2 border-b border-slate-200/60 pb-2 last:border-0 last:pb-0">
+                                    <div class="flex items-start gap-1.5 text-[10px] md:text-[11px] text-slate-600 font-bold leading-tight">
+                                        <span class="w-1.5 h-1.5 rounded-full ${tema.dot} mt-1 shrink-0"></span>
+                                        <span>${steril(namaDetail)}</span>
+                                    </div>
+                                    <span class="text-[9px] md:text-[10px] font-bold text-slate-800 bg-white px-2 py-1 rounded shadow-sm border border-slate-200 shrink-0">
+                                        ${formatRp(hargaDetail)}
+                                    </span>
+                                </div>`;
+                        });
+                        htmlListRincian += '</div>';
+                        if (judulUraian.startsWith('[')) judulUraian = 'Rincian Alokasi Dana';
+                    }
+                } catch(e) {}
+
+                htmlRender += `
+                    <div class="bg-white p-4 md:p-5 rounded-2xl border border-gray-100 shadow-sm transition-all">
+                        <div class="flex justify-between items-start mb-2 gap-3">
+                            <h4 class="font-extrabold text-gray-900 text-xs md:text-sm leading-snug">${judulUraian}</h4>
+                            <span class="text-[9px] md:text-[10px] font-black ${tema.badgeText} ${tema.badgeBg} border ${tema.border} px-2 py-1 rounded-lg shrink-0">${persenAman}%</span>
+                        </div>
+                        
+                        ${htmlListRincian}
+
+                        <div class="mt-4 pt-3 border-t border-gray-100">
+                            <div class="flex justify-between text-[10px] md:text-[11px] mb-2 font-mono">
+                                <span class="text-gray-500 flex flex-col">
+                                    <span class="text-[8px] md:text-[9px] uppercase tracking-wider mb-0.5 font-bold">Anggaran</span>
+                                    <span class="font-bold text-gray-800">${formatRp(item.anggaran)}</span>
+                                </span>
+                                <span class="text-gray-500 flex flex-col text-right">
+                                    <span class="text-[8px] md:text-[9px] uppercase tracking-wider mb-0.5 font-bold">Realisasi</span>
+                                    <span class="font-bold ${tema.text}">${formatRp(item.realisasi)}</span>
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-2 md:h-2.5 overflow-hidden shadow-inner">
+                                <div class="${tema.bar} h-2 md:h-2.5 rounded-full transition-all duration-1000" style="width: ${persenAman}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            wadah.innerHTML = htmlRender;
+            document.getElementById('wadahTombolLihatSemua').classList.remove('hidden');
+
+        } catch (error) {
+            document.getElementById('wadahListRincian').innerHTML = `<div class="text-center py-6 text-rose-500 text-xs md:text-sm font-bold bg-rose-50 rounded-xl">Gagal memuat rincian.</div>`;
+        }
+    };
+
+    window.tutupModalRincian = () => {
+        // 🔥 LEPASKAN KUNCIAN SCROLL BACKGROUND 🔥
+        document.body.classList.remove('overflow-hidden');
+
+        const m = document.getElementById('modalRincianApbdes');
+        const b = document.getElementById('modalRincianApbdesBox');
+        m.classList.add('opacity-0'); 
+        b.classList.remove('scale-100'); 
+        b.classList.add('scale-95');
+        setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
+    };
+</script>

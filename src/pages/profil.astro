@@ -1,99 +1,80 @@
 ---
 // src/pages/profil.astro
-import '../global.css';
-import Header from '../components/Header.astro';
-import AuthModal from '../components/AuthModal.astro';
-import Footer from '../components/Footer.astro';
+import BaseLayout from '../layout/BaseLayout.astro';
 ---
 
-<html lang="id">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Profil - Portal Resmi Desa Mulyamekar</title>
-  </head>
-  <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
-    
-    <Header />
-    
-    <main class="flex-grow">
-      
-      <section class="bg-teal-900 text-white py-20 max-md:landscape:py-12 relative overflow-hidden">
-        <div class="absolute inset-0 opacity-20">
-          <img src="https://images.unsplash.com/photo-1523730205978-59fd1b2965e3?q=80&w=2073&auto=format&fit=crop" alt="Pemandangan Padi" class="w-full h-full object-cover" />
-        </div>
-        <div class="container mx-auto px-4 relative z-10 text-center">
-          <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-amber-400 drop-shadow-md">Profil Desa</h1>
-          <p class="text-lg md:text-xl text-teal-100 max-w-2xl mx-auto drop-shadow">Mengenal lebih dekat sejarah, visi, dan misi Desa Mulyamekar.</p>
-        </div>
-      </section>
+<BaseLayout title="Profil - Portal Resmi Desa Mulyamekar">
+    <section class="bg-teal-900 text-white py-20 max-md:landscape:py-12 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20">
+        <img src="https://images.unsplash.com/photo-1523730205978-59fd1b2965e3?q=80&w=2073&auto=format&fit=crop" alt="Pemandangan Padi" class="w-full h-full object-cover" />
+    </div>
+    <div class="container mx-auto px-4 relative z-10 text-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-amber-400 drop-shadow-md">Profil Desa</h1>
+        <p class="text-lg md:text-xl text-teal-100 max-w-2xl mx-auto drop-shadow">Mengenal lebih dekat sejarah, visi, dan misi Desa Mulyamekar.</p>
+    </div>
+    </section>
 
-      <section class="py-20 max-md:landscape:py-12 bg-white">
-        <div class="container mx-auto px-4 max-w-5xl">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-12 max-md:landscape:gap-6">
+    <section class="py-20 max-md:landscape:py-12 bg-white">
+    <div class="container mx-auto px-4 max-w-5xl">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 max-md:landscape:gap-6">
+        
+        <div class="bg-teal-50 p-8 md:p-10 rounded-3xl border border-teal-100 shadow-sm hover:shadow-lg transition-shadow">
+            <div class="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center text-teal-950 mb-6 shadow-md">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            </div>
+            <h2 class="text-3xl font-bold text-teal-950 mb-4">Visi</h2>
+            <p class="text-xl text-teal-800 font-medium italic leading-relaxed">
+            "Terwujudnya Desa Mulyamekar yang Mandiri, Sejahtera, Agamis, dan Berbudaya melalui Tata Kelola Pemerintahan yang Bersih dan Inovatif."
+            </p>
+        </div>
+
+        <div class="bg-white p-8 md:p-10 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition-shadow relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full -z-10"></div>
             
-            <div class="bg-teal-50 p-8 md:p-10 rounded-3xl border border-teal-100 shadow-sm hover:shadow-lg transition-shadow">
-              <div class="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center text-teal-950 mb-6 shadow-md">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-              </div>
-              <h2 class="text-3xl font-bold text-teal-950 mb-4">Visi</h2>
-              <p class="text-xl text-teal-800 font-medium italic leading-relaxed">
-                "Terwujudnya Desa Mulyamekar yang Mandiri, Sejahtera, Agamis, dan Berbudaya melalui Tata Kelola Pemerintahan yang Bersih dan Inovatif."
-              </p>
+            <div class="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center text-white mb-6 shadow-md">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
             </div>
-
-            <div class="bg-white p-8 md:p-10 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition-shadow relative overflow-hidden">
-              <div class="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full -z-10"></div>
-              
-              <div class="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center text-white mb-6 shadow-md">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-              </div>
-              <h2 class="text-3xl font-bold text-teal-950 mb-6">Misi</h2>
-              <ul class="space-y-5 text-gray-600">
-                <li class="flex items-start gap-4">
-                  <span class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-600 font-bold flex items-center justify-center mt-0.5">1</span>
-                  <span class="leading-relaxed">Meningkatkan kualitas pelayanan publik berbasis teknologi digital yang cepat dan transparan.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                  <span class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-600 font-bold flex items-center justify-center mt-0.5">2</span>
-                  <span class="leading-relaxed">Mendorong pemberdayaan ekonomi masyarakat desa melalui BUMDes dan program UMKM.</span>
-                </li>
-                <li class="flex items-start gap-4">
-                  <span class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-600 font-bold flex items-center justify-center mt-0.5">3</span>
-                  <span class="leading-relaxed">Meningkatkan pembangunan infrastruktur yang merata dan berwawasan lingkungan.</span>
-                </li>
-              </ul>
-            </div>
-
-          </div>
+            <h2 class="text-3xl font-bold text-teal-950 mb-6">Misi</h2>
+            <ul class="space-y-5 text-gray-600">
+            <li class="flex items-start gap-4">
+                <span class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-600 font-bold flex items-center justify-center mt-0.5">1</span>
+                <span class="leading-relaxed">Meningkatkan kualitas pelayanan publik berbasis teknologi digital yang cepat dan transparan.</span>
+            </li>
+            <li class="flex items-start gap-4">
+                <span class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-600 font-bold flex items-center justify-center mt-0.5">2</span>
+                <span class="leading-relaxed">Mendorong pemberdayaan ekonomi masyarakat desa melalui BUMDes dan program UMKM.</span>
+            </li>
+            <li class="flex items-start gap-4">
+                <span class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-600 font-bold flex items-center justify-center mt-0.5">3</span>
+                <span class="leading-relaxed">Meningkatkan pembangunan infrastruktur yang merata dan berwawasan lingkungan.</span>
+            </li>
+            </ul>
         </div>
-      </section>
 
-      <section class="py-20 max-md:landscape:py-12 bg-gray-50 border-t border-gray-200">
-        <div class="container mx-auto px-4 max-w-4xl">
-          <div class="text-center mb-12">
-            <h2 class="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-2">Jejak Langkah</h2>
-            <h3 class="text-3xl font-extrabold text-teal-950">Sejarah Mulyamekar</h3>
-            <div class="w-16 h-1.5 bg-amber-400 mx-auto mt-4 rounded-full"></div>
-          </div>
-          
-          <div class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 text-gray-600 text-lg leading-loose">
-            <p class="mb-6">
-              Desa Mulyamekar terbentuk pada era tahun 1980-an, sebagai hasil pemekaran dari wilayah administrasi yang lebih luas di Kecamatan Babakancikao. Nama <strong>"Mulyamekar"</strong> sendiri diambil dari filosofi dan doa para tokoh masyarakat dan sesepuh desa kala itu.
-            </p>
-            <p class="mb-6">
-              Kata <span class="text-teal-700 font-bold">"Mulya"</span> bermakna mulia, luhur, atau berharga, sedangkan <span class="text-amber-600 font-bold">"Mekar"</span> berarti berkembang, tumbuh, atau harum. Dengan demikian, Mulyamekar mengandung doa agar desa ini terus tumbuh menjadi wilayah yang luhur derajatnya, makmur warganya, dan namanya harum di mata masyarakat luas.
-            </p>
-            <p>
-              Seiring berjalannya waktu, Mulyamekar terus bertransformasi dari desa agraris menjadi kawasan yang dinamis. Kini, dengan pemanfaatan teknologi digital, Pemerintahan Desa Mulyamekar melangkah maju untuk memberikan pelayanan administrasi yang cepat, tepat, dan modern bagi seluruh warganya.
-            </p>
-          </div>
         </div>
-      </section>
+    </div>
+    </section>
 
-    </main>
-    <AuthModal />
-    <Footer />
-
-  </body>
-</html>
+    <section class="py-20 max-md:landscape:py-12 bg-gray-50 border-t border-gray-200">
+    <div class="container mx-auto px-4 max-w-4xl">
+        <div class="text-center mb-12">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-2">Jejak Langkah</h2>
+        <h3 class="text-3xl font-extrabold text-teal-950">Sejarah Mulyamekar</h3>
+        <div class="w-16 h-1.5 bg-amber-400 mx-auto mt-4 rounded-full"></div>
+        </div>
+        
+        <div class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 text-gray-600 text-lg leading-loose">
+        <p class="mb-6">
+            Desa Mulyamekar terbentuk pada era tahun 1980-an, sebagai hasil pemekaran dari wilayah administrasi yang lebih luas di Kecamatan Babakancikao. Nama <strong>"Mulyamekar"</strong> sendiri diambil dari filosofi dan doa para tokoh masyarakat dan sesepuh desa kala itu.
+        </p>
+        <p class="mb-6">
+            Kata <span class="text-teal-700 font-bold">"Mulya"</span> bermakna mulia, luhur, atau berharga, sedangkan <span class="text-amber-600 font-bold">"Mekar"</span> berarti berkembang, tumbuh, atau harum. Dengan demikian, Mulyamekar mengandung doa agar desa ini terus tumbuh menjadi wilayah yang luhur derajatnya, makmur warganya, dan namanya harum di mata masyarakat luas.
+        </p>
+        <p>
+            Seiring berjalannya waktu, Mulyamekar terus bertransformasi dari desa agraris menjadi kawasan yang dinamis. Kini, dengan pemanfaatan teknologi digital, Pemerintahan Desa Mulyamekar melangkah maju untuk memberikan pelayanan administrasi yang cepat, tepat, dan modern bagi seluruh warganya.
+        </p>
+        </div>
+    </div>
+    </section>
+</BaseLayout>
