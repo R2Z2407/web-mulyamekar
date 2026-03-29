@@ -27,6 +27,9 @@ import Footer from '../../components/Footer.astro';
                 <div class="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div>
                         <h2 class="text-xl font-bold text-gray-900">Daftar Pengajuan Masuk</h2>
+                        <button type="button" onclick="downloadSemuaArsip()" id="btnDownloadArsip" class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition-all active:scale-95 text-xs flex items-center gap-2">
+                            📦 Download Arsip Hari Ini (ZIP)
+                        </button>
                     </div>
                     <div class="relative w-full sm:w-72">
                         <input type="text" id="searchSurat" placeholder="Cari pemohon / jenis surat..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all shadow-sm">
@@ -110,13 +113,69 @@ import Footer from '../../components/Footer.astro';
     <Footer />
 
     <script>
-        import { supabase } from '../../lib/supabase.js';
+        import { supabase, URL_DOWNLOAD_ZIP } from '../../lib/supabase.js';
         
         // 🔥 STATE GLOBAL UNTUK PENCARIAN & PAGINATION (LIMIT 6) 🔥
         const itemsPerPage = 6;
         let dataGlobal = [];
         let rawSurat = [];
         let filteredSurat = [];
+
+        // --- FUNGSI DOWNLOAD ARSIP ZIP ---
+        // --- FUNGSI DOWNLOAD ARSIP ZIP ---
+        window.downloadSemuaArsip = async () => {
+            const btn = document.getElementById('btnDownloadArsip');
+            const teksAsli = btn.innerHTML;
+            btn.innerHTML = '⏳ Sedang Membungkus ZIP...';
+            btn.disabled = true;
+
+            try {
+                // 1. Ambil KTP Admin (Token)
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) throw new Error("Sesi tidak valid, silakan login ulang.");
+
+                // 🔥 2. LANGSUNG TEMBAK PAKAI VARIABEL DARI SUPABASE.JS 🔥
+                const response = await fetch(URL_DOWNLOAD_ZIP, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || "Gagal mendownload arsip. Pastikan folder tidak kosong.");
+                }
+
+                // 3. Jadikan Blob (Anti-Corrupt)
+                const blobData = await response.blob();
+
+                // 4. Eksekusi Download
+                const url = window.URL.createObjectURL(blobData);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                const tanggal = new Date().toISOString().split('T')[0];
+                a.download = `Arsip_Mulyamekar_${tanggal}.zip`;
+                
+                document.body.appendChild(a);
+                a.click();
+                
+                window.URL.revokeObjectURL(url);
+                a.remove();
+
+                if(typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Berhasil', 'Arsip ZIP berhasil di-download!');
+                else alert('Arsip ZIP berhasil di-download!');
+
+            } catch (error) {
+                console.error("Download Error:", error);
+                if(typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
+                else alert('Gagal: ' + error.message);
+            } finally {
+                btn.innerHTML = teksAsli;
+                btn.disabled = false;
+            }
+        };
 
         function steril(teks) {
             if (!teks) return '';
@@ -341,16 +400,27 @@ import Footer from '../../components/Footer.astro';
                     if (filePdf) {
                         statUpload.classList.remove('hidden');
                         const fileExt = filePdf.name.split('.').pop();
-                        const fileName = `surat_${Date.now()}.${fileExt}`;
+                        
+                        // 🔥 BIKIN NAMA FOLDER DINAMIS BIAR RAPIH (SINKRON DENGAN BERKAS WARGA) 🔥
+                        // Bersihkan spasi dan karakter aneh jadi underscore
+                        const namaWarga = itemSurat.nama_lengkap.replace(/[^a-zA-Z0-9]/g, '_');
+                        const jenisSurat = itemSurat.jenis_surat.replace(/[^a-zA-Z0-9]/g, '_');
+                        
+                        // Ambil timestamp dari waktu warga ngirim pengajuan biar foldernya unik
+                        const waktuKirim = new Date(itemSurat.created_at).getTime(); 
+                        
+                        // Ini path folder saktinya: hasil_surat / Jenis_Surat / NamaWarga_Waktu /
+                        const fullPath = `hasil_surat/${jenisSurat}/${namaWarga}_${waktuKirim}/Surat_Selesai_${Date.now()}.${fileExt}`;
 
                         const { data: uploadData, error: uploadError } = await supabase.storage
                             .from('berkas_layanan')
-                            .upload(`hasil_surat/${fileName}`, filePdf);
+                            .upload(fullPath, filePdf);
 
                         if (uploadError) throw new Error("Gagal mengunggah PDF: " + uploadError.message);
 
-                        const { data: publicUrlData } = supabase.storage.from('berkas_layanan').getPublicUrl(`hasil_surat/${fileName}`);
+                        const { data: publicUrlData } = supabase.storage.from('berkas_layanan').getPublicUrl(fullPath);
                         fileHasilUrl = publicUrlData.publicUrl;
+                        
                         statUpload.classList.add('hidden');
                     }
                     alasanUpdate = null; 

@@ -176,10 +176,10 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                 document.getElementById('infoUmkm').innerText = `${countToko || 0} Toko | ${countProduk || 0} Produk`;
 
                 // Statistik Bansos
-                const { data: dataBansos, error: errBansos } = await supabase.from('usulan_bansos').select('status');
+                const { data: dataBansos, error: errBansos } = await supabase.from('usulan_bansos').select('status_usulan');
                 let bansosDiberikan = 0;
                 if (!errBansos && dataBansos) {
-                    bansosDiberikan = dataBansos.filter(b => b.status === 'Disetujui' || b.status === 'Disalurkan' || b.status === 'Selesai').length;
+                    bansosDiberikan = dataBansos.filter(b => b.status_usulan === 'Disetujui' || b.status_usulan === 'Disalurkan' || b.status_usulan === 'Selesai').length;
                     if (bansosDiberikan === 0 && dataBansos.length > 0) bansosDiberikan = dataBansos.length; 
                 }
                 document.getElementById('infoBansos').innerText = `${bansosDiberikan} Disalurkan`;

@@ -288,7 +288,6 @@ import BaseLayout from '../layout/BaseLayout.astro';
         document.getElementById('formSurat').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Cek apakah user udah login (Opsional: kalau warga wajib login dulu)
             const { data: { session } } = await supabase.auth.getSession();
             const userId = session ? session.user.id : null; 
 
@@ -296,49 +295,55 @@ import BaseLayout from '../layout/BaseLayout.astro';
             btn.disabled = true; btn.innerText = "Mengunggah Berkas...";
 
             try {
-                // 1. Upload semua berkas ke Supabase Storage (bucket: berkas_layanan)
                 let urlsPersyaratan = {};
                 const inputElements = document.querySelectorAll('.input-berkas');
                 
+                // 🔥 1. BIKIN NAMA FOLDER DINAMIS DARI INPUTAN WARGA 🔥
+                const namaWarga = document.getElementById('inputNama').value.trim().replace(/[^a-zA-Z0-9]/g, '_');
+                const jenisSurat = selectJenis.value.replace(/[^a-zA-Z0-9]/g, '_');
+                const waktuKirim = Date.now(); // Biar unik kalau dia ngirim berkali-kali
+                
+                // Ini path folder saktinya: layanan / Jenis_Surat / NamaWarga_Waktu /
+                const folderPath = `layanan/${jenisSurat}/${namaWarga}_${waktuKirim}`;
+                // 2. Upload semua berkas ke dalam Folder tersebut
                 for (let i = 0; i < inputElements.length; i++) {
                     const el = inputElements[i];
                     const namaSyarat = el.getAttribute('data-nama');
                     const fileSiap = fileBerkasSiap[el.id];
-                    
+
                     if (fileSiap) {
                         const fileExt = fileSiap.name.split('.').pop();
-                        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                        // Nama file juga dirapikan (Contoh: Foto_KTP.jpg)
+                        const namaFileBersih = namaSyarat.replace(/[^a-zA-Z0-9]/g, '_');
+                        const fullPath = `${folderPath}/${namaFileBersih}.${fileExt}`;
                         
-                        // Upload ke Bucket 'berkas_layanan'
+                        // Upload ke Bucket 'berkas_layanan' dengan folder terstruktur
                         const { data: uploadData, error: uploadError } = await supabase.storage
                             .from('berkas_layanan')
-                            .upload(`layanan/${fileName}`, fileSiap);
+                            .upload(fullPath, fileSiap);
 
                         if (uploadError) throw uploadError;
 
-                        // Ambil Public URL
-                        const { data: { publicUrl } } = supabase.storage.from('berkas_layanan').getPublicUrl(`layanan/${fileName}`);
+                        // Ambil Public URL dari path yang baru
+                        const { data: { publicUrl } } = supabase.storage.from('berkas_layanan').getPublicUrl(fullPath);
                         urlsPersyaratan[namaSyarat] = publicUrl;
                     }
                 }
 
                 btn.innerText = "Mengirim Pengajuan...";
 
-                // 2. Simpan ke Tabel `pengajuan_surat` (Tabel asli lu)
+                // 3. Simpan ke Tabel `pengajuan_surat`
                 const payload = {
-    nik: document.getElementById('inputNik').value,
-    nama_lengkap: document.getElementById('inputNama').value,
-    jenis_surat: selectJenis.value,
-    
-    // 🔥 PISAHKAN ALAMAT DAN KEPERLUAN SESUAI DATABASE BARU 🔥
-    alamat: document.getElementById('inputAlamat').value,
-    keperluan: document.getElementById('inputKeperluan').value,
-    
-    file_persyaratan: JSON.stringify(urlsPersyaratan),
-    status: 'Menunggu',
-    status_rt: 'Menunggu ACC RT',
-    user_id: userId
-};
+                    nik: document.getElementById('inputNik').value,
+                    nama_lengkap: document.getElementById('inputNama').value,
+                    jenis_surat: selectJenis.value,
+                    alamat: document.getElementById('inputAlamat').value,
+                    keperluan: document.getElementById('inputKeperluan').value,
+                    file_persyaratan: JSON.stringify(urlsPersyaratan),
+                    status: 'Menunggu',
+                    status_rt: 'Menunggu ACC RT',
+                    user_id: userId
+                };
 
                 const { error: dbError } = await supabase.from('pengajuan_surat').insert([payload]);
                 if (dbError) throw dbError;
@@ -351,12 +356,12 @@ import BaseLayout from '../layout/BaseLayout.astro';
                     alert('Berhasil!');
                 }
 
-                // Reset Form
                 document.getElementById('formSurat').reset();
                 selectJenis.dispatchEvent(new Event('change'));
 
             } catch (err) {
-                btn.disabled = false; btn.innerText = "Kirim Pengajuan Surat";
+                btn.disabled = false;
+                btn.innerText = "Kirim Pengajuan Surat";
                 console.error(err);
                 if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Sistem Sibuk', err.message);
             }

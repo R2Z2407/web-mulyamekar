@@ -9,3 +9,4 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export const SECRET_KEY = import.meta.env.PUBLIC_SECRET_KEY;
 
 export const URL_CEK_NIK = import.meta.env.PUBLIC_URL_CEK_NIK;
+export const URL_DOWNLOAD_ZIP = import.meta.env.PUBLIC_DOWNLOAD;
