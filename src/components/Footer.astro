@@ -88,5 +88,21 @@ const currentYear = new Date().getFullYear();
 </footer>
 <CustomAlert />
 <script is:inline>
-    
+    // 1. Blokir Klik Kanan & Shortcut (Kode sebelumnya)
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.onkeydown = function(e) {
+        if(e.keyCode == 123) return false; // F12
+        if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; // Ctrl+Shift+I
+        if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; // Ctrl+Shift+J
+        if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; // Ctrl+U
+    };
+
+    // 2. TEKNIK BARU: DEBUGGER LOOP (Jebakan Freeze)
+    // Pakai try-catch dan konstruktor rahasia biar kodenya agak susah dilacak sama hacker amatir
+    (function jebakanDebugger() {
+        try {
+            (function() { return false; })['constructor']('debugger')['call']();
+        } catch (err) {}
+        setTimeout(jebakanDebugger, 100); // Akan terus menerus menyerang setiap 0.1 detik
+    })();
 </script>
