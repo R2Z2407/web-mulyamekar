@@ -116,6 +116,22 @@ import Footer from '../../components/Footer.astro';
                 </div>
         </div>
     </div>
+    <div id="modalProduk" class="fixed inset-0 z-[90] bg-gray-900/90 hidden items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="modalProdukBox" class="bg-white rounded-3xl w-full max-w-4xl shadow-2xl transform scale-95 transition-transform duration-300 max-h-[90vh] flex flex-col overflow-hidden">
+            
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-teal-50 shrink-0">
+                <div>
+                    <h3 class="text-xl font-black text-teal-900 flex items-center gap-2">📦 Etalase Produk Toko</h3>
+                    <p class="text-xs text-teal-600 mt-1">Melihat produk dari toko: <span id="namaTokoProduk" class="font-bold uppercase tracking-wider">...</span></p>
+                </div>
+                <button onclick="tutupModalProduk()" class="text-teal-400 hover:text-teal-600 bg-white p-2 rounded-full shadow-sm font-bold border border-teal-100 transition-colors">✖</button>
+            </div>
+            
+            <div id="gridProduk" class="p-6 overflow-y-auto hide-scrollbar flex-grow bg-gray-50/50 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                </div>
+            
+        </div>
+    </div>
 
     <Footer />
 
@@ -221,9 +237,18 @@ import Footer from '../../components/Footer.astro';
                 const tgl = new Date(toko.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
                 
                 let badgeStatus = '';
-                if(toko.status === 'Menunggu Verifikasi') badgeStatus = `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 animate-pulse">⏳ Menunggu ACC</span>`;
-                else if(toko.status === 'Disetujui') badgeStatus = `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">🟢 Tervalidasi</span>`;
-                else badgeStatus = `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">🔴 Ditolak</span>`;
+                let tombolProduk = ''; // 🔥 Variabel Tombol Baru 🔥
+
+                if(toko.status === 'Menunggu Verifikasi') {
+                    badgeStatus = `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 animate-pulse">⏳ Menunggu ACC</span>`;
+                } else if(toko.status === 'Disetujui') {
+                    badgeStatus = `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">🟢 Tervalidasi</span>`;
+                    
+                    // 🔥 Ini dia tombol "Lihat Produk" yang cuma muncul kalau tokonya Disetujui (Aktif) 🔥
+                    tombolProduk = `<button onclick="bukaModalProduk('${toko.id}', '${steril(toko.nama_toko).replace(/'/g, "\\'")}')" class="bg-teal-50 border border-teal-200 text-teal-600 hover:bg-teal-100 font-bold py-1.5 px-4 rounded-lg text-xs shadow-sm transition-all w-full mt-2 flex items-center justify-center gap-1">📦 Lihat Produk</button>`;
+                } else {
+                    badgeStatus = `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">🔴 Ditolak</span>`;
+                }
 
                 html += `
                 <tr class="hover:bg-orange-50/30 transition-colors border-b border-gray-50 last:border-0">
@@ -239,8 +264,9 @@ import Footer from '../../components/Footer.astro';
                     <td class="p-4 align-top text-center pt-5">${badgeStatus}</td>
                     <td class="p-4 align-top text-center pt-4">
                         <button onclick="bukaModalDetail('${toko.id}')" class="bg-white border border-orange-200 text-orange-600 hover:bg-orange-50 font-bold py-1.5 px-4 rounded-lg text-xs shadow-sm transition-all w-full">
-                            🔍 Periksa
+                            🔍 Periksa Info
                         </button>
+                        ${tombolProduk} 
                     </td>
                 </tr>`;
             });
@@ -309,7 +335,68 @@ import Footer from '../../components/Footer.astro';
                 }
             }
         };
+        // ================= KONTROL MODAL PRODUK =================
+        window.bukaModalProduk = async (tokoId, namaToko) => {
+            document.body.classList.add('overflow-hidden');
+            document.getElementById('namaTokoProduk').innerText = namaToko;
+            
+            const m = document.getElementById('modalProduk');
+            const b = document.getElementById('modalProdukBox');
+            const grid = document.getElementById('gridProduk');
+            
+            // Munculkan animasi loading
+            grid.innerHTML = `<div class="col-span-full py-16 text-center text-teal-600 font-bold animate-pulse flex flex-col items-center gap-2"><i class="bi bi-arrow-repeat text-4xl animate-spin"></i> Menyusun etalase produk...</div>`;
+            
+            m.classList.remove('hidden'); m.classList.add('flex');
+            setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
 
+            // 🔥 TARIK DATA PRODUK DARI DATABASE 🔥
+            const { data, error } = await supabase.from('umkm_produk').select('*').eq('toko_id', tokoId).order('created_at', { ascending: false });
+            
+            if (error) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-rose-500 font-bold bg-rose-50 rounded-2xl border border-rose-200">Gagal memuat produk: ${error.message}</div>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-16 text-center bg-white rounded-2xl border border-dashed border-gray-200 shadow-sm"><span class="text-5xl mb-4 block">🛒</span><p class="text-gray-500 font-bold">Warga ini belum mengunggah produk apa pun.</p></div>`;
+                return;
+            }
+
+            let html = '';
+            data.forEach(p => {
+                // Format Harga ke Rupiah
+                const hargaFormat = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(p.harga || 0);
+                const fotoUrl = p.foto_url || 'https://via.placeholder.com/300x300?text=Tanpa+Foto';
+                
+                // Desain Card Produk
+                html += `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group flex flex-col">
+                    <div class="h-44 overflow-hidden bg-gray-100 relative">
+                        <img src="${fotoUrl}" alt="Foto ${steril(p.nama_produk)}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h4 class="font-black text-gray-800 text-sm mb-1 line-clamp-2 group-hover:text-teal-600 transition-colors">${steril(p.nama_produk)}</h4>
+                        <p class="text-teal-600 font-black text-base mb-3">${hargaFormat}</p>
+                        <p class="text-[11px] text-gray-500 line-clamp-3 mb-3 flex-grow leading-relaxed">${steril(p.deskripsi) || 'Tidak ada deskripsi.'}</p>
+                    </div>
+                </div>`;
+            });
+            grid.innerHTML = html;
+        };
+
+        window.tutupModalProduk = () => {
+            const m = document.getElementById('modalProduk');
+            const b = document.getElementById('modalProdukBox');
+            m.classList.add('opacity-0'); b.classList.remove('scale-100'); b.classList.add('scale-95'); 
+            setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
+            
+            // Lepas gembok scroll jika modal detail toko juga sedang tidak terbuka
+            if(document.getElementById('modalDetailToko').classList.contains('hidden')){
+                document.body.classList.remove('overflow-hidden');
+            }
+        };
         document.addEventListener('DOMContentLoaded', initPage);
     </script>
 </body>

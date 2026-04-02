@@ -594,35 +594,65 @@
     });
 
     // --- SUBMIT PENGATURAN PROFIL (Fix Kolom Phone) ---
+    // --- SUBMIT PENGATURAN PROFIL (HANYA UPDATE KONTAK) ---
     document.getElementById('formEditProfil')?.addEventListener('submit', async (e) => {
         e.preventDefault(); 
         const btn = document.getElementById('btnSimpanProfil'); 
         btn.disabled = true; 
         btn.innerHTML = "<i class='bi bi-hourglass-split animate-spin'></i> Menyimpan...";
 
-        const namaBaru = document.getElementById('inputEditNama').value.trim();
+        // Kita cuma ambil Email dan Phone
         const emailBaru = document.getElementById('inputEditEmail').value.trim();
         const phoneBaru = document.getElementById('inputEditPhone').value.trim();
 
         try {
-            // 🔥 TEMBAK KE KOLOM phone, BUKAN no_telp 🔥
-            const { error } = await supabase.from('profil_user').update({ 
-                nama_lengkap: namaBaru,
+            // 🔥 1. SINKRONISASI KE BUKU INDUK DULU (data_penduduk) 🔥
+            // Tambahkan .trim() biar kalau ada spasi nyasar dari database langsung bersih
+            const namaLama = profilWarga.nama_lengkap ? profilWarga.nama_lengkap.trim() : null; 
+            
+            if (namaLama) {
+                // Cari ID warganya di Buku Induk (ilike = abaikan huruf besar/kecil)
+                const { data: dpt, error: errCari } = await supabase.from('data_penduduk')
+                    .select('id')
+                    .ilike('nama_lengkap', namaLama)
+                    .maybeSingle();
+
+                if (errCari) throw new Error("Error nyari data di Buku Induk: " + errCari.message);
+
+                if (dpt) {
+                    // Enkripsi nomor barunya!
+                    const hpEncrypted = CryptoJS.AES.encrypt(phoneBaru, SECRET_KEY).toString();
+                    
+                    // Tembak ke kolom `no_telp` di data_penduduk
+                    const { error: errDukcapil } = await supabase.from('data_penduduk')
+                        .update({ no_telp: hpEncrypted }) 
+                        .eq('id', dpt.id);
+                    
+                    if (errDukcapil) throw new Error("Akses Ditolak Buku Induk (RLS): " + errDukcapil.message);
+                } else {
+                    throw new Error(`Nama '${namaLama}' tidak ditemukan di Buku Induk. Pastikan nama profil Anda sama PERSIS dengan yang didata oleh RT!`);
+                }
+            }
+
+            // 🔥 2. BARU UPDATE DATA AKUN APLIKASI (profil_user) 🔥
+            const { error: errProfil } = await supabase.from('profil_user').update({ 
                 email: emailBaru,
                 phone: phoneBaru 
             }).eq('id', currentUser.id);
             
-            if (error) throw error; 
+            if (errProfil) throw errProfil; 
             
-            // Langsung ubah nama di layar tanpa refresh
-            if(document.getElementById('namaWarga')) document.getElementById('namaWarga').innerText = namaBaru; 
+            // 🔥 3. SELESAI 🔥
+            profilWarga.email = emailBaru;
+            profilWarga.phone = phoneBaru;
             
-            if(typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Berhasil', 'Profil Anda telah disimpan!');
-            else alert('Profil disimpan!');
+            if(typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Berhasil', 'Profil & Kontak Anda berhasil diperbarui dan disinkronkan!');
+            else alert('Profil dan Kontak berhasil diperbarui!');
             
             tutupModalProfil();
         } catch (error) {
-            if(typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
+            // SEKARANG ERRORNYA BAKAL JELAS MUNCUL DI LAYAR
+            if(typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal Sinkronisasi', error.message);
             else alert('Gagal: ' + error.message);
         } finally {
             btn.disabled = false;

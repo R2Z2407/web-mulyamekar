@@ -3,45 +3,48 @@
 import '../../global.css';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-
-const daftarRT = [
-  "Belum Diatur", "RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW 02"
-];
 ---
 
 <html lang="id">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kelola Akun & RT/RW - Admin Mulyamekar</title>
+    <title>Kelola Pejabat Desa - Admin Mulyamekar</title>
 </head>
-<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+<body class="bg-slate-50 font-sans text-slate-800 flex flex-col min-h-screen">
     <Header />
     
-    <main class="flex-grow pt-10 pb-20">
+    <main class="flex-grow pt-24 pb-20">
         <div class="container mx-auto px-4 max-w-6xl">
-            <div class="mb-8">
-                <a href="/admin" class="text-teal-600 hover:text-amber-600 text-sm font-bold mb-2 inline-flex items-center gap-1 transition-colors">
-                    &larr; Kembali ke Dashboard
-                </a>
-                <h1 class="text-3xl font-extrabold text-teal-950">Kelola Hak Akses Akun</h1>
-                <p class="text-gray-500 mt-1">Angkat warga menjadi Ketua RT/RW atau jadikan mereka Admin.</p>
+            
+            <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <div>
+                    <a href="/admin" class="text-teal-600 font-bold text-sm hover:text-teal-800 transition-colors inline-flex items-center gap-1 mb-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        Kembali ke Dashboard
+                    </a>
+                    <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Kelola Pejabat Desa</h1>
+                    <p class="text-sm text-slate-500 mt-1 font-medium">Daftar Admin dan Ketua RT/RW yang sedang menjabat.</p>
+                </div>
+                <button onclick="bukaModalJabatan()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                    Angkat Pejabat Baru
+                </button>
             </div>
 
-            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-8">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
                         <thead>
-                            <tr class="bg-teal-50 text-teal-900 border-b border-teal-100">
-                                <th class="p-4 font-bold text-sm">Informasi Pengguna</th>
-                                <th class="p-4 font-bold text-sm">Email Akun</th>
-                                <th class="p-4 font-bold text-sm">Ubah Role (Jabatan)</th>
-                                <th class="p-4 font-bold text-sm">Wilayah Tugas (Khusus RT)</th>
-                                <th class="p-4 font-bold text-sm text-center">Aksi</th>
+                            <tr class="bg-slate-50 text-slate-500 border-b border-slate-200 text-xs uppercase tracking-widest">
+                                <th class="p-5 font-black">Informasi Pejabat</th>
+                                <th class="p-5 font-black">Kontak & NIK</th>
+                                <th class="p-5 font-black">Jabatan & Wilayah</th>
+                                <th class="p-5 font-black text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="tableAkun" class="divide-y divide-gray-100 text-sm">
-                            <tr><td colspan="5" class="p-8 text-center text-gray-400">Memuat data pengguna...</td></tr>
+                        <tbody id="tableAkun" class="divide-y divide-slate-100 text-sm">
+                            <tr><td colspan="4" class="p-16 text-center text-slate-400 font-bold animate-pulse">Memuat data pejabat...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -49,6 +52,70 @@ const daftarRT = [
 
         </div>
     </main>
+
+    <div id="modalJabatan" class="fixed inset-0 z-[100] bg-slate-900/80 hidden items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="modalJabatanBox" class="bg-white rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
+                <div>
+                    <h2 class="text-xl font-black text-slate-800">Angkat Pejabat Baru</h2>
+                    <p class="text-xs text-slate-500 mt-1">Cari warga dan berikan hak akses sistem.</p>
+                </div>
+                <button onclick="tutupModalJabatan()" class="text-slate-400 hover:text-rose-500 bg-white p-2 rounded-full shadow-sm transition-colors border border-slate-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto">
+                <form id="formTambahJabatan" class="space-y-5">
+                    
+                    <div class="relative">
+                        <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">1. Cari Nama Warga</label>
+                        <div id="wadahInputCari" class="relative">
+                            <input type="text" id="inputCariWarga" placeholder="Ketik minimal 3 huruf nama warga..." autocomplete="off" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-bold text-slate-900 transition-all">
+                            <svg class="w-5 h-5 text-slate-400 absolute right-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        
+                        <div id="hasilPencarian" class="absolute z-50 w-full mt-2 bg-white border border-teal-200 rounded-xl shadow-xl max-h-48 overflow-y-auto hidden divide-y divide-slate-50">
+                            </div>
+                    </div>
+
+                    <input type="hidden" id="selectedWargaId" required>
+                    
+                    <div id="infoWargaTerpilih" class="hidden p-4 bg-teal-50 border border-teal-200 rounded-xl items-center justify-between shadow-sm">
+                        <div>
+                            <p class="text-[10px] text-teal-600 font-black uppercase tracking-widest mb-1">Kandidat Terpilih:</p>
+                            <p id="teksNamaKandidat" class="font-black text-teal-950 text-base">-</p>
+                            <p id="teksNikKandidat" class="text-xs text-teal-700 font-mono mt-0.5">-</p>
+                        </div>
+                        <button type="button" onclick="resetPencarian()" class="text-xs bg-white text-rose-500 hover:text-rose-700 border border-rose-200 px-3 py-1.5 rounded-lg font-bold shadow-sm transition-all">Ganti</button>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">2. Pilih Jabatan Baru</label>
+                        <select id="pilihRole" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-bold text-slate-900 cursor-pointer">
+                            <option value="" disabled selected>-- Pilih Jabatan --</option>
+                            <option value="rt_rw">Ketua RT / RW</option>
+                            <option value="admin">Admin Desa</option>
+                        </select>
+                    </div>
+
+                    <div id="bungkusWilayah" class="hidden">
+                        <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">3. Wilayah Tugas</label>
+                        <select id="pilihWilayah" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-bold text-slate-900 cursor-pointer">
+                            <option value="" disabled selected>-- Pilih Wilayah --</option>
+                            </select>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 mt-4">
+                        <button type="submit" id="btnSimpanJabatan" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-black py-3.5 rounded-xl shadow-md transition-all active:scale-95 flex justify-center items-center gap-2">
+                            Angkat Menjadi Pejabat Desa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <Footer />
 
     <script>
@@ -62,108 +129,106 @@ const daftarRT = [
             }[char] || char));
         }
 
+        let daftarRT_Dinamic = [];
+
         async function initPage() {
             try {
-                // 1. Cek Login
+                // 1. Cek Login & Role
                 const { data: { session } } = await supabase.auth.getSession();
                 if (!session) { window.location.href = '/login'; return; }
 
-                // 2. Cek Profil Admin (Lebih aman)
-                const { data: profilAdmin, error: errProfil } = await supabase
-                    .from('profil_user')
-                    .select('role')
-                    .eq('id', session.user.id)
-                    .single();
-
+                const { data: profilAdmin, error: errProfil } = await supabase.from('profil_user').select('role').eq('id', session.user.id).single();
                 if (errProfil || !profilAdmin || profilAdmin.role !== 'admin') {
-                    await showCustomAlert('error','Akses Ditolak!',' Hanya Admin yang bisa buka halaman ini.');
-                    window.location.href = '/';
-                    return;
+                    if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error','Akses Ditolak!',' Hanya Admin yang bisa buka halaman ini.');
+                    else alert('Akses Ditolak! Khusus Admin.');
+                    window.location.href = '/'; return;
                 }
 
-                // 3. Lolos Satpam -> Muat Tabel
-                loadSemuaAkun();
-
-            } catch (error) {
-                console.error("Terjadi crash di sistem keamanan:", error);
-                document.getElementById('tableAkun').innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500 font-bold">Terjadi error sistem: ${error.message}</td></tr>`;
-            }
-        }
-
-        async function loadSemuaAkun() {
-            try {
-                // 🔥 1. KITA SEDOT DATA RT DARI TABEL MASTER DULU 🔥
-                // (Pastikan tabel lu namanya 'master_wilayah' ya)
-                const { data: dataRT, error: errRT } = await supabase.from('master_wilayah').select('*');
-                if (errRT) console.error("Gagal sedot data RT:", errRT);
-
-                let daftarRT_Dinamic = [];
+                // 2. Tarik Data Wilayah RT untuk Dropdown
+                const { data: dataRT } = await supabase.from('master_wilayah').select('*');
                 if (dataRT) {
-                    // 🔥 LOGIKA PINTAR BUAT BACA NAMA KOLOM & ANTISIPASI NEXT UPDATE 🔥
                     daftarRT_Dinamic = dataRT.map(item => {
-                        // Kalau nomor_rt kosong, null, atau '00', berarti ini jabatan khusus Ketua RW
-                        if (!item.nomor_rt || item.nomor_rt.trim() === '' || item.nomor_rt === '00' || item.nomor_rt === '-') {
-                            return `RW ${item.nomor_rw}`;
-                        }
-                        
-                        // Default-nya: Jabatan Ketua RT
+                        if (!item.nomor_rt || item.nomor_rt.trim() === '' || item.nomor_rt === '00' || item.nomor_rt === '-') return `RW ${item.nomor_rw}`;
                         return `RT ${item.nomor_rt} / RW ${item.nomor_rw}`;
+                    });
+                    
+                    // Isi dropdown di Modal
+                    const selWilayah = document.getElementById('pilihWilayah');
+                    daftarRT_Dinamic.forEach(rt => {
+                        selWilayah.innerHTML += `<option value="${rt}">${rt}</option>`;
                     });
                 }
 
-                // 2. LANJUT SEDOT DATA AKUN WARGA
-                const { data, error } = await supabase.from('profil_user').select('*').order('created_at', { ascending: false });
-                const tbody = document.getElementById('tableAkun');
+                // 3. Render Tabel Pejabat Aktif
+                loadSemuaAkun();
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('tableAkun').innerHTML = `<tr><td colspan="4" class="p-8 text-center text-rose-500 font-bold bg-rose-50">Terjadi error sistem: ${error.message}</td></tr>`;
+            }
+        }
+
+        // ================= MUAT TABEL (HANYA ADMIN & RT) =================
+        async function loadSemuaAkun() {
+            try {
+                // 🔥 HANYA SEDOT YANG ROLENYA ADMIN ATAU RT 🔥
+                const { data, error } = await supabase.from('profil_user')
+                    .select('*')
+                    .in('role', ['admin', 'rt_rw'])
+                    .order('role', { ascending: true }); // Admin tampil duluan
                 
+                const tbody = document.getElementById('tableAkun');
                 if (error) throw error;
 
                 if (!data || data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada akun yang terdaftar.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400">Belum ada pejabat yang terdaftar.</td></tr>`;
                     return;
                 }
 
                 let html = '';
                 data.forEach(user => {
-                    // 🛡️ STERILKAN PROFIL USER
                     const namaAman = steril(user.nama_lengkap) || 'Belum diisi';
-                    const nikAman = steril(user.nik) || '-';
-                    const emailAman = steril(user.email);
+                    const nikAman = steril(user.nik) || 'Kosong';
+                    const emailAman = steril(user.email) || 'Tidak ada email';
+                    const hpAman = steril(user.phone) || 'Tidak ada nomor HP';
+                    
+                    // Styling Badge Jabatan
+                    let badgeJabatan = '';
+                    let wilayahText = '';
 
-                    // Dropdown Role
-                    const isWarga = user.role === 'warga' ? 'selected' : '';
-                    const isRT = user.role === 'rt_rw' ? 'selected' : '';
-                    const isAdmin = user.role === 'admin' ? 'selected' : '';
-
-                    // 🔥 3. RAKIT DROPDOWN PAKAI DATA DINAMIS 🔥
-                    let opsiWilayah = `<option value="">Belum Diatur</option>`;
-                    daftarRT_Dinamic.forEach(rt => {
-                        const sel = user.wilayah_rt === rt ? 'selected' : '';
-                        opsiWilayah += `<option value="${rt}" ${sel}>${rt}</option>`;
-                    });
+                    if(user.role === 'admin') {
+                        badgeJabatan = `<span class="bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-blue-200">Admin Desa</span>`;
+                        wilayahText = `<p class="text-xs text-slate-400 mt-1">Akses Seluruh Sistem</p>`;
+                    } else if(user.role === 'rt_rw') {
+                        badgeJabatan = `<span class="bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-emerald-200">Ketua RT / RW</span>`;
+                        wilayahText = `<p class="text-xs font-bold text-slate-700 mt-1">Wilayah: ${steril(user.wilayah_rt) || 'Belum Diset'}</p>`;
+                    }
 
                     html += `
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="p-4">
-                                <p class="font-bold text-teal-900">${namaAman}</p>
-                                <p class="text-xs text-gray-500 font-mono mt-1">NIK: ${nikAman}</p>
+                        <tr class="hover:bg-slate-50 transition-colors group">
+                            <td class="p-5">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 shrink-0 border border-slate-200">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-black text-slate-800">${namaAman}</p>
+                                    </div>
+                                </div>
                             </td>
-                            <td class="p-4 text-gray-600">${emailAman}</td>
-                            <td class="p-4">
-                                <select id="role-${user.id}" class="bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-teal-500 block p-2 outline-none cursor-pointer font-bold w-full">
-                                    <option value="warga" ${isWarga}>Warga Biasa</option>
-                                    <option value="rt_rw" ${isRT}>Ketua RT/RW</option>
-                                    <option value="admin" ${isAdmin}>Admin Desa</option>
-                                </select>
+                            <td class="p-5">
+                                <p class="text-sm font-bold text-slate-700">${emailAman}</p>
+                                <div class="flex items-center gap-2 mt-1 text-xs text-slate-500 font-mono">
+                                    <span>NIK: ${nikAman}</span> | <span>HP: ${hpAman}</span>
+                                </div>
                             </td>
-                            <td class="p-4">
-                                <select id="wilayah-${user.id}" class="bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-teal-500 block p-2 outline-none cursor-pointer w-full">
-                                    ${opsiWilayah}
-                                </select>
-                                <p class="text-[10px] text-gray-400 mt-1">*Wajib diisi untuk Warga & RT</p>
+                            <td class="p-5">
+                                ${badgeJabatan}
+                                ${wilayahText}
                             </td>
-                            <td class="p-4 text-center">
-                                <button onclick="simpanAkun('${user.id}')" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-xl transition-all shadow-sm active:scale-95 text-xs w-full">
-                                    Simpan Ubahan
+                            <td class="p-5 text-center">
+                                <button onclick="cabutJabatan('${user.id}', '${namaAman.replace(/'/g, "\\'")}')" class="bg-white text-rose-500 hover:bg-rose-50 border border-rose-200 font-bold py-2 px-4 rounded-xl transition-all shadow-sm active:scale-95 text-[11px] uppercase tracking-wider">
+                                    Cabut Jabatan
                                 </button>
                             </td>
                         </tr>
@@ -171,42 +236,168 @@ const daftarRT = [
                 });
                 tbody.innerHTML = html;
             } catch (error) {
-                document.getElementById('tableAkun').innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500 font-bold">Gagal memuat data: ${error.message}</td></tr>`;
+                document.getElementById('tableAkun').innerHTML = `<tr><td colspan="4" class="p-8 text-center text-rose-500 font-bold">Gagal memuat data: ${error.message}</td></tr>`;
             }
         }
 
-        window.simpanAkun = async (id) => {
-            const roleBaru = document.getElementById(`role-${id}`).value;
-            let wilayahBaru = document.getElementById(`wilayah-${id}`).value;
+        // ================= FUNGSI MODAL & PENCARIAN WARGA =================
+        window.bukaModalJabatan = () => {
+            document.body.classList.add('overflow-hidden');
+            const m = document.getElementById('modalJabatan');
+            const b = document.getElementById('modalJabatanBox');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+        };
 
-            // 🔥 1. PASANG CCTV SEBELUM NEMBAK DATABASE 🔥
-            console.log("=== MENGIRIM DATA KE SUPABASE ===");
-            console.log("Target ID User:", id);
-            console.log("Role yang dipilih:", roleBaru);
-            console.log("Wilayah yang dipilih:", wilayahBaru);
+        window.tutupModalJabatan = () => {
+            document.body.classList.remove('overflow-hidden');
+            const m = document.getElementById('modalJabatan');
+            const b = document.getElementById('modalJabatanBox');
+            m.classList.add('opacity-0'); b.classList.remove('scale-100'); b.classList.add('scale-95');
+            setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); resetPencarian(); document.getElementById('formTambahJabatan').reset(); }, 300);
+        };
 
-            // 2. Eksekusi Update & Minta Balasan Data (select)
-            const { data, error } = await supabase.from('profil_user').update({ 
-                role: roleBaru, 
-                wilayah_rt: wilayahBaru 
-            }).eq('id', id).select();
+        // Live Search Warga (Anti-Ngelag)
+        let timerCari;
+        document.getElementById('inputCariWarga')?.addEventListener('input', (e) => {
+            clearTimeout(timerCari);
+            const val = e.target.value.trim();
+            const wadah = document.getElementById('hasilPencarian');
+            
+            if(val.length < 3) {
+                wadah.classList.add('hidden');
+                return;
+            }
+            
+            timerCari = setTimeout(async () => {
+                wadah.innerHTML = `<div class="p-4 text-center text-xs font-bold text-slate-400"><i class="bi bi-hourglass-split animate-spin"></i> Mencari warga...</div>`;
+                wadah.classList.remove('hidden');
+                
+                // Cari HANYA warga biasa (Biar RT yg udah aktif nggak bisa kepilih 2x)
+                const { data, error } = await supabase.from('profil_user')
+                    .select('id, nama_lengkap, nik')
+                    .eq('role', 'warga')
+                    .ilike('nama_lengkap', `%${val}%`)
+                    .limit(5); // Batasi 5 hasil biar gak penuh layarnya
+                    
+                if(error || !data || data.length === 0) {
+                    wadah.innerHTML = `<div class="p-4 text-center text-xs text-rose-500 font-bold">Tidak ada Warga Biasa dengan nama tersebut.</div>`;
+                    return;
+                }
+                
+                let htmlList = '';
+                data.forEach(w => {
+                    const nik = steril(w.nik) || '-';
+                    const nama = steril(w.nama_lengkap) || 'Tanpa Nama';
+                    htmlList += `
+                        <div onclick="pilihKandidat('${w.id}', '${nama.replace(/'/g, "\\'")}', '${nik}')" class="p-3 hover:bg-teal-50 cursor-pointer transition-colors flex justify-between items-center group">
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm group-hover:text-teal-700">${nama}</p>
+                                <p class="text-[10px] text-slate-500 font-mono mt-0.5">NIK: ${nik}</p>
+                            </div>
+                            <span class="text-teal-600 bg-teal-100 px-2 py-1 rounded text-[9px] font-bold uppercase hidden group-hover:block">Pilih</span>
+                        </div>`;
+                });
+                wadah.innerHTML = htmlList;
+            }, 500); // Tunggu 0.5 detik setelah ngetik biar database gak jebol
+        });
 
-            // 🔥 3. PASANG CCTV SETELAH DITEMBAK 🔥
-            console.log("Hasil dari Supabase:", { data, error });
+        // Pilih Kandidat dari hasil pencarian
+        window.pilihKandidat = (id, nama, nik) => {
+            document.getElementById('selectedWargaId').value = id;
+            document.getElementById('teksNamaKandidat').innerText = nama;
+            document.getElementById('teksNikKandidat').innerText = `NIK: ${nik}`;
+            
+            document.getElementById('wadahInputCari').classList.add('hidden');
+            document.getElementById('hasilPencarian').classList.add('hidden');
+            
+            document.getElementById('infoWargaTerpilih').classList.remove('hidden');
+            document.getElementById('infoWargaTerpilih').classList.add('flex');
+        };
 
-            if (error) {
-                if (typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
+        // Batal / Ganti Kandidat
+        window.resetPencarian = () => {
+            document.getElementById('selectedWargaId').value = '';
+            document.getElementById('inputCariWarga').value = '';
+            document.getElementById('wadahInputCari').classList.remove('hidden');
+            document.getElementById('infoWargaTerpilih').classList.add('hidden');
+            document.getElementById('infoWargaTerpilih').classList.remove('flex');
+            document.getElementById('hasilPencarian').classList.add('hidden');
+        };
+
+        // Logic memunculkan dropdown wilayah jika pilih RT
+        document.getElementById('pilihRole')?.addEventListener('change', (e) => {
+            const wadahWilayah = document.getElementById('bungkusWilayah');
+            const selectWilayah = document.getElementById('pilihWilayah');
+            if(e.target.value === 'rt_rw') {
+                wadahWilayah.classList.remove('hidden');
+                selectWilayah.required = true;
+            } else {
+                wadahWilayah.classList.add('hidden');
+                selectWilayah.required = false;
+                selectWilayah.value = '';
+            }
+        });
+
+        // ================= EKSEKUSI SIMPAN JABATAN BARU =================
+        document.getElementById('formTambahJabatan')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userId = document.getElementById('selectedWargaId').value;
+            const roleBaru = document.getElementById('pilihRole').value;
+            const wilayahBaru = document.getElementById('pilihWilayah').value;
+            
+            if(!userId) {
+                alert("Harap cari dan pilih warga terlebih dahulu!");
+                return;
+            }
+
+            const btn = document.getElementById('btnSimpanJabatan');
+            btn.disabled = true; btn.innerHTML = "Memproses...";
+
+            try {
+                const { error } = await supabase.from('profil_user').update({ 
+                    role: roleBaru, 
+                    wilayah_rt: wilayahBaru || null 
+                }).eq('id', userId);
+
+                if (error) throw error;
+                
+                if(typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Berhasil', 'Pejabat baru berhasil diangkat!');
+                else alert('Pejabat baru berhasil diangkat!');
+                
+                tutupModalJabatan();
+                loadSemuaAkun(); // Segarkan tabel utama
+            } catch (error) {
+                if(typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
                 else alert('Gagal: ' + error.message);
-            } 
-            else if (!data || data.length === 0) {
-                // Ini kalau Salah Alamat (ID nggak ketemu)
-                if (typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Salah Alamat!', 'ID User tidak ditemukan di database.');
-                else alert('Salah Alamat! ID User tidak ditemukan di database.');
-            } 
-            else {
-                if (typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Berhasil', 'Hak akses diperbarui!');
-                else alert('Hak akses berhasil diperbarui!');
-                loadSemuaAkun();
+            } finally {
+                btn.disabled = false; btn.innerHTML = "Angkat Menjadi Pejabat Desa";
+            }
+        });
+
+        // ================= EKSEKUSI CABUT JABATAN (KEMBALI JADI WARGA) =================
+        window.cabutJabatan = async (id, nama) => {
+            // Konfirmasi standar browser untuk keamanan ganda
+            const yakin = confirm(`Peringatan:\nApakah Anda yakin ingin mencabut jabatan dari Sdr/i ${nama}?\n\nMereka akan kembali menjadi Warga biasa dan kehilangan akses dashboard RT/Admin.`);
+            if(!yakin) return;
+
+            try {
+                // Tembak jadi warga dan kosongkan wilayahnya
+                const { error } = await supabase.from('profil_user').update({ 
+                    role: 'warga', 
+                    wilayah_rt: null 
+                }).eq('id', id);
+
+                if (error) throw error;
+
+                if(typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Jabatan Dicabut', `${nama} telah dikembalikan menjadi Warga biasa.`);
+                else alert('Jabatan berhasil dicabut!');
+                
+                loadSemuaAkun(); // Segarkan tabel
+            } catch (error) {
+                if(typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
+                else alert('Gagal mencabut jabatan: ' + error.message);
             }
         };
 

@@ -1,0 +1,97 @@
+---
+// src/pages/admin/profil-desa.astro
+import BaseLayout from '../../layout/BaseLayout.astro';
+---
+
+<BaseLayout title="Edit Profil Desa - Admin Mulyamekar">
+    <main class="flex-grow pt-24 pb-20 bg-slate-50 min-h-screen">
+        <div class="container mx-auto px-4 max-w-4xl">
+            
+            <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <div>
+                    <a href="/admin" class="text-teal-600 font-bold text-sm hover:text-teal-800 transition-colors inline-flex items-center gap-1 mb-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        Kembali ke Dashboard
+                    </a>
+                    <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Edit Profil Desa</h1>
+                    <p class="text-sm text-slate-500 mt-1 font-medium">Ubah Visi, Misi, dan Sejarah yang tampil di halaman depan.</p>
+                </div>
+            </div>
+
+            <form id="formProfilDesa" class="space-y-6">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                    <label class="block text-lg font-black text-teal-900 mb-2">Visi Desa</label>
+                    <textarea id="inputVisi" rows="3" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm text-slate-800 leading-relaxed" placeholder="Masukkan Visi Desa..."></textarea>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                    <label class="block text-lg font-black text-teal-900 mb-2">Misi Desa</label>
+                    <p class="text-xs text-slate-500 mb-3 font-bold">*Pisahkan setiap poin misi dengan baris baru (Enter).</p>
+                    <textarea id="inputMisi" rows="6" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm text-slate-800 leading-relaxed" placeholder="1. Misi pertama&#10;2. Misi kedua&#10;3. Misi ketiga"></textarea>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                    <label class="block text-lg font-black text-teal-900 mb-2">Sejarah Desa</label>
+                    <p class="text-xs text-slate-500 mb-3 font-bold">*Gunakan baris baru (Enter) untuk memisahkan paragraf.</p>
+                    <textarea id="inputSejarah" rows="10" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm text-slate-800 leading-relaxed" placeholder="Ceritakan sejarah desa di sini..."></textarea>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                    <button type="submit" id="btnSimpan" class="bg-teal-600 hover:bg-teal-700 text-white font-black py-3.5 px-8 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2">
+                        💾 Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </main>
+
+    <script>
+        import { supabase } from '../../lib/supabase.js';
+
+        async function initPage() {
+            // Cek Keamanan Admin
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = '/login'; return; }
+            const { data: profil } = await supabase.from('profil_user').select('role').eq('id', session.user.id).single();
+            if (!profil || profil.role !== 'admin') { window.location.href = '/'; return; }
+
+            // Muat Data Lama
+            const { data, error } = await supabase.from('profil_desa').select('*').eq('id', 1).single();
+            if (data) {
+                document.getElementById('inputVisi').value = data.visi || '';
+                document.getElementById('inputMisi').value = data.misi || '';
+                document.getElementById('inputSejarah').value = data.sejarah || '';
+            }
+        }
+
+        document.getElementById('formProfilDesa')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSimpan');
+            btn.disabled = true; btn.innerHTML = "Menyimpan...";
+
+            const payload = {
+                id: 1, // Kita paksa ID 1 biar selalu numpuk di baris yang sama
+                visi: document.getElementById('inputVisi').value,
+                misi: document.getElementById('inputMisi').value,
+                sejarah: document.getElementById('inputSejarah').value
+            };
+
+            try {
+                // Pakai upsert: Kalau ID 1 udah ada, dia update. Kalau belum, dia bikin baru.
+                const { error } = await supabase.from('profil_desa').upsert([payload]);
+                if (error) throw error;
+                
+                if(typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Berhasil', 'Profil Desa berhasil diperbarui!');
+                else alert('Profil Desa berhasil diperbarui!');
+            } catch (error) {
+                if(typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
+                else alert('Gagal: ' + error.message);
+            } finally {
+                btn.disabled = false; btn.innerHTML = "💾 Simpan Perubahan";
+            }
+        });
+
+        initPage();
+    </script>
+</BaseLayout>
