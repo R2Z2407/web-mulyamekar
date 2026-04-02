@@ -357,8 +357,29 @@
     }
 
     window.updateStatusRT = async (id, statusBaru) => {
-        const { error } = await supabase.from('pengajuan_surat').update({ status_rt: statusBaru }).eq('id', id);
-        if (!error) loadSuratRT();
+        let payload = { status_rt: statusBaru };
+
+        // 🔥 LOGIKA PINTAR: OTOMATISASI PENOLAKAN 🔥
+        if (statusBaru === 'Ditolak RT') {
+            payload.status = 'Ditolak'; // Otomatis ubah status Desa jadi Ditolak
+            payload.alasan_penolakan = 'Pengajuan dibatalkan/ditolak oleh Ketua RT setempat.';
+        } 
+        // Jaga-jaga kalau RT klik "Batal Tolak/Batal ACC", kita balikin lagi status Desanya
+        else if (statusBaru === 'Menunggu ACC RT') {
+            payload.status = 'Menunggu';
+            payload.alasan_penolakan = null;
+        }
+
+        // Eksekusi ke database
+        const { error } = await supabase.from('pengajuan_surat').update(payload).eq('id', id);
+        
+        if (!error) {
+            loadSuratRT();
+        } else {
+            console.error("Gagal update status RT:", error);
+            if(typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
+            else alert("Gagal mengubah status: " + error.message);
+        }
     };
 
     document.getElementById('searchSuratRT')?.addEventListener('input', (e) => {
@@ -572,7 +593,7 @@
         }
     });
 
-    // --- SUBMIT EDIT NAMA (MODAL TAMPILAN WARGA BARU) ---
+    // --- SUBMIT PENGATURAN PROFIL (Fix Kolom Phone) ---
     document.getElementById('formEditProfil')?.addEventListener('submit', async (e) => {
         e.preventDefault(); 
         const btn = document.getElementById('btnSimpanProfil'); 
@@ -580,12 +601,22 @@
         btn.innerHTML = "<i class='bi bi-hourglass-split animate-spin'></i> Menyimpan...";
 
         const namaBaru = document.getElementById('inputEditNama').value.trim();
+        const emailBaru = document.getElementById('inputEditEmail').value.trim();
+        const phoneBaru = document.getElementById('inputEditPhone').value.trim();
 
         try {
-            const { error } = await supabase.from('profil_user').update({ nama_lengkap: namaBaru }).eq('id', currentUser.id);
+            // 🔥 TEMBAK KE KOLOM phone, BUKAN no_telp 🔥
+            const { error } = await supabase.from('profil_user').update({ 
+                nama_lengkap: namaBaru,
+                email: emailBaru,
+                phone: phoneBaru 
+            }).eq('id', currentUser.id);
+            
             if (error) throw error; 
             
-            document.getElementById('namaWarga').innerText = namaBaru; 
+            // Langsung ubah nama di layar tanpa refresh
+            if(document.getElementById('namaWarga')) document.getElementById('namaWarga').innerText = namaBaru; 
+            
             if(typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Berhasil', 'Profil Anda telah disimpan!');
             else alert('Profil disimpan!');
             
@@ -615,6 +646,68 @@
 
     document.getElementById('btnLogoutWarga')?.addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = '/'; });
     document.getElementById('btnLogout')?.addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = '/'; });
+
+    // --- SUBMIT LAPORAN KHUSUS RT ---
+    document.getElementById('formLaporanRT')?.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Mencegah halaman refresh otomatis
+        
+        const btn = document.getElementById('btnSubmitLaporanRT');
+        const kategori = document.getElementById('laporan_kategori').value;
+        const namaTarget = document.getElementById('laporan_nama_warga').value;
+        const nikTarget = document.getElementById('laporan_nik_warga').value;
+        const keterangan = document.getElementById('laporan_keterangan').value;
+
+        // Validasi Kategori
+        if (!kategori) {
+            if (typeof showCustomAlert !== 'undefined') showCustomAlert('warning', 'Pilih Kategori!', 'Kategori laporan harus diisi.');
+            else alert('Kategori laporan harus diisi.');
+            return;
+        }
+
+        // Animasi Tombol Loading
+        btn.disabled = true;
+        btn.innerHTML = "<i class='bi bi-hourglass-split animate-spin'></i> Mengirim...";
+
+        try {
+            // Label khusus biar Admin gampang ngenalin
+            const jenisSuratKhusus = `LAPORAN RT: ${kategori}`;
+            
+            // Gabungin data warga yang dilaporin ke dalam kolom keterangan
+            const detailKeperluan = `Target Warga: ${namaTarget || 'Tidak spesifik'} (NIK: ${nikTarget || '-'}) \nKeterangan RT:\n${keterangan}`.trim();
+
+            // 🔥 PERBAIKAN: Masukkan data diri Pak RT ke kolom wajib 🔥
+            // 🔥 PERBAIKAN FINAL: Tambah status_rt otomatis bypass 🔥
+            const { error } = await supabase.from('pengajuan_surat').insert({
+                user_id: currentUser.id, 
+                nama_lengkap: profilWarga.nama_lengkap || 'Ketua RT', 
+                nik: profilWarga.nik || '-',                          
+                wilayah_rt: profilWarga.wilayah_rt || 'Belum Diset',  
+                jenis_surat: jenisSuratKhusus,
+                keperluan: detailKeperluan,
+                status: 'Menunggu',
+                status_rt: 'Laporan RT', // <--- INI KUNCINYA, BIAR NGGAK MINTA ACC LAGI
+                alamat: '-' 
+            });
+
+            if (error) throw error;
+
+            // Berhasil
+            if (typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Laporan Terkirim!', 'Laporan Anda telah masuk ke meja Admin Desa.');
+            else alert('Laporan Terkirim!');
+            
+            // Bersihkan form
+            document.getElementById('formLaporanRT').reset();
+
+        } catch (error) {
+            console.error("Gagal kirim laporan:", error);
+            if (typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
+            else alert('Gagal: ' + error.message);
+        } finally {
+            // Kembalikan tombol ke keadaan semula
+            btn.disabled = false;
+            btn.innerHTML = "<i class='bi bi-send-fill'></i> Kirim Laporan ke Admin Desa";
+        }
+    });
 
     initDashboard();
 </script>

@@ -92,6 +92,26 @@ const daftarRT = [
 
         async function loadSemuaAkun() {
             try {
+                // 🔥 1. KITA SEDOT DATA RT DARI TABEL MASTER DULU 🔥
+                // (Pastikan tabel lu namanya 'master_wilayah' ya)
+                const { data: dataRT, error: errRT } = await supabase.from('master_wilayah').select('*');
+                if (errRT) console.error("Gagal sedot data RT:", errRT);
+
+                let daftarRT_Dinamic = [];
+                if (dataRT) {
+                    // 🔥 LOGIKA PINTAR BUAT BACA NAMA KOLOM & ANTISIPASI NEXT UPDATE 🔥
+                    daftarRT_Dinamic = dataRT.map(item => {
+                        // Kalau nomor_rt kosong, null, atau '00', berarti ini jabatan khusus Ketua RW
+                        if (!item.nomor_rt || item.nomor_rt.trim() === '' || item.nomor_rt === '00' || item.nomor_rt === '-') {
+                            return `RW ${item.nomor_rw}`;
+                        }
+                        
+                        // Default-nya: Jabatan Ketua RT
+                        return `RT ${item.nomor_rt} / RW ${item.nomor_rw}`;
+                    });
+                }
+
+                // 2. LANJUT SEDOT DATA AKUN WARGA
                 const { data, error } = await supabase.from('profil_user').select('*').order('created_at', { ascending: false });
                 const tbody = document.getElementById('tableAkun');
                 
@@ -114,9 +134,9 @@ const daftarRT = [
                     const isRT = user.role === 'rt_rw' ? 'selected' : '';
                     const isAdmin = user.role === 'admin' ? 'selected' : '';
 
-                    // Dropdown Wilayah
+                    // 🔥 3. RAKIT DROPDOWN PAKAI DATA DINAMIS 🔥
                     let opsiWilayah = `<option value="">Belum Diatur</option>`;
-                    ["RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 02", "RT 02 / RW 02"].forEach(rt => {
+                    daftarRT_Dinamic.forEach(rt => {
                         const sel = user.wilayah_rt === rt ? 'selected' : '';
                         opsiWilayah += `<option value="${rt}" ${sel}>${rt}</option>`;
                     });
@@ -156,13 +176,39 @@ const daftarRT = [
         }
 
         window.simpanAkun = async (id) => {
-         const roleBaru = document.getElementById(`role-${id}`).value;
-         let wilayahBaru = document.getElementById(`wilayah-${id}`).value;
+            const roleBaru = document.getElementById(`role-${id}`).value;
+            let wilayahBaru = document.getElementById(`wilayah-${id}`).value;
 
-         const { error } = await supabase.from('profil_user').update({ role: roleBaru, wilayah_rt: wilayahBaru }).eq('id', id);
-         if (error) await showCustomAlert('error','','Gagal menyimpan: ' + error.message);
-         else { await showCustomAlert('success','','Hak akses berhasil diperbarui!'); loadSemuaAkun(); }
-     };
+            // 🔥 1. PASANG CCTV SEBELUM NEMBAK DATABASE 🔥
+            console.log("=== MENGIRIM DATA KE SUPABASE ===");
+            console.log("Target ID User:", id);
+            console.log("Role yang dipilih:", roleBaru);
+            console.log("Wilayah yang dipilih:", wilayahBaru);
+
+            // 2. Eksekusi Update & Minta Balasan Data (select)
+            const { data, error } = await supabase.from('profil_user').update({ 
+                role: roleBaru, 
+                wilayah_rt: wilayahBaru 
+            }).eq('id', id).select();
+
+            // 🔥 3. PASANG CCTV SETELAH DITEMBAK 🔥
+            console.log("Hasil dari Supabase:", { data, error });
+
+            if (error) {
+                if (typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
+                else alert('Gagal: ' + error.message);
+            } 
+            else if (!data || data.length === 0) {
+                // Ini kalau Salah Alamat (ID nggak ketemu)
+                if (typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Salah Alamat!', 'ID User tidak ditemukan di database.');
+                else alert('Salah Alamat! ID User tidak ditemukan di database.');
+            } 
+            else {
+                if (typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Berhasil', 'Hak akses diperbarui!');
+                else alert('Hak akses berhasil diperbarui!');
+                loadSemuaAkun();
+            }
+        };
 
         initPage();
     </script>

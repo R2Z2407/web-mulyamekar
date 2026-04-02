@@ -2,23 +2,23 @@
 // src/components/RegisterModal.astro
 ---
 
-<div id="registerModal" class="fixed inset-0 z-[100] bg-slate-900/80 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
-    <div id="registerModalBox" class="bg-white rounded-3xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300 overflow-hidden flex flex-col">
+<div id="registerModal" class="fixed inset-0 z-[100] bg-slate-900/80 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300 ease-out">
+    <div id="registerModalBox" class="bg-white rounded-3xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300 ease-out overflow-hidden flex flex-col h-max max-h-[90vh]">
         
-        <div class="bg-gradient-to-r from-emerald-600 to-teal-800 p-6 text-white flex justify-between items-center relative overflow-hidden">
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-800 p-6 text-white flex justify-between items-center relative overflow-hidden shrink-0">
             <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
             <div class="relative z-10">
-                <h3 class="text-2xl font-black tracking-tight">Daftar Akun Baru</h3>
-                <p class="text-emerald-100 text-sm mt-1">Validasi NIK Dukcapil Mulyamekar</p>
+                <h3 class="text-2xl font-black tracking-tight" id="regTitle">Daftar Akun Baru</h3>
+                <p class="text-emerald-100 text-sm mt-1" id="regDesc">Validasi NIK Dukcapil Mulyamekar</p>
             </div>
             <button type="button" onclick="tutupRegisterModal()" class="relative z-10 text-emerald-100 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
 
-        <div class="p-6 md:p-8">
-            <form id="registerForm" class="space-y-5" novalidate>
-                
+        <div class="p-6 md:p-8 overflow-y-auto">
+            
+            <form id="registerForm" class="space-y-4 animate-fadeIn" novalidate>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">NIK KTP (16 Digit)</label>
                     <div class="relative">
@@ -35,15 +35,30 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Alamat Email</label>
-                    <div class="relative">
-                        <i class="bi bi-envelope absolute left-4 top-3.5 text-slate-400 text-lg"></i>
-                        <input type="email" id="regEmail" class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold text-slate-900 placeholder-slate-400" placeholder="email@anda.com">
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider text-center">Pilih Metode Verifikasi</label>
+                    
+                    <div class="flex bg-slate-200/50 p-1 rounded-xl mb-3 relative z-0">
+                        <button type="button" id="btnRegModePhone" onclick="setRegContactMode('phone')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white shadow-sm text-emerald-600 transition-all duration-300 relative z-10">Nomor HP</button>
+                        <button type="button" id="btnRegModeEmail" onclick="setRegContactMode('email')" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all duration-300 relative z-10">Email</button>
+                    </div>
+
+                    <div id="wrapperRegPhone" class="animate-contentIn">
+                        <div class="flex shadow-sm rounded-xl overflow-hidden border border-slate-200 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 transition-all bg-white">
+                            <span class="inline-flex items-center px-4 bg-slate-100 text-slate-500 font-bold text-sm border-r border-slate-200">+62</span>
+                            <input type="tel" id="regPhone" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/^0+/, '')" class="w-full px-4 py-3 outline-none text-sm font-bold text-slate-900 placeholder-slate-400" placeholder="81234567890">
+                        </div>
+                    </div>
+
+                    <div id="wrapperRegEmail" class="hidden animate-contentIn">
+                        <div class="relative bg-white shadow-sm rounded-xl border border-slate-200 focus-within:ring-2 focus-within:ring-emerald-500">
+                            <i class="bi bi-envelope absolute left-4 top-3.5 text-slate-400 text-lg"></i>
+                            <input type="email" id="regEmail" class="w-full pl-12 pr-4 py-3 bg-transparent outline-none transition-all text-sm font-bold text-slate-900 placeholder-slate-400" placeholder="email@anda.com">
+                        </div>
                     </div>
                 </div>
                 
-                <div>
+                <div class="pt-2">
                     <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">Buat Kata Sandi</label>
                     <div class="relative">
                         <i class="bi bi-shield-lock absolute left-4 top-3.5 text-slate-400 text-lg"></i>
@@ -51,41 +66,96 @@
                     </div>
                 </div>
 
-                <button type="submit" id="btnRegSubmit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-xl shadow-md shadow-emerald-600/20 transition-all active:scale-95 flex justify-center items-center gap-2">
-                    Validasi & Daftar <i class="bi bi-check2-circle text-lg"></i>
+                <button type="submit" id="btnRegSubmit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 mt-2 rounded-xl shadow-md shadow-emerald-600/20 transition-all active:scale-95 flex justify-center items-center gap-2">
+                    Daftar Akun Sekarang <i class="bi bi-check-circle-fill text-lg"></i>
                 </button>
             </form>
 
-            <div class="mt-6 text-center border-t border-slate-100 pt-6">
+            <div class="mt-5 text-center border-t border-slate-100 pt-5" id="regFooterSection">
                 <p class="text-sm text-slate-500 font-medium">
-                    Sudah punya akun? <button type="button" onclick="tutupRegisterModal(); setTimeout(() => bukaLoginModal(), 300);" class="text-emerald-600 font-bold hover:text-emerald-800 hover:underline">Masuk di sini</button>
+                    Sudah punya akun?
+                    <button type="button" onclick="tutupRegisterModal(); setTimeout(() => bukaLoginModal(), 300);" class="text-emerald-600 font-bold hover:text-emerald-800 hover:underline">Masuk di sini</button>
                 </p>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+    /* Definisi animasi custom jika belum ada di global CSS */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes contentIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+        animation: fadeIn 0.4s ease-out forwards;
+    }
+    .animate-contentIn {
+        animation: contentIn 0.3s ease-out forwards;
+    }
+</style>
+
 <script>
     import { supabase } from '../lib/supabase.js';
+
+    let regContactMode = 'phone'; // Default mode
 
     window.bukaRegisterModal = () => {
         const m = document.getElementById('registerModal');
         const b = document.getElementById('registerModalBox');
         m.classList.remove('hidden');
-        setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+        setTimeout(() => { 
+            m.classList.remove('opacity-0'); 
+            b.classList.remove('scale-95'); 
+            b.classList.add('scale-100'); 
+        }, 10);
+        
+        // 🔥 batalOtp() SUDAH DIHAPUS TOTAL DARI SINI 🔥
+        setRegContactMode('phone'); 
     };
 
     window.tutupRegisterModal = () => {
         const m = document.getElementById('registerModal');
         const b = document.getElementById('registerModalBox');
-        m.classList.add('opacity-0'); b.classList.remove('scale-100'); b.classList.add('scale-95');
-        setTimeout(() => { m.classList.add('hidden'); document.getElementById('registerForm').reset(); }, 300);
+        m.classList.add('opacity-0'); 
+        b.classList.remove('scale-100'); 
+        b.classList.add('scale-95');
+        setTimeout(() => { 
+            m.classList.add('hidden'); 
+            document.getElementById('registerForm').reset(); 
+        }, 300);
+    };
+
+    window.setRegContactMode = (mode) => {
+        if(regContactMode === mode && !document.getElementById('registerModal').classList.contains('hidden')) return;
+        regContactMode = mode;
+        const btnPhone = document.getElementById('btnRegModePhone');
+        const btnEmail = document.getElementById('btnRegModeEmail');
+        const wrapPhone = document.getElementById('wrapperRegPhone');
+        const wrapEmail = document.getElementById('wrapperRegEmail');
+
+        if (mode === 'phone') {
+            btnPhone.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white shadow-sm text-emerald-600 transition-all duration-300 relative z-10";
+            btnEmail.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all duration-300 relative z-10";
+            wrapPhone.classList.remove('hidden');
+            wrapEmail.classList.add('hidden');
+        } else {
+            btnEmail.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white shadow-sm text-emerald-600 transition-all duration-300 relative z-10";
+            btnPhone.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all duration-300 relative z-10";
+            wrapEmail.classList.remove('hidden');
+            wrapPhone.classList.add('hidden');
+        }
     };
 
     document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const nik = document.getElementById('regNik').value.trim();
         const nama = document.getElementById('regNama').value.trim();
+        const rawPhone = document.getElementById('regPhone').value.trim();
         const email = document.getElementById('regEmail').value.trim();
         const password = document.getElementById('regPassword').value;
         const btn = document.getElementById('btnRegSubmit');
@@ -95,42 +165,51 @@
 
         try {
             if (nik.length !== 16) throw new Error("NIK harus 16 digit!");
-            if (!email || !password || !nama) throw new Error("Semua data wajib diisi!");
+            if (!password || !nama) throw new Error("Nama dan Kata Sandi wajib diisi!");
+            if (regContactMode === 'phone' && !rawPhone) throw new Error("Silakan isi Nomor HP!");
+            if (regContactMode === 'email' && !email) throw new Error("Silakan isi Alamat Email!");
 
-            // 1. Tembak Edge Function Dukcapil
             const { data: hasil, error: invokeError } = await supabase.functions.invoke('cek-nik', {
                 body: { nik: nik, nama: nama }
             });
 
-            if (invokeError) throw new Error("Sistem verifikasi sedang sibuk. Coba beberapa saat lagi.");
+            if (invokeError) throw new Error("Sistem verifikasi sedang sibuk. Coba lagi.");
             if (hasil && hasil.status !== 'sukses') throw new Error(hasil.pesan || "Verifikasi gagal!");
 
             btn.innerHTML = "Membuat Akun... <i class='bi bi-hourglass-split animate-spin'></i>";
 
-            // 2. SignUp Auth Supabase (Trigger Database akan otomatis handle profil_user)
-            const { data: authData, error: signError } = await supabase.auth.signUp({ 
-                email, password, options: { 
-                    data: { 
-                        nama_lengkap: nama, 
-                        nik: nik,
-                        wilayah_rt: hasil.wilayah_rt || ''
-                    } 
-                } 
-            });
-            
+            let authPayload = {
+                password: password,
+                options: { 
+                    data: { nama_lengkap: nama, nik: nik, wilayah_rt: hasil.wilayah_rt || '' } 
+                }
+            };
+
+            const finalPhone = rawPhone ? `+62${rawPhone}` : null;
+            if (regContactMode === 'phone') authPayload.phone = finalPhone;
+            else authPayload.email = email;
+
+            const { error: signError } = await supabase.auth.signUp(authPayload);
             if (signError) throw signError;
 
-            showCustomAlert('success', 'Pendaftaran Berhasil', 'Identitas valid. Mengalihkan ke Dashboard...');
+            if (typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Pendaftaran Berhasil!', 'Identitas valid. Mengalihkan ke Dashboard...');
+            else alert('Pendaftaran Berhasil!');
+            
             setTimeout(() => { window.location.href = '/warga'; }, 1500);
 
         } catch (error) {
             console.error("❌ ERROR DAFTAR:", error);
             let msg = error.message;
-            if(msg.includes('already registered')) msg = "Email ini sudah terdaftar!";
-            showCustomAlert('error', 'Gagal', msg);
+            if(msg.includes('already registered')) msg = "Nomor HP / Email ini sudah terdaftar!";
+            // Pesan khusus kalau error Hook Supabase masih muncul
+            if(msg.includes('hook')) msg = "Server Supabase Error: Matikan 'Auth Hooks' (Send SMS / Pre-Signup) di Dashboard Supabase lu!";
             
+            if (typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', msg);
+            else alert(msg);
+            
+        } finally {
             btn.disabled = false;
-            btn.innerHTML = "Validasi & Daftar <i class='bi bi-check2-circle text-lg'></i>";
+            btn.innerHTML = "Daftar Akun Sekarang <i class='bi bi-check-circle-fill text-lg'></i>";
         }
     });
 </script>

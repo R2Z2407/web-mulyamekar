@@ -215,12 +215,16 @@ import Footer from '../../components/Footer.astro';
         async function loadSurat() {
             const { data, error } = await supabase.from('pengajuan_surat').select('*').order('created_at', { ascending: false });
             if (error) {
-                document.getElementById('tableSurat').innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Gagal memuat: ${error.message}</td></tr>`;
+                document.getElementById('tableSurat').innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Gagal memuat: ${error.message}</td></tr>`;
                 return;
             }
             
-            dataGlobal = data || []; // Simpan referensi asli buat Modal
-            rawSurat = data || [];
+            // 🔥 TRIK UX: FILTER & SEMBUNYIKAN YANG DITOLAK RT 🔥
+            // Surat yang status_rt nya 'Ditolak RT' gak bakal masuk ke layar Admin
+            const dataBersih = (data || []).filter(item => item.status_rt !== 'Ditolak RT');
+
+            dataGlobal = dataBersih; // Simpan referensi asli buat Modal
+            rawSurat = dataBersih;
             filteredSurat = rawSurat;
             renderSurat(1);
         }
@@ -230,7 +234,7 @@ import Footer from '../../components/Footer.astro';
             const paginasiContainer = document.getElementById('paginationSurat');
             
             if (filteredSurat.length === 0) { 
-                tbody.innerHTML = `<tr><td colspan="6" class="p-12 text-center text-gray-400 font-medium">Belum ada pengajuan surat.</td></tr>`; 
+                tbody.innerHTML = `<tr><td colspan="6" class="p-12 text-center text-gray-400 font-medium">Belum ada pengajuan surat atau laporan.</td></tr>`;
                 paginasiContainer.innerHTML = '';
                 return; 
             }
@@ -239,27 +243,64 @@ import Footer from '../../components/Footer.astro';
             const dataTampil = filteredSurat.slice(start, start + itemsPerPage);
 
             let html = '';
-            const sekarang = new Date(); 
+            const sekarang = new Date();
 
             dataTampil.forEach(item => {
                 const tglDibuat = new Date(item.created_at);
                 const tglStr = tglDibuat.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-                
                 const selisihJam = (sekarang - tglDibuat) / (1000 * 60 * 60);
                 const isExpired = selisihJam > 24;
 
+                // 🔥 DETEKSI APAKAH INI LAPORAN RT ATAU SURAT BIASA 🔥
+                const isLaporanRT = item.jenis_surat.startsWith('LAPORAN RT');
+
+                // 1. Warna Baris Tabel (Ungu untuk RT, Putih untuk Surat Biasa)
+                const rowClass = isLaporanRT 
+                    ? "bg-purple-50/30 hover:bg-purple-50 transition-colors border-b border-purple-100" 
+                    : "hover:bg-gray-50 transition-colors border-b border-gray-50";
+
+                // 2. Tampilan Label Jenis Surat
+                const labelJenisSurat = isLaporanRT 
+                    ? `<span class="inline-block px-2 py-1 bg-purple-100 text-purple-800 text-[9px] font-black rounded uppercase tracking-wider mb-1 shadow-sm border border-purple-200">📢 Mutasi / Laporan RT</span><br><span class="font-bold text-purple-950 text-xs">${steril(item.jenis_surat.replace('LAPORAN RT: ', ''))}</span>`
+                    : `<p class="font-bold text-gray-800 text-xs">${steril(item.jenis_surat)}</p>`;
+
+                // 3. Rapihkan Format Keterangan (Enter jadi <br>)
+                const keperluanFormatted = steril(item.keperluan).replace(/\n/g, '<br>');
+
+                // 4. Atur Tombol Aksi Kanan (Contextual Buttons)
+                let tombolAksi = '';
+                if (isLaporanRT) {
+                    tombolAksi = `
+                        <button onclick="bukaModal('${item.id}')" class="text-purple-700 font-bold text-[10px] bg-purple-100 px-3 py-2 rounded-lg border border-purple-200 hover:bg-purple-600 hover:text-white shadow-sm transition-all block w-full mb-1.5">
+                            PROSES LAPORAN
+                        </button>
+                        <a href="/admin/penduduk" target="_blank" class="text-emerald-700 font-bold text-[10px] bg-emerald-100 px-3 py-2 rounded-lg border border-emerald-200 hover:bg-emerald-600 hover:text-white shadow-sm transition-all block w-full text-center">
+                            BUKA DUKCAPIL <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                    `;
+                } else {
+                    tombolAksi = `
+                        <button onclick="bukaModal('${item.id}')" class="text-teal-600 font-bold text-[10px] bg-teal-50 px-3 py-2 rounded-lg border border-teal-200 hover:bg-teal-600 hover:text-white shadow-sm transition-all block w-full">
+                            PROSES SURAT
+                        </button>
+                    `;
+                }
+
+                // Warna Status Desa
                 let badgeClass = "bg-amber-100 text-amber-700 border-amber-200";
                 if(item.status === 'Diproses') badgeClass = "bg-blue-100 text-blue-700 border-blue-200";
                 if(item.status === 'Selesai') badgeClass = "bg-emerald-100 text-emerald-700 border-emerald-200";
                 if(item.status === 'Ditolak') badgeClass = "bg-rose-100 text-rose-700 border-rose-200";
 
+                // Warna Status RT
                 let rtClass = "bg-gray-100 text-gray-500 border-gray-200";
                 if(item.status_rt?.includes('Disetujui')) rtClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
                 if(item.status_rt?.includes('Ditolak')) rtClass = "bg-rose-50 text-rose-600 border-rose-200";
-                if(item.status_rt === 'Bypass RT') rtClass = "bg-blue-50 text-blue-600 border-blue-200";
+                if(item.status_rt === 'Bypass RT' || isLaporanRT) rtClass = "bg-blue-50 text-blue-600 border-blue-200";
 
+                // Cek Lampiran Berkas (Laporan RT biasanya gak pakai berkas)
                 let berkasHTML = '';
-                if (isExpired && item.status === 'Menunggu') {
+                if (isExpired && item.status === 'Menunggu' && !isLaporanRT) {
                     berkasHTML = `<span class="inline-block mt-2 bg-rose-50 border border-rose-200 text-rose-600 font-bold px-2 py-1 rounded text-[10px]">⚠️ Berkas Hangus (>24 Jam)</span>`;
                 } else if (item.file_persyaratan) {
                     try {
@@ -275,23 +316,23 @@ import Footer from '../../components/Footer.astro';
                 }
 
                 html += `
-                <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
+                <tr class="${rowClass}">
                     <td class="p-4 text-xs text-gray-500 font-medium align-top">${tglStr}</td>
                     <td class="p-4 align-top">
                         <p class="font-bold text-teal-950">${steril(item.nama_lengkap)}</p>
-                        <p class="text-[10px] font-mono text-gray-500 bg-gray-100 inline-block px-1.5 py-0.5 rounded mt-1">${steril(item.nik)}</p>
+                        <p class="text-[10px] font-mono text-gray-500 bg-white/60 inline-block px-1.5 py-0.5 rounded border border-gray-100 mt-1">${steril(item.nik)}</p>
                         <p class="text-[10px] text-teal-600 font-bold mt-1">${steril(item.wilayah_rt)}</p>
                         ${berkasHTML}
                     </td>
                     <td class="p-4 align-top max-w-xs">
-                        <p class="font-bold text-gray-800 text-xs">${steril(item.jenis_surat)}</p>
-                        <p class="text-[11px] text-gray-500 mt-1 line-clamp-2">${steril(item.keperluan)}</p>
+                        ${labelJenisSurat}
+                        <div class="text-[11px] text-gray-700 mt-2 bg-white/60 p-2.5 rounded-lg border border-gray-200 shadow-sm">${keperluanFormatted}</div>
                         ${item.status === 'Ditolak' && item.alasan_penolakan ? `<div class="mt-2 bg-rose-50 p-2 rounded border border-rose-100"><p class="text-[9px] font-bold text-rose-700">Alasan Tolak:</p><p class="text-[10px] text-rose-600">${steril(item.alasan_penolakan)}</p></div>` : ''}
-                        ${item.file_hasil ? `<a href="${item.file_hasil}" target="_blank" class="inline-block mt-2 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-md font-bold">📥 Lihat Surat Jadi</a>` : ''}
+                        ${item.file_hasil ? `<a href="${item.file_hasil}" target="_blank" class="inline-block mt-2 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-md font-bold shadow-sm">📥 Download Surat Jadi</a>` : ''}
                     </td>
                     <td class="p-4 text-center align-top">
                         <span class="px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider rounded-lg border shadow-sm block ${rtClass}">
-                            ${item.status_rt || 'Menunggu'}
+                            ${isLaporanRT ? 'Otomatis Desa' : (item.status_rt || 'Menunggu')}
                         </span>
                     </td>
                     <td class="p-4 text-center align-top">
@@ -300,9 +341,7 @@ import Footer from '../../components/Footer.astro';
                         </span>
                     </td>
                     <td class="p-4 text-center align-top">
-                        <button onclick="bukaModal('${item.id}')" class="text-teal-600 font-bold text-[10px] bg-teal-50 px-3 py-2 rounded-lg border border-teal-200 hover:bg-teal-600 hover:text-white shadow-sm transition-all block w-full">
-                            PROSES
-                        </button>
+                        ${tombolAksi}
                     </td>
                 </tr>`;
             });
@@ -330,10 +369,14 @@ import Footer from '../../components/Footer.astro';
         const containerPdf = document.getElementById('containerUploadPdf');
         const containerAlasan = document.getElementById('containerAlasanTolak');
         const inputAlasan = document.getElementById('inputAlasanTolak');
+        
+        // State Global buat nandain ini Laporan RT atau bukan
+        window.isModeLaporanRT = false;
 
         selectStatus.addEventListener('change', (e) => {
             if (e.target.value === 'Selesai') {
-                containerPdf.classList.remove('hidden');
+                // 🔥 Kunci UX: Sembunyikan form PDF jika ini Laporan RT 🔥
+                if (!window.isModeLaporanRT) containerPdf.classList.remove('hidden');
                 containerAlasan.classList.add('hidden');
                 inputAlasan.removeAttribute('required');
             } else if (e.target.value === 'Ditolak') {
@@ -351,20 +394,28 @@ import Footer from '../../components/Footer.astro';
             const item = dataGlobal.find(d => d.id === id);
             if (!item) return;
 
+            window.isModeLaporanRT = item.jenis_surat.startsWith('LAPORAN RT');
+
             document.getElementById('editSuratId').value = item.id;
             document.getElementById('labelNama').innerText = item.nama_lengkap + ' (' + item.nik + ')';
             document.getElementById('labelWilayah').innerText = item.wilayah_rt || 'Wilayah Belum Diset';
-            document.getElementById('labelJenis').innerText = item.jenis_surat;
-            document.getElementById('inputStatus').value = item.status;
             
+            // Tampilan Khusus di Judul Modal
+            document.getElementById('labelJenis').innerHTML = window.isModeLaporanRT 
+                ? `<span class="text-purple-600 font-bold bg-purple-50 px-2 py-1 rounded">📢 ${item.jenis_surat}</span>`
+                : item.jenis_surat;
+
+            document.getElementById('inputStatus').value = item.status;
             document.getElementById('inputFileHasil').value = '';
             inputAlasan.value = item.alasan_penolakan || '';
             
+            // Reset semua tampilan tambahan
             containerPdf.classList.add('hidden');
             containerAlasan.classList.add('hidden');
             inputAlasan.removeAttribute('required');
 
-            if (item.status === 'Selesai') containerPdf.classList.remove('hidden');
+            // Buka field sesuai status akhir sebelumnya
+            if (item.status === 'Selesai' && !window.isModeLaporanRT) containerPdf.classList.remove('hidden');
             if (item.status === 'Ditolak') {
                 containerAlasan.classList.remove('hidden');
                 inputAlasan.setAttribute('required', 'true');
@@ -375,7 +426,8 @@ import Footer from '../../components/Footer.astro';
         };
 
         const tutupModal = () => {
-            modal.classList.add('opacity-0'); modalBox.classList.remove('scale-100'); modalBox.classList.add('scale-95');
+            modal.classList.add('opacity-0');
+            modalBox.classList.remove('scale-100'); modalBox.classList.add('scale-95');
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         };
 
@@ -395,47 +447,43 @@ import Footer from '../../components/Footer.astro';
                 let fileHasilUrl = itemSurat.file_hasil; 
                 let alasanUpdate = itemSurat.alasan_penolakan;
 
-                if (statusBaru === 'Selesai') {
+                // Cek upload PDF (Abaikan kalau Mode Laporan RT)
+                if (statusBaru === 'Selesai' && !window.isModeLaporanRT) {
                     const filePdf = document.getElementById('inputFileHasil').files[0];
                     if (filePdf) {
                         statUpload.classList.remove('hidden');
                         const fileExt = filePdf.name.split('.').pop();
-                        
-                        // 🔥 BIKIN NAMA FOLDER DINAMIS BIAR RAPIH (SINKRON DENGAN BERKAS WARGA) 🔥
-                        // Bersihkan spasi dan karakter aneh jadi underscore
                         const namaWarga = itemSurat.nama_lengkap.replace(/[^a-zA-Z0-9]/g, '_');
                         const jenisSurat = itemSurat.jenis_surat.replace(/[^a-zA-Z0-9]/g, '_');
+                        const waktuKirim = new Date(itemSurat.created_at).getTime();
                         
-                        // Ambil timestamp dari waktu warga ngirim pengajuan biar foldernya unik
-                        const waktuKirim = new Date(itemSurat.created_at).getTime(); 
-                        
-                        // Ini path folder saktinya: hasil_surat / Jenis_Surat / NamaWarga_Waktu /
                         const fullPath = `hasil_surat/${jenisSurat}/${namaWarga}_${waktuKirim}/Surat_Selesai_${Date.now()}.${fileExt}`;
-
-                        const { data: uploadData, error: uploadError } = await supabase.storage
-                            .from('berkas_layanan')
-                            .upload(fullPath, filePdf);
-
+                        
+                        const { error: uploadError } = await supabase.storage.from('berkas_layanan').upload(fullPath, filePdf);
                         if (uploadError) throw new Error("Gagal mengunggah PDF: " + uploadError.message);
 
                         const { data: publicUrlData } = supabase.storage.from('berkas_layanan').getPublicUrl(fullPath);
                         fileHasilUrl = publicUrlData.publicUrl;
-                        
                         statUpload.classList.add('hidden');
                     }
-                    alasanUpdate = null; 
+                    alasanUpdate = null;
+                } else if (statusBaru === 'Selesai' && window.isModeLaporanRT) {
+                    // Kalau RT Selesai, ga ada PDF
+                    alasanUpdate = null;
                 } else if (statusBaru === 'Ditolak') {
                     alasanUpdate = inputAlasan.value;
                 } else {
-                    alasanUpdate = null; 
+                    alasanUpdate = null;
                 }
 
+                // Kirim perubahan ke database
                 const payloadUpdate = { status: statusBaru, alasan_penolakan: alasanUpdate };
                 if (fileHasilUrl) payloadUpdate.file_hasil = fileHasilUrl;
 
                 const { error: errorSurat } = await supabase.from('pengajuan_surat').update(payloadUpdate).eq('id', id);
                 if (errorSurat) throw errorSurat;
 
+                // Automasi Bansos (SKTM)
                 if (statusBaru === 'Selesai' && itemSurat.jenis_surat === 'Surat Keterangan Tidak Mampu (SKTM)') {
                     const payloadBansos = { nik: itemSurat.nik, nama_warga: itemSurat.nama_lengkap, sumber_usulan: 'Otomatis dari Pengajuan SKTM' };
                     const { error: errorBansos } = await supabase.from('usulan_bansos').insert([payloadBansos]);
@@ -444,7 +492,7 @@ import Footer from '../../components/Footer.astro';
 
                 tutupModal();
                 if(typeof showCustomAlert !== 'undefined') {
-                    let pesanSukses = 'Status pengajuan surat berhasil diperbarui!';
+                    let pesanSukses = window.isModeLaporanRT ? 'Laporan RT berhasil ditandai selesai!' : 'Status pengajuan surat berhasil diperbarui!';
                     if (fileHasilUrl) pesanSukses += ' File PDF balasan berhasil dilampirkan.';
                     await showCustomAlert('success', 'Berhasil', pesanSukses);
                 } else alert('Berhasil diperbarui!');
