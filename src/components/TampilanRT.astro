@@ -13,30 +13,31 @@
         </div>
     </div>
 
-    <div class="flex overflow-x-auto hide-scrollbar gap-2 mb-6 border-b border-gray-200 pb-2 px-2">
-        <button onclick="switchTabRT('surat')" id="btnTab-surat" class="px-5 py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap bg-amber-100 text-amber-800 shadow-sm border border-amber-200">
-            📄 Verifikasi Surat
-        </button>
-        <button onclick="switchTabRT('aduan')" id="btnTab-aduan" class="px-5 py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800 border border-transparent">
-            📢 Pantau Aduan
-        </button>
-        <button onclick="switchTabRT('daftarwarga')" id="btnTab-daftarwarga" class="px-5 py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800 border border-transparent flex items-center gap-2">
-            📋 Daftar Warga
-        </button>
-        <button onclick="switchTabRT('laporan')" id="btnTab-laporan" class="px-5 py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800 border border-transparent flex items-center gap-2">
-            📝 Laporan Khusus RT
-        </button>
-    </div>
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+        
+        <div class="flex overflow-x-auto hide-scrollbar space-x-2 border-b border-gray-200 px-6 pt-6 bg-gray-50">
+            <button onclick="switchTabRT('surat')" id="btnTab-surat" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-amber-500 text-amber-800 bg-amber-100/50 whitespace-nowrap flex items-center gap-2">
+                📄 Verifikasi Surat
+            </button>
+            <button onclick="switchTabRT('aduan')" id="btnTab-aduan" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap flex items-center gap-2">
+                📢 Pantau Aduan
+            </button>
+            <button onclick="switchTabRT('daftarwarga')" id="btnTab-daftarwarga" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap flex items-center gap-2">
+                📋 Daftar Warga
+            </button>
+            <button onclick="switchTabRT('laporan')" id="btnTab-laporan" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap flex items-center gap-2">
+                📝 Laporan Khusus RT
+            </button>
+        </div>
 
-    <div id="tab-surat" class="block animate-fadeIn">
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8 border-t-4 border-t-amber-500">
-            <div class="p-6 border-b border-gray-100 bg-amber-50/30 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div id="tab-surat" class="p-6 md:p-8 block animate-fadeIn">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 border-b border-gray-50 pb-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">Verifikasi Surat Warga</h2>
                     <p class="text-sm text-gray-500 mt-1">Daftar permohonan surat di wilayah Anda.</p>
                 </div>
                 <div class="relative w-full sm:w-64">
-                    <input type="text" id="searchSuratRT" placeholder="Cari pemohon / surat..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none transition-all">
+                    <input type="text" id="searchSuratRT" placeholder="Cari pemohon / surat..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none transition-all">
                     <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
             </div>
@@ -52,23 +53,21 @@
                         </tr>
                     </thead>
                     <tbody id="tableSuratRT" class="divide-y divide-gray-100 text-sm">
-                        <tr><td colspan="5" class="p-8 text-center text-gray-400 animate-pulse">Memuat data...</td></tr>
+                        <tr><td colspan="5" class="p-8 text-center text-gray-400 animate-pulse font-bold">Memuat data...</td></tr>
                     </tbody>
                 </table>
             </div>
-            <div id="paginationSuratRT" class="px-6 py-4 bg-gray-50 border-t border-gray-100"></div>
+            <div id="paginationSuratRT" class="mt-4 pt-4 border-t border-gray-50"></div>
         </div>
-    </div>
 
-    <div id="tab-aduan" class="hidden animate-fadeIn">
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-rose-500">
-            <div class="p-6 border-b border-gray-100 bg-rose-50/30 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div id="tab-aduan" class="p-6 md:p-8 hidden animate-fadeIn">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 border-b border-gray-50 pb-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">Pantauan Aduan Warga</h2>
                     <p class="text-sm text-gray-500 mt-1">Laporan masalah di wilayah Anda (Hanya pantauan).</p>
                 </div>
                 <div class="relative w-full sm:w-64">
-                    <input type="text" id="searchAduanRT" placeholder="Cari pelapor / masalah..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 outline-none transition-all">
+                    <input type="text" id="searchAduanRT" placeholder="Cari pelapor / masalah..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 outline-none transition-all">
                     <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
             </div>
@@ -82,24 +81,22 @@
                         </tr>
                     </thead>
                     <tbody id="tableAduanRT" class="divide-y divide-gray-100 text-sm">
-                        <tr><td colspan="3" class="p-8 text-center text-gray-400 animate-pulse">Memuat data aduan...</td></tr>
+                        <tr><td colspan="3" class="p-8 text-center text-gray-400 animate-pulse font-bold">Memuat data aduan...</td></tr>
                     </tbody>
                 </table>
             </div>
-            <div id="paginationAduanRT" class="px-6 py-4 bg-gray-50 border-t border-gray-100"></div>
+            <div id="paginationAduanRT" class="mt-4 pt-4 border-t border-gray-50"></div>
         </div>
-    </div>
 
-    <div id="tab-daftarwarga" class="hidden animate-fadeIn">
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8 border-t-4 border-t-emerald-500">
-            <div class="p-6 border-b border-gray-100 bg-emerald-50/30 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div id="tab-daftarwarga" class="p-6 md:p-8 hidden animate-fadeIn">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 border-b border-gray-50 pb-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">Buku Induk RT</h2>
                     <p class="text-sm text-gray-500 mt-1">Daftar warga yang tercatat secara resmi di wilayah Anda.</p>
                 </div>
                 <div class="flex items-center gap-3 w-full sm:w-auto">
                     <div class="relative w-full sm:w-64">
-                        <input type="text" id="searchDaftarWargaRT" placeholder="Cari nama warga..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                        <input type="text" id="searchDaftarWargaRT" placeholder="Cari nama warga..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
                         <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
                     <button onclick="document.getElementById('modalTambahWargaRT').classList.remove('hidden')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold shrink-0 shadow-sm flex items-center gap-2 transition-all active:scale-95">
@@ -119,68 +116,55 @@
                         </tr>
                     </thead>
                     <tbody id="tableDaftarWargaRT" class="divide-y divide-gray-100 text-sm">
-                        <tr><td colspan="5" class="p-8 text-center text-gray-400 animate-pulse">Memuat data warga...</td></tr>
+                        <tr><td colspan="5" class="p-8 text-center text-gray-400 animate-pulse font-bold">Memuat data warga...</td></tr>
                     </tbody>
                 </table>
             </div>
-            <div id="paginationDaftarWargaRT" class="px-6 py-4 bg-gray-50 border-t border-gray-100"></div>
+            <div id="paginationDaftarWargaRT" class="mt-4 pt-4 border-t border-gray-50"></div>
         </div>
-    </div>
 
-    <div id="tab-laporan" class="hidden animate-fadeIn">
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-purple-500 flex flex-col">
-            <div class="p-6 border-b border-gray-100 bg-purple-50/30">
+        <div id="tab-laporan" class="p-6 md:p-8 hidden animate-fadeIn">
+            <div class="mb-6 border-b border-gray-50 pb-4">
                 <h2 class="text-xl font-bold text-gray-900">Laporan & Pengajuan Khusus RT</h2>
-                <p class="text-sm text-gray-500 mt-1 flex items-center gap-1">
-                    Ajukan laporan warga meninggal, pindah domisili, perubahan data, atau kewenangan RT lainnya.
-                </p>
+                <p class="text-sm text-gray-500 mt-1">Ajukan laporan warga meninggal, pindah domisili, perubahan data, atau kewenangan RT lainnya.</p>
             </div>
             
-            <div class="p-6">
-                <form id="formLaporanRT" class="space-y-6 max-w-4xl">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Kategori Laporan *</label>
-                                <select id="laporan_kategori" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 text-sm font-bold outline-none cursor-pointer transition-all">
-                                    <option value="" disabled selected>-- Pilih Kategori --</option>
-                                    <option value="Warga Meninggal">🪦 Lapor Warga Meninggal</option>
-                                    <option value="Pindah Keluar">🚚 Lapor Warga Pindah Keluar Mulyamekar</option>
-                                    <option value="Perubahan Status Ekonomi">💰 Pengajuan Ubah Status (Mampu/Tidak Mampu)</option>
-                                    <option value="Perubahan Pendidikan/Pekerjaan">🎓 Pengajuan Ubah Pendidikan / Pekerjaan</option>
-                                    <option value="Lainnya">📝 Lainnya (Jelaskan di keterangan)</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Nama Warga Terkait (Opsional)</label>
-                                <input type="text" id="laporan_nama_warga" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 text-sm outline-none transition-all" placeholder="Nama warga yang dimaksud...">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">NIK Warga Terkait (Opsional)</label>
-                                <input type="text" id="laporan_nik_warga" maxlength="16" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 font-mono text-sm outline-none transition-all" placeholder="16 Digit NIK">
-                            </div>
+            <form id="formLaporanRT" class="space-y-6 max-w-4xl">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Kategori Laporan *</label>
+                            <select id="laporan_kategori" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 text-sm font-bold outline-none cursor-pointer transition-all">
+                                <option value="" disabled selected>-- Pilih Kategori --</option>
+                                <option value="Warga Meninggal">🪦 Lapor Warga Meninggal</option>
+                                <option value="Pindah Keluar">🚚 Lapor Warga Pindah Keluar Mulyamekar</option>
+                                <option value="Perubahan Status Ekonomi">💰 Pengajuan Ubah Status (Mampu/Tidak Mampu)</option>
+                                <option value="Perubahan Pendidikan/Pekerjaan">🎓 Pengajuan Ubah Pendidikan / Pekerjaan</option>
+                                <option value="Lainnya">📝 Lainnya (Jelaskan di keterangan)</option>
+                            </select>
                         </div>
-
-                        <div class="space-y-4">
-                            <div class="h-full flex flex-col">
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Detail Keterangan & Pengajuan *</label>
-                                <textarea id="laporan_keterangan" required rows="6" class="w-full h-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 text-sm outline-none transition-all resize-none" placeholder="Tuliskan keterangan lengkap di sini. 
-Contoh: 
-- Mohon ubah data pendidikan anak atas nama Budi dari SD menjadi SMP.
-- Warga atas nama A telah meninggal dunia pada tanggal..."></textarea>
-                            </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Warga Terkait (Opsional)</label>
+                            <input type="text" id="laporan_nama_warga" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 text-sm outline-none transition-all" placeholder="Nama warga yang dimaksud...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">NIK Warga Terkait (Opsional)</label>
+                            <input type="text" id="laporan_nik_warga" maxlength="16" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 font-mono text-sm outline-none transition-all" placeholder="16 Digit NIK">
                         </div>
                     </div>
-
-                    <div class="pt-6 border-t border-gray-100 flex justify-end">
-                        <button type="submit" id="btnSubmitLaporanRT" class="px-8 py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-black rounded-xl text-sm transition-all shadow-md shadow-purple-600/20 flex items-center justify-center gap-2 w-full sm:w-auto active:scale-95">
-                            <i class="bi bi-send-fill"></i> Kirim Laporan ke Admin Desa
-                        </button>
+                    <div class="space-y-4">
+                        <div class="h-full flex flex-col">
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Detail Keterangan & Pengajuan *</label>
+                            <textarea id="laporan_keterangan" required rows="6" class="w-full h-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 text-sm outline-none transition-all resize-none" placeholder="Tuliskan keterangan lengkap di sini..."></textarea>
+                        </div>
                     </div>
-                </form>
-            </div>
+                </div>
+                <div class="pt-6 border-t border-gray-100 flex justify-end">
+                    <button type="submit" id="btnSubmitLaporanRT" class="px-8 py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-black rounded-xl text-sm transition-all shadow-md shadow-purple-600/20 flex items-center justify-center gap-2 w-full sm:w-auto active:scale-95">
+                        <i class="bi bi-send-fill"></i> Kirim Laporan ke Admin Desa
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
     <div id="modalTambahWargaRT" class="fixed inset-0 z-[100] bg-slate-900/80 hidden flex items-center justify-center p-4 backdrop-blur-sm">

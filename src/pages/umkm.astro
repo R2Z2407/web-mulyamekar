@@ -14,7 +14,8 @@ import Footer from '../components/Footer.astro';
 <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
     <Header />
     
-    <main class="flex-grow pt-24 pb-20">
+    <main class="flex-grow pb-20">
+        
         <section class="bg-gradient-to-br from-orange-500 to-amber-500 text-white py-12 mb-8 shadow-inner relative overflow-hidden">
             <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/food.png')]"></div>
             <div class="container mx-auto px-4 max-w-6xl relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
@@ -33,17 +34,68 @@ import Footer from '../components/Footer.astro';
             </div>
         </section>
 
-        <div class="container mx-auto px-4 max-w-6xl">
-            <div class="flex flex-wrap justify-center gap-3 mb-10" id="kategoriContainer">
-                <button onclick="filterKategori('Semua')" class="btn-kategori active px-6 py-2 rounded-full font-bold text-sm bg-orange-500 text-white shadow-md transition-all">Semua</button>
-                <button onclick="filterKategori('Makanan')" class="btn-kategori px-6 py-2 rounded-full font-bold text-sm bg-white text-gray-600 border border-gray-200 hover:border-orange-500 hover:text-orange-500 transition-all">🍔 Makanan</button>
-                <button onclick="filterKategori('Kerajinan')" class="btn-kategori px-6 py-2 rounded-full font-bold text-sm bg-white text-gray-600 border border-gray-200 hover:border-orange-500 hover:text-orange-500 transition-all">🏺 Kerajinan</button>
-                <button onclick="filterKategori('Pertanian')" class="btn-kategori px-6 py-2 rounded-full font-bold text-sm bg-white text-gray-600 border border-gray-200 hover:border-orange-500 hover:text-orange-500 transition-all">🌾 Pertanian</button>
-                <button onclick="filterKategori('Jasa')" class="btn-kategori px-6 py-2 rounded-full font-bold text-sm bg-white text-gray-600 border border-gray-200 hover:border-orange-500 hover:text-orange-500 transition-all">🛠️ Jasa</button>
-            </div>
+        <div class="container mx-auto px-4 sm:px-6 max-w-6xl">
             
-            <div id="gridProduk" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            <div class="max-w-4xl mx-auto mb-10 flex flex-col sm:flex-row gap-4 sm:gap-5">
+                <div class="relative flex-grow">
+                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" id="inputPencarian" onkeyup="cariProduk()" class="w-full pl-14 pr-5 py-4 bg-white border border-gray-200 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all font-medium text-gray-700 text-sm md:text-base placeholder-gray-400" placeholder="Cari seblak, kerajinan, atau nama toko...">
                 </div>
+
+                <div class="relative w-full sm:w-72 shrink-0">
+                    <select id="selectUrutan" onchange="ubahUrutan()" class="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-orange-500 transition-all font-bold text-gray-700 text-sm cursor-pointer appearance-none">
+                        <option value="Terbaru">✨ Paling Baru</option>
+                        <option value="HargaTermurah">💸 Harga: Termurah</option>
+                        <option value="HargaTermahal">💎 Harga: Termahal</option>
+                        <option value="Terlaris">🔥 Paling Laris (Sering Dilihat)</option>
+                        <option value="KurangLaris">📉 Kurang Diminati</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-12">
+                <div class="flex overflow-x-auto hide-scrollbar gap-4 md:gap-6 md:justify-center snap-x snap-mandatory pb-6 pt-2" id="kategoriContainer">
+                    
+                    <button onclick="filterKategori('Semua')" class="btn-kategori active group shrink-0 snap-center w-[90px] md:w-28 flex flex-col items-center justify-start p-3 rounded-2xl bg-white border-2 border-gray-100 hover:border-orange-300 hover:shadow-md transition-all active:scale-95">
+                        <div class="pointer-events-none w-14 h-14 bg-gray-50 group-[.active]:bg-orange-100 rounded-full flex items-center justify-center text-3xl mb-3 transition-colors shadow-inner">🏪</div>
+                        <span class="pointer-events-none text-[11px] md:text-xs font-black uppercase tracking-wider text-gray-500 group-[.active]:text-orange-600 text-center leading-tight">Semua</span>
+                    </button>
+
+                    <button onclick="filterKategori('Makanan')" class="btn-kategori group shrink-0 snap-center w-[90px] md:w-28 flex flex-col items-center justify-start p-3 rounded-2xl bg-white border-2 border-gray-100 hover:border-orange-300 hover:shadow-md transition-all active:scale-95">
+                        <div class="pointer-events-none w-14 h-14 bg-gray-50 group-[.active]:bg-orange-100 rounded-full flex items-center justify-center text-3xl mb-3 transition-colors shadow-inner">🍔</div>
+                        <span class="pointer-events-none text-[11px] md:text-xs font-black uppercase tracking-wider text-gray-500 group-[.active]:text-orange-600 text-center leading-tight">Makanan</span>
+                    </button>
+
+                    <button onclick="filterKategori('Minuman')" class="btn-kategori group shrink-0 snap-center w-[90px] md:w-28 flex flex-col items-center justify-start p-3 rounded-2xl bg-white border-2 border-gray-100 hover:border-orange-300 hover:shadow-md transition-all active:scale-95">
+                        <div class="pointer-events-none w-14 h-14 bg-gray-50 group-[.active]:bg-orange-100 rounded-full flex items-center justify-center text-3xl mb-3 transition-colors shadow-inner">🧋</div>
+                        <span class="pointer-events-none text-[11px] md:text-xs font-black uppercase tracking-wider text-gray-500 group-[.active]:text-orange-600 text-center leading-tight">Minuman</span>
+                    </button>
+
+                    <button onclick="filterKategori('Kerajinan')" class="btn-kategori group shrink-0 snap-center w-[90px] md:w-28 flex flex-col items-center justify-start p-3 rounded-2xl bg-white border-2 border-gray-100 hover:border-orange-300 hover:shadow-md transition-all active:scale-95">
+                        <div class="pointer-events-none w-14 h-14 bg-gray-50 group-[.active]:bg-orange-100 rounded-full flex items-center justify-center text-3xl mb-3 transition-colors shadow-inner">🏺</div>
+                        <span class="pointer-events-none text-[11px] md:text-xs font-black uppercase tracking-wider text-gray-500 group-[.active]:text-orange-600 text-center leading-tight">Kerajinan</span>
+                    </button>
+
+                    <button onclick="filterKategori('Pertanian')" class="btn-kategori group shrink-0 snap-center w-[90px] md:w-28 flex flex-col items-center justify-start p-3 rounded-2xl bg-white border-2 border-gray-100 hover:border-orange-300 hover:shadow-md transition-all active:scale-95">
+                        <div class="pointer-events-none w-14 h-14 bg-gray-50 group-[.active]:bg-orange-100 rounded-full flex items-center justify-center text-3xl mb-3 transition-colors shadow-inner">🌾</div>
+                        <span class="pointer-events-none text-[11px] md:text-xs font-black uppercase tracking-wider text-gray-500 group-[.active]:text-orange-600 text-center leading-tight">Pertanian</span>
+                    </button>
+
+                    <button onclick="filterKategori('Jasa')" class="btn-kategori group shrink-0 snap-center w-[90px] md:w-28 flex flex-col items-center justify-start p-3 rounded-2xl bg-white border-2 border-gray-100 hover:border-orange-300 hover:shadow-md transition-all active:scale-95">
+                        <div class="pointer-events-none w-14 h-14 bg-gray-50 group-[.active]:bg-orange-100 rounded-full flex items-center justify-center text-3xl mb-3 transition-colors shadow-inner">🛠️</div>
+                        <span class="pointer-events-none text-[11px] md:text-xs font-black uppercase tracking-wider text-gray-500 group-[.active]:text-orange-600 text-center leading-tight">Jasa</span>
+                    </button>
+
+                </div>
+            </div>
+
+            <div id="gridProduk" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-8"></div>
+            
         </div>
     </main>
 
@@ -63,11 +115,22 @@ import Footer from '../components/Footer.astro';
     </div>
 
     <Footer />
-
+    <style>
+        /* Sembunyikan scrollbar tapi tetep bisa di-scroll */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Desain khusus saat tombol kategori sedang aktif (diklik) */
+        .btn-kategori.active {
+            border-color: #f97316; /* orange-500 */
+            box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.1), 0 2px 4px -1px rgba(249, 115, 22, 0.06);
+        }
+    </style>
     <script>
         import { supabase } from '../lib/supabase.js';
 
         let dataProdukMentah = [];
+        let kategoriAktif = 'Semua'; // Menyimpan state kategori yang lagi diklik
 
         const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         
@@ -90,34 +153,71 @@ import Footer from '../components/Footer.astro';
 
             if (!error) {
                 dataProdukMentah = data;
-                renderProduk('Semua');
+                jalankanFilter(); // Render pertama kali
             } else {
                 console.error(error);
                 grid.innerHTML = `<div class="col-span-full text-center text-red-500 font-bold">Gagal memuat katalog: ${error.message}</div>`;
             }
         }
 
+        // 🔥 PERBAIKAN 1: FUNGSI KATEGORI YANG GAK MERUSAK DESAIN 🔥
         window.filterKategori = (kategori) => {
-            document.querySelectorAll('.btn-kategori').forEach(btn => btn.className = "btn-kategori px-6 py-2 rounded-full font-bold text-sm bg-white text-gray-600 border border-gray-200 hover:border-orange-500 hover:text-orange-500 transition-all");
-            event.target.className = "btn-kategori active px-6 py-2 rounded-full font-bold text-sm bg-orange-500 text-white shadow-md transition-all";
-            renderProduk(kategori);
+            kategoriAktif = kategori;
+            
+            // Tangkap elemen yang diklik (menggunakan event global browser)
+            const targetBtn = event.currentTarget || event.target;
+            const tombolAsli = targetBtn.closest('.btn-kategori');
+
+            // Hapus class 'active' dari SEMUA tombol kategori
+            document.querySelectorAll('.btn-kategori').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Tambahkan class 'active' HANYA ke tombol yang diklik
+            if (tombolAsli) {
+                tombolAsli.classList.add('active');
+            }
+
+            jalankanFilter();
         };
 
-        function renderProduk(kategori) {
-            const grid = document.getElementById('gridProduk');
-            let produkTampil = kategori === 'Semua' ? dataProdukMentah : dataProdukMentah.filter(p => p.kategori === kategori);
+        // 🔥 PERBAIKAN 2: FUNGSI PENCARIAN YANG SEBELUMNYA HILANG 🔥
+        window.cariProduk = () => {
+            jalankanFilter();
+        };
 
-            if (produkTampil.length === 0) {
-                grid.innerHTML = `<div class="col-span-full bg-orange-50 p-10 rounded-3xl text-center border border-orange-100 mt-4"><span class="text-5xl mb-3 block">🏪</span><h3 class="text-xl font-bold text-orange-900">Belum Ada Produk</h3></div>`;
+        // 🔥 MESIN FILTER PINTAR (GABUNGAN PENCARIAN + KATEGORI) 🔥
+        function jalankanFilter() {
+            const grid = document.getElementById('gridProduk');
+            const keyword = document.getElementById('inputPencarian').value.toLowerCase();
+            
+            let produkSaring = dataProdukMentah;
+
+            // 1. Saring Kategori
+            if (kategoriAktif !== 'Semua') {
+                produkSaring = produkSaring.filter(p => p.kategori === kategoriAktif);
+            }
+
+            // 2. Saring Keyword Pencarian
+            if (keyword !== '') {
+                produkSaring = produkSaring.filter(p => {
+                    const nama = (p.nama_produk || '').toLowerCase();
+                    const toko = (p.umkm_toko && p.umkm_toko.nama_toko) ? p.umkm_toko.nama_toko.toLowerCase() : '';
+                    return nama.includes(keyword) || toko.includes(keyword);
+                });
+            }
+
+            // 3. Render Hasilnya
+            if (produkSaring.length === 0) {
+                grid.innerHTML = `<div class="col-span-full bg-orange-50 p-10 rounded-3xl text-center border border-orange-100 mt-4"><span class="text-5xl mb-3 block">🏪</span><h3 class="text-xl font-bold text-orange-900">Produk Tidak Ditemukan</h3><p class="text-sm text-orange-600 mt-1">Coba kata kunci atau kategori lain.</p></div>`;
                 return;
             }
 
             let html = '';
-            produkTampil.forEach(p => {
+            produkSaring.forEach(p => {
                 const noWaAman = p.umkm_toko ? p.umkm_toko.no_wa : '';
                 const namaTokoAman = p.umkm_toko ? p.umkm_toko.nama_toko : 'Toko Tidak Dikenal';
 
-                // Tambahkan aksi onclick="bukaZoomFoto" dan ubah kursor jadi pointer di gambar
                 html += `
                 <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all group flex flex-col h-full">
                     <div class="relative w-full h-48 bg-gray-100 overflow-hidden shrink-0 cursor-zoom-in" onclick="bukaZoomFoto('${p.foto_url}')">
@@ -142,16 +242,14 @@ import Footer from '../components/Footer.astro';
 
         // ================= LOGIKA ZOOM FOTO =================
         let currentScale = 1;
-        
         window.bukaZoomFoto = (url) => {
             const m = document.getElementById('modalZoomFoto');
             const img = document.getElementById('gambarZoom');
             
             img.src = url;
-            currentScale = 1; // Reset zoom tiap buka foto baru
+            currentScale = 1; // Reset zoom
             img.style.transform = `scale(1)`;
-            
-            document.body.classList.add('overflow-hidden'); // Kunci scroll layar belakang
+            document.body.classList.add('overflow-hidden');
             m.classList.remove('hidden');
             setTimeout(() => m.classList.remove('opacity-0'), 10);
         };
@@ -161,32 +259,27 @@ import Footer from '../components/Footer.astro';
             m.classList.add('opacity-0');
             setTimeout(() => {
                 m.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden'); // Buka kunci layar belakang
+                document.body.classList.remove('overflow-hidden');
             }, 300);
         };
 
         document.addEventListener('DOMContentLoaded', () => {
             loadProduk();
 
-            // Pasang Event Listener untuk Zoom
             const imgZoom = document.getElementById('gambarZoom');
 
-            // 1. ZOOM DESKTOP (SCROLL MOUSE)
+            // 1. ZOOM DESKTOP
             imgZoom.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                // Hitung arah scroll (ke atas/bawah)
                 currentScale += e.deltaY * -0.002;
-                // Batasi zoom minimal ukuran asli (1x) dan maksimal 4x
                 currentScale = Math.min(Math.max(1, currentScale), 4); 
                 imgZoom.style.transform = `scale(${currentScale})`;
             });
 
-            // 2. ZOOM MOBILE (PINCH / CUBIT)
+            // 2. ZOOM MOBILE
             let startDistance = 0;
-
             imgZoom.addEventListener('touchstart', (e) => {
                 if (e.touches.length === 2) {
-                    // Hitung jarak awal antara dua jari saat nyentuh layar
                     startDistance = Math.hypot(
                         e.touches[0].pageX - e.touches[1].pageX,
                         e.touches[0].pageY - e.touches[1].pageY
@@ -196,23 +289,16 @@ import Footer from '../components/Footer.astro';
 
             imgZoom.addEventListener('touchmove', (e) => {
                 if (e.touches.length === 2) {
-                    e.preventDefault(); // Cegah browser ikutan ke-zoom
-                    
-                    // Hitung jarak baru antara dua jari yang lagi geser
+                    e.preventDefault(); 
                     const currentDistance = Math.hypot(
                         e.touches[0].pageX - e.touches[1].pageX,
                         e.touches[0].pageY - e.touches[1].pageY
                     );
-                    
-                    // Hitung rasio pelebaran jari
                     const distanceRatio = currentDistance / startDistance;
                     let newScale = currentScale * distanceRatio;
-                    
-                    // Batasi batas maksimal dan minimal zoom
                     newScale = Math.min(Math.max(1, newScale), 4);
                     imgZoom.style.transform = `scale(${newScale})`;
                     
-                    // Update titik awal untuk pergerakan selanjutnya biar mulus
                     startDistance = currentDistance;
                     currentScale = newScale;
                 }

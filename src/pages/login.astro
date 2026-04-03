@@ -107,9 +107,9 @@ import Footer from '../components/Footer.astro';
                 if (profil.role === 'admin') {
                     window.location.href = '/admin';
                 } else if (profil.role === 'rt_rw') {
-                    window.location.href = '/rt'; // <-- Kembalikan ke /rt
+                    window.location.href = '/pengguna'; // <-- Kembalikan ke /rt
                 } else {
-                    window.location.href = '/warga'; 
+                    window.location.href = '/pengguna'; 
                 }
             }
         });

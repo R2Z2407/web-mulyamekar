@@ -2,19 +2,46 @@
 // src/components/Header.astro
 import LoginModal from './LoginModal.astro';
 import RegisterModal from './RegisterModal.astro';
-import AvatarWarga from './AvatarWarga.astro'; // 🔥 IMPORT AVATAR DI SINI 🔥
+import AvatarWarga from './AvatarWarga.astro';
+
+// STRUKTUR MENU BARU YANG LEBIH RAPIH
 const navItems = [
   { name: 'Beranda', url: '/' },
-  { name: 'Profil', url: '/profil' },
-  { name: 'Pemerintahan', url: '/pemerintahan' },
-  { name: 'Informasi', url: '/informasi' },
+  {
+    name: 'Profil Desa',
+    children: [
+      { name: 'Sejarah & Visi Misi', url: '/profil/visi-misi-sejarah' },
+      { name: 'Struktur Organisasi', url: '/profil/struktur' },
+      { name: 'Demografi Penduduk', url: '/profil/demografi' },
+      { name: 'Peta Desa', url: '/peta' },
+    ]
+  },
+  {
+    name: 'Layanan',
+    children: [
+      { name: 'Persuratan Online', url: '/layanan/persuratan' },
+      { name: 'Aduan Warga', url: '/layanan/aduan' },
+      { name: 'Cek Bansos', url: '/layanan/bansos' },
+    ]
+  },
+  {
+    name: 'Transparansi', url: '/apbdes'},
+  { name: 'Berita', url: '/berita' },
+  { name: 'UMKM', url: '/umkm' },
+  { name: 'Kontak', url: '/kontak' },
 ];
+// 🔥 LOGIKA DETEKSI HALAMAN UNTUK GANTI WARNA 🔥
+const pathname = Astro.url.pathname;
+const isUMKM = pathname.includes('/umkm');
+
+const bgHeader = isUMKM ? 'bg-orange-600' : 'bg-teal-700';
+const bgMobileOverlay = isUMKM ? 'bg-orange-950/95' : 'bg-teal-950/95';
 ---
 
-<header class="bg-teal-700 text-white shadow-md sticky top-0 z-50 w-full">
+<header class={`${bgHeader} text-white shadow-md sticky top-0 z-50 w-full transition-colors duration-500`}>
   <div class="container mx-auto px-4 py-3 flex justify-between items-center relative z-50">
     
-    <a href="/" class="flex items-center gap-3 relative z-50 group">
+    <a href="/" class="flex items-center gap-3 relative z-50 group shrink-0">
       <img 
         src="https://i.ibb.co.com/S7Wv5qST/logo-header.png" 
         alt="Logo Desa Mulyamekar" 
@@ -26,26 +53,38 @@ const navItems = [
       </div>
     </a>
 
-    <nav class="hidden md:flex gap-5 lg:gap-6 items-center">
+    <nav class="hidden lg:flex gap-4 xl:gap-6 items-center">
       {navItems.map((item) => (
-        <a href={item.url} class="text-sm font-medium hover:text-amber-400 transition-colors">
-          {item.name}
-        </a>
+        item.children ? (
+          <div class="relative group">
+            <button class="text-sm font-medium hover:text-amber-400 transition-colors flex items-center gap-1 py-4">
+              {item.name}
+              <svg class="w-3 h-3 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="absolute top-[85%] left-0 bg-white text-teal-950 min-w-[220px] rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-3 group-hover:translate-y-0 border border-gray-100 overflow-hidden z-50">
+              <div class="py-2">
+                {item.children.map(child => (
+                  <a href={child.url} class="block px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-teal-50 hover:text-teal-700 transition-colors">
+                    {child.name}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <a href={item.url} class="text-sm font-medium hover:text-amber-400 transition-colors py-4">
+            {item.name}
+          </a>
+        )
       ))}
       
-      <a href="/layanan" class="bg-amber-500 hover:bg-amber-600 text-teal-950 px-5 py-2 rounded-full text-sm font-bold transition-transform hover:scale-105 shadow-sm ml-2">
-        Layanan Surat
-      </a>
-
       <button id="btnNavLogin" onclick="bukaLoginModal()" class="hidden text-sm font-bold border-2 border-white hover:bg-white hover:text-teal-700 px-5 py-1.5 rounded-full transition-colors shadow-sm ml-2">
         Masuk / Daftar
       </button>
 
       <div id="navProfile" class="hidden items-center gap-4 border-l border-teal-600 pl-5 ml-2">
         <a href="#" id="linkDashboard" class="flex items-center gap-2 group cursor-pointer" title="Buka Dashboard Saya">
-          
           <AvatarWarga id="headerAvatarDesktop" className="w-8 h-8 group-hover:ring-2 group-hover:ring-amber-400 transition-all" />
-          
           <div class="flex flex-col">
             <span id="userName" class="text-sm font-bold leading-tight group-hover:text-amber-400 transition-colors max-w-[100px] truncate">Memuat...</span>
             <span id="userRole" class="text-[10px] text-teal-200 uppercase tracking-wider">Role</span>
@@ -57,7 +96,7 @@ const navItems = [
       </div>
     </nav>
 
-    <button id="mobile-menu-btn" class="md:hidden relative p-2 text-white hover:text-amber-400 focus:outline-none w-10 h-10 z-50">
+    <button id="mobile-menu-btn" class="lg:hidden relative p-2 text-white hover:text-amber-400 focus:outline-none w-10 h-10 z-50 shrink-0">
       <div class="absolute inset-0 flex flex-col items-center justify-center gap-1.5 transform transition-all duration-300 origin-center">
         <span id="line-1" class="w-6 h-0.5 bg-current transform transition-all duration-300 origin-center"></span>
         <span id="line-2" class="w-6 h-0.5 bg-current transform transition-all duration-300 origin-center"></span>
@@ -66,36 +105,50 @@ const navItems = [
     </button>
   </div>
 
-  <div id="mobile-menu-overlay" class="fixed inset-0 bg-teal-950/95 backdrop-blur-md z-40 transform translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] md:hidden flex flex-col items-center pt-24 pb-8 overflow-y-auto">
-    <nav id="mobile-nav-links" class="flex flex-col items-center space-y-6 w-full px-8 opacity-0 transform translate-y-8 transition-all duration-500 delay-200 mt-auto mb-auto">
-      {navItems.map((item) => (
-        <a href={item.url} class="text-2xl font-bold text-white hover:text-amber-400 transition-colors tracking-wide">
-          {item.name}
-        </a>
-      ))}
-      <div class="w-20 h-0.5 bg-teal-600/50 my-4 rounded-full"></div>
+  <div id="mobile-menu-overlay" class={`fixed inset-0 ${bgMobileOverlay} backdrop-blur-md z-40 transform translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] lg:hidden flex flex-col pt-24 pb-8 overflow-y-auto`}>
+    <nav id="mobile-nav-links" class="flex flex-col w-full px-6 opacity-0 transform translate-y-8 transition-all duration-500 delay-200">
       
-      <a href="/layanan" class="w-full max-w-xs text-center bg-amber-500 hover:bg-amber-600 text-teal-950 py-3 rounded-full text-lg font-extrabold shadow-xl transition-transform active:scale-95">
-        Layanan Surat
-      </a>
+      <div class="flex flex-col gap-2 mb-6">
+        {navItems.map((item) => (
+          item.children ? (
+            <details class="w-full group [&_summary::-webkit-details-marker]:hidden">
+              <summary class="text-lg font-bold text-white hover:text-amber-400 transition-colors tracking-wide py-3 border-b border-teal-800/50 cursor-pointer list-none flex justify-between items-center">
+                {item.name}
+                <svg class="w-5 h-5 transition-transform group-open:rotate-180 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </summary>
+              <div class="flex flex-col gap-1 py-3 px-4 bg-teal-900/50 rounded-b-xl mb-1">
+                {item.children.map(child => (
+                  <a href={child.url} class="text-sm font-medium text-teal-200 hover:text-amber-400 transition-colors py-2 block border-l-2 border-teal-600 pl-3">
+                    {child.name}
+                  </a>
+                ))}
+              </div>
+            </details>
+          ) : (
+            <a href={item.url} class="text-lg font-bold text-white hover:text-amber-400 transition-colors tracking-wide py-3 border-b border-teal-800/50 block w-full">
+              {item.name}
+            </a>
+          )
+        ))}
+      </div>
 
-      <button id="btnMobileLogin" onclick="bukaLoginModal(); document.getElementById('mobile-menu-btn').click();" class="hidden w-full max-w-xs text-center border-2 border-white hover:bg-white text-white hover:text-teal-950 py-2.5 rounded-full text-lg font-bold transition-colors">
-        Masuk / Daftar
-      </button>
-
-      <div id="mobileProfile" class="hidden flex-col items-center w-full max-w-xs gap-3">
-        <a href="#" id="mobileLinkDashboard" class="flex items-center gap-3 bg-teal-800 p-4 rounded-2xl w-full">
-          
-          <AvatarWarga id="headerAvatarMobile" className="w-10 h-10 border-2 border-white/50" />
-          
-          <div class="flex flex-col text-left">
-            <span id="mobileUserName" class="text-white font-bold text-lg leading-tight">Memuat...</span>
-            <span id="mobileUserRole" class="text-teal-300 text-xs uppercase font-bold tracking-wider">Role</span>
-          </div>
-        </a>
-        <button id="btnMobileLogout" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors shadow-md">
-          Keluar dari Akun
+      <div class="flex flex-col items-center gap-4 mt-auto pt-6">
+        <button id="btnMobileLogin" onclick="bukaLoginModal(); document.getElementById('mobile-menu-btn').click();" class="hidden w-full max-w-xs text-center border-2 border-white hover:bg-white text-white hover:text-teal-950 py-3 rounded-full text-lg font-bold transition-colors">
+          Masuk / Daftar
         </button>
+
+        <div id="mobileProfile" class="hidden flex-col items-center w-full max-w-xs gap-3">
+          <a href="#" id="mobileLinkDashboard" class="flex items-center gap-3 bg-teal-800 p-4 rounded-2xl w-full">
+            <AvatarWarga id="headerAvatarMobile" className="w-10 h-10 border-2 border-white/50" />
+            <div class="flex flex-col text-left">
+              <span id="mobileUserName" class="text-white font-bold text-lg leading-tight">Memuat...</span>
+              <span id="mobileUserRole" class="text-teal-300 text-xs uppercase font-bold tracking-wider">Role</span>
+            </div>
+          </a>
+          <button id="btnMobileLogout" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors shadow-md">
+            Keluar dari Akun
+          </button>
+        </div>
       </div>
 
     </nav>
@@ -145,7 +198,6 @@ const navItems = [
   // --- LOGIKA AUTENTIKASI HEADER (UI DINAMIS) ---
   async function checkHeaderAuth() {
     const { data: { session } } = await supabase.auth.getSession();
-    
     const btnNavLogin = document.getElementById('btnNavLogin');
     const navProfile = document.getElementById('navProfile');
     const linkDashboard = document.getElementById('linkDashboard');
@@ -155,33 +207,26 @@ const navItems = [
     const mobileLinkDashboard = document.getElementById('mobileLinkDashboard');
 
     if (session) {
-      // 🔥 PERUBAHAN 3: TARIK DATA AVATAR DARI SUPABASE 🔥
       const { data: profil } = await supabase.from('profil_user').select('nama_lengkap, role, avatar_url, jenis_kelamin').eq('id', session.user.id).single();
-      
+
       if (profil) {
-        let targetUrl = '/warga';
+        let targetUrl = '/pengguna';
         let namaRole = 'Warga Desa';
-        
+
         if (profil.role === 'admin') { 
-            targetUrl = '/admin'; 
+            targetUrl = '/admin';
             namaRole = 'Admin Desa'; 
         } else if (profil.role === 'rt_rw') { 
-            targetUrl = '/warga'; 
+            targetUrl = '/pengguna';
             namaRole = 'Ketua RT/RW'; 
         }
 
         const namaPendek = profil.nama_lengkap ? profil.nama_lengkap.split(' ')[0] : 'User';
 
-        // Set Avatar di Header (Kalo belum upload, pake Dicebear sesuai gender)
-        // Set Avatar di Header
         let finalAvatar = profil.avatar_url;
-
-        // 🔥 LOGIKA KHUSUS ADMIN 🔥
         if (profil.role === 'admin') {
-            // Kalau dia Admin, paksa pakai Logo Desa Mulyamekar
             finalAvatar = 'https://i.ibb.co.com/S7Wv5qST/logo-header.png';
         } 
-        // Kalau Warga/RT dan belum punya foto, pakai Dicebear
         else if (!finalAvatar) {
             const gender = profil.jenis_kelamin === 'Perempuan' ? 'Perempuan' : 'Laki-laki'; 
             finalAvatar = gender === 'Perempuan' 
@@ -189,11 +234,9 @@ const navItems = [
                 : `https://api.dicebear.com/7.x/avataaars/svg?seed=${profil.nama_lengkap}&backgroundColor=b6e3f4&clothing=blazerAndSweater&hair=shortHairShortFlat`;
         }
 
-        // Terapkan Avatar ke Header
         if(document.getElementById('headerAvatarDesktop')) document.getElementById('headerAvatarDesktop').src = finalAvatar;
         if(document.getElementById('headerAvatarMobile')) document.getElementById('headerAvatarMobile').src = finalAvatar;
 
-        // Update UI Desktop
         if(btnNavLogin) btnNavLogin.classList.add('hidden');
         if(navProfile) {
             navProfile.classList.remove('hidden');
@@ -203,7 +246,6 @@ const navItems = [
             document.getElementById('linkDashboard').href = targetUrl;
         }
 
-        // Update UI Mobile
         if(btnMobileLogin) btnMobileLogin.classList.add('hidden');
         if(mobileProfile) {
             mobileProfile.classList.remove('hidden');

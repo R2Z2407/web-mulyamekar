@@ -214,7 +214,7 @@
 
                 // Arahkan otomatis ke dashboard sesuai Role
                 const { data: profil } = await supabase.from('profil_user').select('role').eq('id', data.user.id).single();
-                window.location.href = (profil && profil.role === 'admin') ? '/admin' : '/warga';
+                window.location.href = (profil && profil.role === 'admin') ? '/admin' : '/pengguna';
 
             } else {
                 // LOGIKA RESET SANDI

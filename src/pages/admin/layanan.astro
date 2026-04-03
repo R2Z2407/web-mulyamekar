@@ -1,26 +1,14 @@
 ---
 // src/pages/admin/layanan.astro
-import '../../global.css';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
+import AdminLayout from '../../layout/AdminLayout.astro';
 ---
 
-<html lang="id">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kelola Layanan Surat - Admin Mulyamekar</title>
-</head>
-<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
-    <Header />
-    
-    <main class="flex-grow pt-10 pb-20">
-        <div class="container mx-auto px-4 max-w-7xl">
-            <div class="mb-8">
-                <a href="/admin" class="text-teal-600 font-bold text-sm hover:text-amber-600 transition-colors">&larr; Kembali ke Dashboard</a>
-                <h1 class="text-3xl font-extrabold text-teal-950 mt-2">Layanan Administrasi Surat</h1>
-                <p class="text-sm text-gray-500">Kelola permohonan pengajuan surat, tinjau berkas, dan berikan tindak lanjut kepada warga.</p>
-            </div>
+<AdminLayout 
+    title="Kelola Layanan Surat - Admin Mulyamekar"
+    pageTitle="Layanan Administrasi Surat"
+    pageDesc="Kelola permohonan pengajuan surat, tinjau berkas, dan berikan tindak lanjut kepada warga."
+    maxWidth="max-w-7xl"
+>
 
             <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                 
@@ -108,9 +96,8 @@ import Footer from '../../components/Footer.astro';
                 </div>
             </form>
         </div>
-    </div>
-
-    <Footer />
+</div>
+</AdminLayout>
 
     <script>
         import { supabase, URL_DOWNLOAD_ZIP } from '../../lib/supabase.js';

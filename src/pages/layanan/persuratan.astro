@@ -1,6 +1,6 @@
 ---
 // src/pages/layanan.astro
-import BaseLayout from '../layout/BaseLayout.astro';
+import BaseLayout from '../../layout/BaseLayout.astro';
 ---
 
 <BaseLayout title="Layanan E-Surat - Mulyamekar">
@@ -90,7 +90,7 @@ import BaseLayout from '../layout/BaseLayout.astro';
         </div>
     </main>
     <script>
-        import { supabase } from '../lib/supabase.js';
+        import { supabase } from '../../lib/supabase.js';
 
         async function cekAksesMasuk() {
             const { data: { session } } = await supabase.auth.getSession();

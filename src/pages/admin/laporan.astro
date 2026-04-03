@@ -1,38 +1,17 @@
 ---
 // src/pages/admin/laporan.astro
-import '../../global.css';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
+import AdminLayout from '../../layout/AdminLayout.astro';
 ---
 
-<html lang="id">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Laporan Pengajuan Surat - Admin Mulyamekar</title>
-</head>
-<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
-    
-    <Header />
-    
-    <main class="flex-grow pt-10 pb-20">
-        <div class="container mx-auto px-4 max-w-6xl">
-            
-            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <div>
-                    <a href="/admin" class="text-teal-600 hover:text-amber-600 text-sm font-bold mb-2 inline-flex items-center gap-1 transition-colors">
-                        &larr; Kembali ke Dashboard
-                    </a>
-                    <h1 class="text-3xl font-extrabold text-teal-950">Data Pengajuan Surat</h1>
-                    <p class="text-gray-500 mt-1">Rekapitulasi permohonan layanan administrasi warga.</p>
-                </div>
-                
-                <button id="btnExport" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Export ke Excel (CSV)
-                </button>
-            </div>
-
+<AdminLayout 
+    title="Laporan Pengajuan Surat - Admin Mulyamekar"
+    pageTitle="Data Pengajuan Surat"
+    pageDesc="Rekapitulasi permohonan layanan administrasi warga."
+>
+    <button slot="action" id="btnExport" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        Export ke Excel (CSV)
+    </button>
             <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -55,10 +34,7 @@ import Footer from '../../components/Footer.astro';
                 </div>
             </div>
 
-        </div>
-    </main>
-
-    <Footer />
+</AdminLayout>
 
     <script>
         import { supabase } from '../../lib/supabase.js';

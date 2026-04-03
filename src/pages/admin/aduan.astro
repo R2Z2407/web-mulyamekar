@@ -1,28 +1,14 @@
 ---
 // src/pages/admin/aduan.astro
-import '../../global.css';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
+import AdminLayout from '../../layout/AdminLayout.astro';
 ---
 
-<html lang="id">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kelola Aduan Warga - Admin Mulyamekar</title>
-</head>
-<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
-    <Header />
-    
-    <main class="flex-grow pt-24 pb-20">
-        <div class="container mx-auto px-4 max-w-7xl">
-            <div class="mb-8 flex flex-col md:flex-row justify-between items-end gap-4">
-                <div>
-                    <a href="/admin" class="text-teal-600 font-bold text-sm hover:text-amber-600 transition-colors">&larr; Kembali ke Dashboard</a>
-                    <h1 class="text-3xl font-extrabold text-teal-950 mt-2">Kelola Aduan Warga</h1>
-                    <p class="text-sm text-gray-500">Pantau dan tindak lanjuti laporan masalah dari warga.</p>
-                </div>
-            </div>
+<AdminLayout 
+    title="Kelola Aduan Warga - Admin Mulyamekar"
+    pageTitle="Kelola Aduan Warga"
+    pageDesc="Pantau dan tindak lanjuti laporan masalah dari warga."
+    maxWidth="max-w-7xl"
+>
 
             <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                 
@@ -59,42 +45,43 @@ import Footer from '../../components/Footer.astro';
         </div>
     </main>
 
-    <div id="modalStatus" class="fixed inset-0 z-[60] bg-gray-900/60 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
-        <div id="modalBox" class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-teal-900">Tindak Lanjut Aduan</h3>
-                <button id="btnTutupModal" class="text-gray-400 hover:text-red-500 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            
-            <form id="formStatus" class="space-y-4">
-                <input type="hidden" id="editAduanId">
-                
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Ubah Status Laporan *</label>
-                    <select id="inputStatus" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-bold">
-                        <option value="Menunggu">🟠 Menunggu (Belum dicek)</option>
-                        <option value="Diproses">🔵 Diproses (Sedang ditangani)</option>
-                        <option value="Selesai">🟢 Selesai (Masalah teratasi)</option>
-                        <option value="Ditolak">🔴 Ditolak (Laporan palsu/spam)</option>
-                    </select>
-                </div>
-
-                <div class="pt-4 border-t border-gray-100">
-                    <button type="submit" id="btnSimpanStatus" class="w-full bg-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:bg-teal-700 transition-all active:scale-95">
-                        Simpan Perubahan
+    <div slot="modal">
+        <div id="modalStatus" class="fixed inset-0 z-[60] bg-gray-900/60 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+            <div id="modalBox" class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-teal-900">Tindak Lanjut Aduan</h3>
+                    <button id="btnTutupModal" class="text-gray-400 hover:text-red-500 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
-            </form>
+                
+                <form id="formStatus" class="space-y-4">
+                    <input type="hidden" id="editAduanId">
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Ubah Status Laporan *</label>
+                        <select id="inputStatus" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-bold">
+                            <option value="Menunggu">🟠 Menunggu (Belum dicek)</option>
+                            <option value="Diproses">🔵 Diproses (Sedang ditangani)</option>
+                            <option value="Selesai">🟢 Selesai (Masalah teratasi)</option>
+                            <option value="Ditolak">🔴 Ditolak (Laporan palsu/spam)</option>
+                        </select>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-100">
+                        <button type="submit" id="btnSimpanStatus" class="w-full bg-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-md hover:bg-teal-700 transition-all active:scale-95">
+                            Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="modalFoto" class="fixed inset-0 z-[70] bg-gray-900/90 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="tutupFoto()">
+            <img id="imgPreview" src="" class="max-w-full max-h-[90vh] rounded-xl shadow-2xl transform scale-95 transition-transform duration-300">
         </div>
     </div>
-
-    <div id="modalFoto" class="fixed inset-0 z-[70] bg-gray-900/90 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="tutupFoto()">
-        <img id="imgPreview" src="" class="max-w-full max-h-[90vh] rounded-xl shadow-2xl transform scale-95 transition-transform duration-300">
-    </div>
-
-    <Footer />
+</AdminLayout>
 
     <script>
         import { supabase } from '../../lib/supabase.js';

@@ -1,12 +1,12 @@
 ---
 // src/pages/statistik.astro
-import BaseLayout from '../layout/BaseLayout.astro';
-import { supabase } from '../lib/supabase.js';
+import BaseLayout from '../../layout/BaseLayout.astro';
+import { supabase } from '../../lib/supabase.js';
 
 // Impor 3 Komponen Pecahan Kita
-import StatistikRingkasan from '../components/statistik/StatistikRingkasan.astro';
-import StatistikPekerjaan from '../components/statistik/StatistikPekerjaan.astro';
-import StatistikWilayahTabel from '../components/statistik/StatistikWilayahTabel.astro';
+import StatistikRingkasan from '../../components/statistik/StatistikRingkasan.astro';
+import StatistikPekerjaan from '../../components/statistik/StatistikPekerjaan.astro';
+import StatistikWilayahTabel from '../../components/statistik/StatistikWilayahTabel.astro';
 
 // 1. Tarik Data Statistik
 const { data: stats, error } = await supabase.from('statistik_desa').select('*').order('urutan', { ascending: true });
@@ -34,13 +34,6 @@ const dataWilayah = (stats || []).filter(s => !labelDemografi.includes(s.label))
 
     <main class="bg-[#F8FAFC] min-h-screen pt-24 pb-20 font-sans text-slate-800">
         <div class="container mx-auto px-4 max-w-6xl">
-            
-            <div class="mb-6" data-aos="fade-down">
-                <a href="/#statistik" class="inline-flex items-center gap-2 text-sm font-bold text-teal-600 hover:text-amber-500 transition-colors bg-white px-4 py-2 rounded-full shadow-sm border border-slate-200">
-                    <i class="bi bi-arrow-left"></i> Kembali ke Beranda
-                </a>
-            </div>
-
             <div class="text-center max-w-2xl mx-auto mb-12" data-aos="fade-up">
                 <span class="bg-teal-100 text-teal-700 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-sm border border-teal-200">Portal Data Terbuka</span>
                 <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mt-5 tracking-tight">Infografis <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-teal-400">Mulyamekar</span></h1>

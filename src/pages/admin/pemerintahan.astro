@@ -1,25 +1,17 @@
 ---
 // src/pages/admin/pemerintahan.astro
-import BaseLayout from '../../layout/BaseLayout.astro';
+import AdminLayout from '../../layout/AdminLayout.astro';
 import ModalAparaturDashboard from '../../components/ModalAparaturDashboard.astro';
 ---
 
-<BaseLayout title="Kelola Aparatur Desa - Admin Mulyamekar">
-    <main class="flex-grow pt-24 pb-20">
-        <div class="container mx-auto px-4 max-w-6xl">
-            <div class="mb-8 flex flex-col md:flex-row justify-between items-end gap-4">
-                <div>
-                    <a href="/admin" class="text-teal-600 font-bold text-sm hover:text-amber-600 transition-colors">
-                        &larr; Kembali ke Dashboard
-                    </a>
-                    <h1 class="text-3xl font-extrabold text-teal-950 mt-2">Kelola Aparatur Desa</h1>
-                    <p class="text-sm text-gray-500">Sesuaikan peran (Role) SOTK agar struktur OrgChart di halaman depan rapi.</p>
-                </div>
-                <button onclick="bukaModalAparatur()" class="bg-teal-600 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg hover:bg-teal-700 transition-all active:scale-95">
-                    + Aparatur Baru
-                </button>
-            </div>
-
+<AdminLayout 
+    title="Kelola Aparatur Desa - Admin Mulyamekar"
+    pageTitle="Kelola Aparatur Desa"
+    pageDesc="Sesuaikan peran (Role) SOTK agar struktur OrgChart di halaman depan rapi."
+>
+    <button slot="action" onclick="bukaModalAparatur()" class="bg-teal-600 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg hover:bg-teal-700 transition-all active:scale-95">
+        + Aparatur Baru
+    </button>
             <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
@@ -37,10 +29,10 @@ import ModalAparaturDashboard from '../../components/ModalAparaturDashboard.astr
                     </table>
                 </div>
             </div>
-        </div>
-    </main>
-
-    <ModalAparaturDashboard />
+<div slot="modal">
+        <ModalAparaturDashboard />
+    </div>
+</AdminLayout>
 
     <script>
         import { supabase } from '../../lib/supabase.js';

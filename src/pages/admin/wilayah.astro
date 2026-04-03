@@ -1,26 +1,13 @@
 ---
 // src/pages/admin/wilayah.astro
-import BaseLayout from '../../layout/BaseLayout.astro';
+import AdminLayout from '../../layout/AdminLayout.astro';
 ---
 
-<BaseLayout title="Pemetaan Wilayah RT/RW - Admin Desa">
-    <main class="flex-grow pt-24 pb-20">
-        <div class="container mx-auto px-4 max-w-6xl">
-            
-            <a href="/admin" class="text-teal-600 font-bold text-sm hover:text-amber-600 transition-colors">&larr; Kembali ke Dashboard</a>
-
-            <div class="bg-gradient-to-r from-teal-700 to-teal-900 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden mb-6">
-                <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-                <div class="relative z-10 flex items-center gap-4">
-                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl shadow-inner border border-white/30 backdrop-blur-sm shrink-0">
-                        🗺️
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-black tracking-tight">Pemetaan RT & RW</h2>
-                        <p class="text-teal-100 text-sm mt-1">Kelola data wilayah agar dropdown pendaftaran warga otomatis terisi dengan akurat.</p>
-                    </div>
-                </div>
-            </div>
+<AdminLayout 
+    title="Pemetaan Wilayah RT/RW - Admin Desa"
+    pageTitle="🗺️ Pemetaan RT & RW"
+    pageDesc="Kelola data wilayah agar dropdown pendaftaran warga otomatis terisi dengan akurat."
+>
 
             <div class="bg-white rounded-3xl p-2 shadow-sm border border-slate-100 mb-8 h-64 md:h-80 relative overflow-hidden group">
                 <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md z-10 flex items-center gap-2 border border-slate-100 pointer-events-none">
@@ -109,9 +96,7 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                     </div>
                 </div>
             </div>
-
-        </div>
-    </main>
+</AdminLayout>
 
     <script>
         import { supabase } from '../../lib/supabase.js';
@@ -314,4 +299,3 @@ import BaseLayout from '../../layout/BaseLayout.astro';
         // Mulai Gas!
         cekAksesAdmin();
     </script>
-</BaseLayout>

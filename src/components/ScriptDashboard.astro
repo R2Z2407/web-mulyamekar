@@ -19,7 +19,7 @@
     let currentUser = null;
     let profilWarga = null;
 
-    const itemsPerPage = 6;
+    const itemsPerPage = 5;
     let rawRiwayatWarga = [];  let filteredRiwayatWarga = [];
     let rawRiwayatAduan = [];  let filteredRiwayatAduan = [];
     let rawSuratRT = [];       let filteredSuratRT = [];
@@ -195,38 +195,39 @@
 
     // 🔥 LOGIKA TAB BARU UNTUK DAFTAR WARGA 🔥
     window.switchTabRT = (tabName) => {
-        ['surat', 'aduan', 'daftarwarga', 'warga'].forEach(id => {
+        // 1. Sembunyikan semua konten tab
+        ['surat', 'aduan', 'daftarwarga', 'laporan'].forEach(id => {
             const el = document.getElementById(`tab-${id}`);
-            if(el) {
-                el.classList.add('hidden');
-                el.classList.remove('block');
-            }
+            if(el) { el.classList.add('hidden'); el.classList.remove('block'); }
         });
-        
+
+        // 2. Ambil semua tombol tab
         const btnSurat = document.getElementById('btnTab-surat');
         const btnAduan = document.getElementById('btnTab-aduan');
         const btnDaftar = document.getElementById('btnTab-daftarwarga');
-        const btnWarga = document.getElementById('btnTab-warga');
+        const btnLaporan = document.getElementById('btnTab-laporan');
 
-        [btnSurat, btnAduan, btnDaftar, btnWarga].forEach(btn => {
-            if(btn) {
-                btn.className = "px-5 py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-800 border border-transparent flex items-center gap-2";
-                if(btn.id === 'btnTab-warga' && !btn.innerHTML.includes('span')) {
-                     btn.innerHTML = `👥 Pendataan Warga <span class="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-widest">Baru</span>`;
-                }
-            }
+        // 3. Reset warna semua tombol ke abu-abu (Gaya Warga)
+        const classNonAktif = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap flex items-center gap-2";
+        [btnSurat, btnAduan, btnDaftar, btnLaporan].forEach(btn => {
+            if(btn) btn.className = classNonAktif;
         });
 
+        // 4. Tampilkan konten yang dipilih
         const targetTab = document.getElementById(`tab-${tabName}`);
         if(targetTab) {
-            targetTab.classList.remove('hidden');
-            targetTab.classList.add('block');
+            targetTab.classList.remove('hidden'); targetTab.classList.add('block');
         }
 
-        if(tabName === 'surat' && btnSurat) btnSurat.className = "px-5 py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap bg-amber-100 text-amber-800 shadow-sm border border-amber-200 flex items-center gap-2";
-        else if(tabName === 'aduan' && btnAduan) btnAduan.className = "px-5 py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap bg-rose-100 text-rose-800 shadow-sm border border-rose-200 flex items-center gap-2";
-        else if(tabName === 'daftarwarga' && btnDaftar) btnDaftar.className = "px-5 py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap bg-emerald-100 text-emerald-800 shadow-sm border border-emerald-200 flex items-center gap-2";
-        else if(tabName === 'warga' && btnWarga) btnWarga.className = "px-5 py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap bg-blue-100 text-blue-800 shadow-sm border border-blue-200 flex items-center gap-2";
+        // 5. Beri garis bawah & warna khas untuk tab yang sedang aktif
+        if(tabName === 'surat' && btnSurat) 
+            btnSurat.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-amber-500 text-amber-800 bg-amber-100/50 whitespace-nowrap flex items-center gap-2";
+        else if(tabName === 'aduan' && btnAduan) 
+            btnAduan.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-rose-500 text-rose-800 bg-rose-100/50 whitespace-nowrap flex items-center gap-2";
+        else if(tabName === 'daftarwarga' && btnDaftar) 
+            btnDaftar.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-emerald-500 text-emerald-800 bg-emerald-100/50 whitespace-nowrap flex items-center gap-2";
+        else if(tabName === 'laporan' && btnLaporan) 
+            btnLaporan.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-purple-500 text-purple-800 bg-purple-100/50 whitespace-nowrap flex items-center gap-2";
     };
 
     window.gantiMode = (isModeRT) => {
@@ -310,7 +311,8 @@
             container.innerHTML = `<div class="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200"><p class="text-gray-500 font-bold">Belum ada riwayat aduan yang diajukan.</p></div>`;
             paginasiContainer.innerHTML = ''; return;
         }
-        const start = (page - 1) * itemsPerPage; const dataTampil = filteredRiwayatAduan.slice(start, start + itemsPerPage);
+        const start = (page - 1) * itemsPerPage;
+        const dataTampil = filteredRiwayatAduan.slice(start, start + itemsPerPage);
         let html = '';
         dataTampil.forEach(a => {
             const tgl = new Date(a.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
@@ -594,7 +596,6 @@
     });
 
     // --- SUBMIT PENGATURAN PROFIL (Fix Kolom Phone) ---
-    // --- SUBMIT PENGATURAN PROFIL (HANYA UPDATE KONTAK) ---
     document.getElementById('formEditProfil')?.addEventListener('submit', async (e) => {
         e.preventDefault(); 
         const btn = document.getElementById('btnSimpanProfil'); 
@@ -738,6 +739,32 @@
             btn.innerHTML = "<i class='bi bi-send-fill'></i> Kirim Laporan ke Admin Desa";
         }
     });
+    // === LOGIKA TAB SURAT & ADUAN ===
+    window.pindahTabWarga = (tab) => {
+        const tabSurat = document.getElementById('tab_surat');
+        const tabAduan = document.getElementById('tab_aduan');
+        const kontenSurat = document.getElementById('konten_surat');
+        const kontenAduan = document.getElementById('konten_aduan');
 
+        // Reset semua tampilan tombol ke warna abu-abu (tidak aktif)
+        const classNonAktif = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700";
+        tabSurat.className = classNonAktif;
+        tabAduan.className = classNonAktif;
+
+        // Sembunyikan semua konten
+        kontenSurat.classList.add('hidden');
+        kontenAduan.classList.add('hidden');
+
+        // Tampilkan yang dipilih saja
+        if (tab === 'surat') {
+            tabSurat.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-teal-600 text-teal-800 bg-teal-100/50";
+            kontenSurat.classList.remove('hidden');
+            kontenSurat.classList.add('block');
+        } else if (tab === 'aduan') {
+            tabAduan.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-rose-500 text-rose-800 bg-rose-100/50";
+            kontenAduan.classList.remove('hidden');
+            kontenAduan.classList.add('block');
+        }
+    };
     initDashboard();
 </script>

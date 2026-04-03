@@ -1,27 +1,13 @@
 ---
 // src/pages/admin/bansos.astro
-import '../../global.css';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
+import AdminLayout from '../../layout/AdminLayout.astro';
 ---
 
-<html lang="id">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kelola Bansos - Admin Mulyamekar</title>
-</head>
-<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
-    <Header />
-    
-    <main class="flex-grow pt-24 pb-20">
-        <div class="container mx-auto px-4 max-w-6xl">
-            <div class="mb-8">
-                <a href="/admin" class="text-teal-600 font-bold text-sm hover:text-amber-600 transition-colors">&larr; Kembali ke Dashboard</a>
-                <h1 class="text-3xl font-extrabold text-teal-950 mt-2">Pusat Kelola Bansos</h1>
-                <p class="text-sm text-gray-500">Kelola master program bantuan dan daftar antrean usulan warga.</p>
-            </div>
-
+<AdminLayout 
+    title="Kelola Bansos - Admin Mulyamekar"
+    pageTitle="Pusat Kelola Bansos"
+    pageDesc="Kelola master program bantuan dan daftar antrean usulan warga."
+>
             <div class="flex space-x-2 mb-6 border-b border-gray-200">
                 <button onclick="pindahTab('program')" id="tab_program" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-teal-600 text-teal-800 bg-teal-50">
                     📦 Daftar Program Bansos
@@ -152,9 +138,7 @@ import Footer from '../../components/Footer.astro';
                 </div>
             </div>
 
-        </div>
-    </main>
-    <Footer />
+</AdminLayout>
 
     <style>
         .animate-fadeIn { animation: fadeIn 0.3s ease-in-out forwards; }

@@ -1,7 +1,7 @@
 ---
 // src/pages/informasi.astro
-import BaseLayout from '../layout/BaseLayout.astro';
-import { supabase } from '../lib/supabase.js';
+import BaseLayout from '../../layout/BaseLayout.astro';
+import { supabase } from '../../lib/supabase.js';
 
 // 1. Tarik SEMUA data berita dari Supabase di sisi server
 const { data: berita, error } = await supabase

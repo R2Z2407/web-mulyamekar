@@ -1,34 +1,17 @@
 ---
 // src/pages/admin/berita.astro
-import '../../global.css';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
+import AdminLayout from '../../layout/AdminLayout.astro';
 
 const kategoriBerita = ["Pemerintahan", "Kegiatan Warga", "Pemberdayaan", "Pengumuman"];
 ---
 
-<html lang="id">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kelola Berita - Admin Mulyamekar</title>
-</head>
-<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
-    <Header />
-    
-    <main class="flex-grow pt-10 pb-20">
-        <div class="container mx-auto px-4 max-w-6xl">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <div>
-                    <a href="/admin" class="text-teal-600 hover:text-amber-600 text-sm font-bold mb-2 inline-flex items-center gap-1 transition-colors">
-                        &larr; Kembali ke Dashboard
-                    </a>
-                    <h1 class="text-3xl font-extrabold text-teal-950">Kelola Berita</h1>
-                </div>
-                <button id="btnTambah" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95">
-                    + Tulis Berita Baru
-                </button>
-            </div>
+<AdminLayout 
+    title="Kelola Berita - Admin Mulyamekar"
+    pageTitle="Kelola Berita"
+>
+    <button slot="action" id="btnTambah" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95">
+        + Tulis Berita Baru
+    </button>
 
             <div id="formContainer" class="hidden bg-white p-8 rounded-3xl shadow-sm border border-gray-100 mb-8">
                 <h2 id="formTitle" class="text-xl font-bold text-teal-900 mb-6">Form Berita Baru</h2>
@@ -85,10 +68,7 @@ const kategoriBerita = ["Pemerintahan", "Kegiatan Warga", "Pemberdayaan", "Pengu
                     </table>
                 </div>
             </div>
-        </div>
-    </main>
-    <Footer />
-
+        </AdminLayout>
     <script>
         import { supabase } from '../../lib/supabase.js';
 

@@ -1,22 +1,14 @@
 ---
 // src/pages/admin/profil-desa.astro
-import BaseLayout from '../../layout/BaseLayout.astro';
+import AdminLayout from '../../layout/AdminLayout.astro';
 ---
 
-<BaseLayout title="Edit Profil Desa - Admin Mulyamekar">
-    <main class="flex-grow pt-24 pb-20 bg-slate-50 min-h-screen">
-        <div class="container mx-auto px-4 max-w-4xl">
-            
-            <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                <div>
-                    <a href="/admin" class="text-teal-600 font-bold text-sm hover:text-teal-800 transition-colors inline-flex items-center gap-1 mb-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                        Kembali ke Dashboard
-                    </a>
-                    <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Edit Profil Desa</h1>
-                    <p class="text-sm text-slate-500 mt-1 font-medium">Ubah Visi, Misi, dan Sejarah yang tampil di halaman depan.</p>
-                </div>
-            </div>
+<AdminLayout 
+    title="Edit Profil Desa - Admin Mulyamekar"
+    pageTitle="Edit Profil Desa"
+    pageDesc="Ubah Visi, Misi, dan Sejarah yang tampil di halaman depan."
+    maxWidth="max-w-4xl"
+>
 
             <form id="formProfilDesa" class="space-y-6">
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
@@ -42,9 +34,7 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                     </button>
                 </div>
             </form>
-
-        </div>
-    </main>
+</AdminLayout>
 
     <script>
         import { supabase } from '../../lib/supabase.js';

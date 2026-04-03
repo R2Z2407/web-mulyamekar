@@ -1,7 +1,7 @@
 ---
 // src/pages/pemerintahan.astro
-import BaseLayout from '../layout/BaseLayout.astro';
-import { supabase } from '../lib/supabase.js';
+import BaseLayout from '../../layout/BaseLayout.astro';
+import { supabase } from '../../lib/supabase.js';
 
 // 1. Tarik semua data dari database
 const { data: aparatur, error } = await supabase
