@@ -188,11 +188,13 @@
             const teksJabatan = document.getElementById('teksJabatanPanel');
             if (teksJabatan) teksJabatan.innerText = `Panel ${labelJabatan}`;
             
+            // 🔥 LOGIKA LABEL WILAYAH BARU (Lebih Simpel) 🔥
             const labelWilayah = document.getElementById('wilayahRTLabel');
             if (labelWilayah) {
+                // Kalau RW tampilkan "RW 03", kalau RT tampilkan "RT 03"
                 labelWilayah.innerText = profil.role === 'rw' 
-                    ? `Wilayah RW ${profil.rw}` 
-                    : `Wilayah RT ${profil.rt} / RW ${profil.rw}`;
+                    ? `RW ${profil.rw || '-'}` 
+                    : `RT ${profil.rt || '-'}`;
             }
 
             loadSuratRT();
@@ -419,33 +421,90 @@
         try {
             let query = supabase.from('aduan_warga').select('*');
             
-            if (profilWarga.role === 'rw') query = query.eq('rw', profilWarga.rw);
-            else query = query.eq('rw', profilWarga.rw).eq('rt', profilWarga.rt);
+            // 🔥 LOGIKA SMART FETCH: Biar RW bisa narik data lama & baru
+            if (profilWarga.role === 'rw') {
+                // RW narik yang kolom rw-nya cocok ATAU teks wilayah_rt-nya mengandung RW tersebut
+                query = query.or(`rw.eq.${profilWarga.rw},wilayah_rt.ilike.%RW ${profilWarga.rw}%`);
+            } else {
+                // RT narik yang RT & RW-nya cocok ATAU teks wilayah_rt-nya cocok persis
+                const stringWilayah = `RT ${profilWarga.rt} / RW ${profilWarga.rw}`;
+                query = query.or(`and(rt.eq.${profilWarga.rt},rw.eq.${profilWarga.rw}),wilayah_rt.ilike.%${stringWilayah}%`);
+            }
 
             const { data, error } = await query.order('created_at', { ascending: false });
             if (error) throw error;
-            rawAduanRT = data || []; filteredAduanRT = rawAduanRT; renderAduanRT(1);
+            
+            rawAduanRT = data || []; 
+            filteredAduanRT = rawAduanRT; 
+            renderAduanRT(1);
         } catch (err) {
-            if(tbody) tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-rose-500 font-bold bg-rose-50 rounded-xl">Error: ${err.message}</td></tr>`;
+            if(tbody) tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-rose-500 font-bold bg-rose-50 rounded-xl">Error: ${err.message}</td></tr>`;
         }
     }
 
     // 3. FUNGSI LOAD WARGA
+    document.getElementById('searchWargaRT')?.addEventListener('input', () => terapkanFilterWargaRT());
+    document.getElementById('filterRTWarga')?.addEventListener('change', () => terapkanFilterWargaRT());
+
+    // 2. FUNGSI LOAD DATA (Dukcapil)
     async function loadDaftarWargaRT() {
-        const tbody = document.getElementById('tableDaftarWargaRT');
         if (!profilWarga?.rw) return;
         try {
-            let query = supabase.from('data_penduduk').select('nama_lengkap, jenis_kelamin, pekerjaan, status_warga, wilayah_rt, rt, rw');
+            let query = supabase.from('data_penduduk').select('*');
             
-            if (profilWarga.role === 'rw') query = query.eq('rw', profilWarga.rw);
-            else query = query.eq('rw', profilWarga.rw).eq('rt', profilWarga.rt);
+            // 🔥 FILTER SUPER KETAT: Hindari penggunaan .or() yang berisiko bocor
+            if (profilWarga.role === 'rw') {
+                // RW hanya menarik data di RW miliknya saja
+                query = query.eq('rw', profilWarga.rw);
+                
+                const wadah = document.getElementById('wadahFilterRTWarga');
+                if (wadah) wadah.classList.remove('hidden');
+                
+                const { data: listRT } = await supabase.from('master_wilayah').select('nomor_rt').eq('nomor_rw', profilWarga.rw).order('nomor_rt');
+                if (listRT) {
+                    const sel = document.getElementById('filterRTWarga');
+                    let html = '<option value="Semua">Semua RT</option>';
+                    [...new Set(listRT.map(i => i.nomor_rt))].forEach(rt => {
+                        html += `<option value="${rt}">RT ${rt}</option>`;
+                    });
+                    sel.innerHTML = html;
+                }
+            } else {
+                // Khusus RT: Kunci rapat-rapat HANYA untuk RW dan RT miliknya!
+                query = query.eq('rw', profilWarga.rw).eq('rt', profilWarga.rt);
+            }
 
             const { data, error } = await query.order('nama_lengkap', { ascending: true });
             if (error) throw error;
-            rawDaftarWargaRT = data || []; filteredDaftarWargaRT = rawDaftarWargaRT; renderDaftarWargaRT(1);
+
+            rawDaftarWargaRT = (data || []).map(d => ({
+                ...d,
+                nik: typeof decrypt === 'function' ? decrypt(d.nik) : d.nik 
+            }));
+
+            filteredDaftarWargaRT = rawDaftarWargaRT;
+            renderDaftarWargaRT(1);
         } catch (err) {
-            if(tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-rose-500 font-bold bg-rose-50 rounded-xl">Error: ${err.message}</td></tr>`;
+            console.error("Gagal narik data warga:", err);
         }
+    }
+
+    // 3. FUNGSI FILTERING (Searching & Filtering)
+    function terapkanFilterWargaRT() {
+        const keyword = document.getElementById('searchWargaRT').value.toLowerCase();
+        const filterRT = document.getElementById('filterRTWarga')?.value || 'Semua';
+
+        filteredDaftarWargaRT = rawDaftarWargaRT.filter(w => {
+            const matchNama = (w.nama_lengkap || '').toLowerCase().includes(keyword);
+            const matchNik = (w.nik || '').includes(keyword);
+            
+            // 🔥 FILTER KETAT: Cukup sesuaikan murni dengan kolom w.rt
+            const matchRT = filterRT === 'Semua' ? true : w.rt === filterRT;
+
+            return (matchNama || matchNik) && matchRT;
+        });
+
+        renderDaftarWargaRT(1);
     }
 
     function renderSuratRT(page) {
@@ -562,47 +621,51 @@
     function renderAduanRT(page) {
         const tbody = document.getElementById('tableAduanRT');
         const paginasiContainer = document.getElementById('paginationAduanRT');
-        if (filteredAduanRT.length === 0) { tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-gray-500">Belum ada aduan warga.</td></tr>`; paginasiContainer.innerHTML = ''; return; }
-        const start = (page - 1) * itemsPerPage; const dataTampil = filteredAduanRT.slice(start, start + itemsPerPage);
+        if (!tbody || !paginasiContainer) return;
+
+        if (filteredAduanRT.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400">Tidak ada aduan warga di wilayah ini.</td></tr>`;
+            paginasiContainer.innerHTML = ''; return;
+        }
+
+        const start = (page - 1) * itemsPerPage;
+        const dataTampil = filteredAduanRT.slice(start, start + itemsPerPage);
+        
         let html = '';
         dataTampil.forEach(a => {
-            const tgl = new Date(a.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short' });
-            let bStatus = a.status === 'Menunggu' ? 'bg-amber-100 text-amber-700' : (a.status === 'Diproses' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700');
-            let fotoHTML = a.foto_url ? `<button type="button" onclick="lihatFoto('${a.foto_url}')" class="block mt-2 text-[10px] font-bold text-blue-600 hover:underline inline-flex items-center gap-1">📸 Lihat Foto</button>` : '';
-            let deskripsiHTML = steril(a.deskripsi).replace(/\(Maps:\s*(-?\d+\.\d+),\s*(-?\d+\.\d+)\)/g, '<a href="https://www.google.com/maps?q=$1,$2" target="_blank" class="text-blue-600 font-bold underline bg-blue-50 px-2 py-0.5 rounded-lg hover:bg-blue-100 transition-colors inline-flex items-center gap-1 mt-1">🗺️ Buka di Google Maps</a>');
-           // 🔥 LOGIKA BARU: RT/RW Hanya Memantau, Eksekusi oleh Desa
-            let tombolAduan = '-';
+            const tgl = new Date(a.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
             
-            if (a.status === 'Menunggu' || a.status === 'Diproses') {
-                tombolAduan = `<span class="text-[9px] text-slate-500 font-bold uppercase bg-slate-100 px-2 py-1.5 rounded border border-slate-200 shadow-inner block text-center" title="Aduan ini ditindaklanjuti oleh Admin Desa">
-                    <span class="text-xs">🏢</span> Wewenang Desa
-                </span>`;
-            } else if (a.status === 'Selesai') {
-                tombolAduan = `<span class="text-[9px] text-emerald-600 font-bold uppercase bg-emerald-50 px-2 py-1.5 rounded border border-emerald-200 block text-center">✅ Diselesaikan Desa</span>`;
-            } else if (a.status === 'Ditolak') {
-                tombolAduan = `<span class="text-[9px] text-rose-600 font-bold uppercase bg-rose-50 px-2 py-1.5 rounded border border-rose-200 block text-center">❌ Ditolak Desa</span>`;
-            }
+            // Warna Status
+            let bStatus = 'bg-gray-100 text-gray-600 border-gray-200';
+            if (a.status === 'Selesai') bStatus = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+            else if (a.status === 'Diproses') bStatus = 'bg-blue-100 text-blue-700 border-blue-200';
+            else if (a.status === 'Ditolak') bStatus = 'bg-rose-100 text-rose-700 border-rose-200';
 
-            html += `<tr class="hover:bg-rose-50/30 border-b border-gray-50">
+            // Keterangan wilayah (Fallback jika kolom rt kosong)
+            const labelWilayah = a.rt ? `RT ${a.rt} / RW ${a.rw}` : (a.wilayah_rt || 'Wilayah Pusaka');
+
+            html += `<tr class="hover:bg-rose-50/30 border-b border-gray-50 transition-colors">
                 <td class="p-4 align-top">
                     <p class="font-bold text-gray-900">${steril(a.nama_pelapor)}</p>
-                    <p class="text-[10px] text-gray-500 mt-1">${tgl}</p>
+                    <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded mt-1 inline-block">${labelWilayah}</span>
+                    <p class="text-[9px] text-gray-400 mt-1">${tgl}</p>
                 </td>
                 <td class="p-4 align-top">
                     <span class="text-[9px] font-bold text-rose-600 uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100 block w-max mb-1">${steril(a.kategori)}</span>
                     <p class="text-sm font-bold text-gray-800">${steril(a.judul)}</p>
-                    <p class="text-xs text-gray-600 mt-1 whitespace-pre-wrap">${deskripsiHTML}</p>
-                    ${fotoHTML}
+                    <p class="text-xs text-gray-600 mt-1 line-clamp-2">${steril(a.deskripsi)}</p>
                 </td>
                 <td class="p-4 text-center align-top">
                     <span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase ${bStatus} border shadow-sm">${a.status}</span>
                 </td>
                 <td class="p-4 text-center align-middle">
-                    ${tombolAduan}
+                    <span class="text-[9px] text-slate-500 font-bold uppercase bg-slate-100 px-2 py-1.5 rounded border border-slate-200 block">🏢 Desa</span>
                 </td>
             </tr>`;
         });
-        tbody.innerHTML = html; paginasiContainer.innerHTML = createTabPaginationUI('AduanRT', page, filteredAduanRT.length);
+
+        tbody.innerHTML = html;
+        paginasiContainer.innerHTML = createTabPaginationUI('AduanRT', page, filteredAduanRT.length);
     }
 
     document.getElementById('searchAduanRT')?.addEventListener('input', (e) => {
@@ -617,7 +680,7 @@
         if (!tbody || !paginasiContainer) return;
 
         if (filteredDaftarWargaRT.length === 0) { 
-            tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada warga terdata di wilayah ini.</td></tr>`; 
+            tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada warga terdata yang cocok dengan pencarian.</td></tr>`; 
             paginasiContainer.innerHTML = ''; return; 
         }
         
@@ -627,12 +690,15 @@
         
         dataTampil.forEach((w, index) => {
             let badgeStatus = w.status_warga === 'Tetap' ? 'bg-emerald-100 text-emerald-700' : (w.status_warga === 'Pendatang' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700');
+            
+            let labelWilayah = `RT ${w.rt || '-'} / RW ${w.rw || '-'}`;
+
             html += `
             <tr class="hover:bg-emerald-50/30 border-b border-gray-50 transition-colors">
                 <td class="p-4 text-center text-gray-500 text-xs font-bold">${start + index + 1}</td>
                 <td class="p-4">
                     <p class="font-black text-gray-800">${steril(w.nama_lengkap)}</p>
-                    <p class="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded mt-1 inline-block">${steril(w.wilayah_rt)}</p>
+                    <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded inline-block mt-1">${labelWilayah}</span>
                 </td>
                 <td class="p-4 text-center text-gray-500 font-bold">${w.jenis_kelamin === 'Laki-laki' ? 'L' : 'P'}</td>
                 <td class="p-4 text-gray-600 text-xs">${steril(w.pekerjaan)}</td>

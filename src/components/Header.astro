@@ -216,9 +216,13 @@ const bgMobileOverlay = isUMKM ? 'bg-orange-950/95' : 'bg-teal-950/95';
         if (profil.role === 'admin') { 
             targetUrl = '/admin';
             namaRole = 'Admin Desa'; 
-        } else if (profil.role === 'rt_rw') { 
+        } else if (profil.role === 'rt') { 
             targetUrl = '/pengguna';
-            namaRole = 'Ketua RT/RW'; 
+            namaRole = 'Ketua RT'; 
+        }
+        else if (profil.role === 'rw') { 
+            targetUrl = '/pengguna';
+            namaRole = 'Ketua RW'; 
         }
 
         const namaPendek = profil.nama_lengkap ? profil.nama_lengkap.split(' ')[0] : 'User';

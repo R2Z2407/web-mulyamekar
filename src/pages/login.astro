@@ -106,7 +106,9 @@ import Footer from '../components/Footer.astro';
                 // 3. Smart Routing Berdasarkan Role
                 if (profil.role === 'admin') {
                     window.location.href = '/admin';
-                } else if (profil.role === 'rt_rw') {
+                } else if (profil.role === 'rt') {
+                    window.location.href = '/pengguna'; // <-- Kembalikan ke /rt
+                } else if (profil.role === 'rw') {
                     window.location.href = '/pengguna'; // <-- Kembalikan ke /rt
                 } else {
                     window.location.href = '/pengguna'; 
