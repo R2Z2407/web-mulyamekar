@@ -415,27 +415,24 @@
             if (s.status !== 'Menunggu') { 
                 tombolAksi = `<span class="text-[9px] text-gray-500 font-bold uppercase bg-gray-100 px-2 py-1.5 rounded border border-gray-200 shadow-inner block"><span class="text-xs">🔒</span> Terkunci Desa</span>`;
             } else { 
+                // LOGIKA TOMBOL BERJENJANG (RT -> RW)
                 if (window.currentDashboardMode === 'RW') {
-                    // 👑 TAMPILAN JIKA MODE RW AKTIF
+                    // Tampilan buat Pak RW
                     if (statusRtText === 'Menunggu ACC RW') { 
                         tombolAksi = `<div class="flex flex-col gap-1.5"><button onclick="updateStatusRT('${s.id}', 'Disetujui RW')" class="bg-blue-600 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-blue-700">ACC RW</button><button onclick="updateStatusRT('${s.id}', 'Ditolak RW')" class="bg-rose-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-rose-600">Tolak</button></div>`;
                     } else if (statusRtText === 'Menunggu ACC RT') { 
                         tombolAksi = `<span class="text-[9px] text-amber-600 font-bold bg-amber-50 px-2 py-1 rounded border border-amber-100 block text-center">Menunggu RT</span>`;
                     } else if (statusRtText === 'Disetujui RW') { 
                         tombolAksi = `<button onclick="updateStatusRT('${s.id}', 'Menunggu ACC RW')" class="text-[10px] text-gray-500 underline hover:text-gray-800 font-bold">Batal ACC</button>`;
-                    } else {
-                        tombolAksi = `-`;
                     }
                 } else {
-                    // 🎩 TAMPILAN JIKA MODE RT AKTIF
+                    // Tampilan buat Pak RT
                     if (statusRtText === 'Menunggu ACC RT') { 
                         tombolAksi = `<div class="flex flex-col gap-1.5"><button onclick="updateStatusRT('${s.id}', 'Menunggu ACC RW')" class="bg-emerald-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-emerald-600">ACC RT</button><button onclick="updateStatusRT('${s.id}', 'Ditolak RT')" class="bg-rose-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-rose-600">Tolak</button></div>`;
                     } else if (statusRtText === 'Menunggu ACC RW') { 
                         tombolAksi = `<button onclick="updateStatusRT('${s.id}', 'Menunggu ACC RT')" class="text-[10px] text-gray-500 underline hover:text-gray-800 font-bold">Batal ACC</button>`;
                     } else if (statusRtText === 'Disetujui RW') { 
                         tombolAksi = `<span class="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-100 block text-center">Sudah di RW</span>`;
-                    } else {
-                        tombolAksi = `-`;
                     }
                 }
             }
@@ -467,10 +464,8 @@
         // 🔥 LOGIKA PINTAR: OTOMATISASI PENOLAKAN 🔥
         if (statusBaru.includes('Ditolak')) {
             payload.status = 'Ditolak';
-            payload.alasan_penolakan = 'Pengajuan dibatalkan/ditolak oleh Pengurus Wilayah (RT/RW) setempat.';
-        } 
-        // Jaga-jaga kalau RT/RW klik "Batal Tolak" atau "Batal ACC", kita pastikan status Desanya kembali aman
-        else {
+            payload.alasan_penolakan = 'Pengajuan ditolak oleh Pengurus Wilayah (RT/RW).';
+        } else {
             payload.status = 'Menunggu';
             payload.alasan_penolakan = null;
         }
@@ -484,6 +479,16 @@
             console.error("Gagal update status RT:", error);
             if(typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
             else alert("Gagal mengubah status: " + error.message);
+        }
+    };
+
+    window.updateStatusAduan = async (id, statusBaru) => {
+        const { error } = await supabase.from('aduan_warga').update({ status: statusBaru }).eq('id', id);
+        if (!error) {
+            loadAduanRT();
+            if(typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Berhasil', `Aduan telah ${statusBaru}`);
+        } else {
+            alert("Gagal: " + error.message);
         }
     };
 
@@ -504,19 +509,19 @@
             let bStatus = a.status === 'Menunggu' ? 'bg-amber-100 text-amber-700' : (a.status === 'Diproses' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700');
             let fotoHTML = a.foto_url ? `<button type="button" onclick="lihatFoto('${a.foto_url}')" class="block mt-2 text-[10px] font-bold text-blue-600 hover:underline inline-flex items-center gap-1">📸 Lihat Foto</button>` : '';
             let deskripsiHTML = steril(a.deskripsi).replace(/\(Maps:\s*(-?\d+\.\d+),\s*(-?\d+\.\d+)\)/g, '<a href="https://www.google.com/maps?q=$1,$2" target="_blank" class="text-blue-600 font-bold underline bg-blue-50 px-2 py-0.5 rounded-lg hover:bg-blue-100 transition-colors inline-flex items-center gap-1 mt-1">🗺️ Buka di Google Maps</a>');
+            let tombolAduan = '-';
+            if (a.status === 'Menunggu') {
+                tombolAduan = `<div class="flex flex-col gap-1.5">
+                    <button onclick="updateStatusAduan('${a.id}', 'Diproses')" class="bg-emerald-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm">Proses</button>
+                    <button onclick="updateStatusAduan('${a.id}', 'Ditolak')" class="bg-rose-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm">Tolak</button>
+                </div>`;
+            }
+
             html += `<tr class="hover:bg-rose-50/30 border-b border-gray-50">
-                <td class="p-4 align-top">
-                    <p class="font-bold text-gray-900">${steril(a.nama_pelapor)}</p>
-                    <p class="text-[10px] text-rose-700 font-bold bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded mt-1 inline-block">${steril(a.wilayah_rt)}</p>
-                    <p class="text-[10px] text-gray-500 mt-1">${tgl}</p>
-                </td>
-                <td class="p-4 align-top">
-                    <span class="text-[9px] font-bold text-rose-600 uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100 block w-max mb-1">${steril(a.kategori)}</span>
-                    <p class="text-sm font-bold text-gray-800">${steril(a.judul)}</p>
-                    <p class="text-xs text-gray-600 mt-1 whitespace-pre-wrap">${deskripsiHTML}</p>
-                    ${fotoHTML}
-                </td>
+                <td class="p-4 align-top"><p class="font-bold text-gray-900">${steril(a.nama_pelapor)}</p><p class="text-[10px] text-gray-500 mt-1">${tgl}</p></td>
+                <td class="p-4 align-top"><span class="text-[9px] font-bold text-rose-600 uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100 block w-max mb-1">${steril(a.kategori)}</span><p class="text-sm font-bold text-gray-800">${steril(a.judul)}</p><p class="text-xs text-gray-600 mt-1 whitespace-pre-wrap">${deskripsiHTML}</p>${fotoHTML}</td>
                 <td class="p-4 text-center align-top"><span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase ${bStatus} border shadow-sm">${a.status}</span></td>
+                <td class="p-4 text-center align-middle">${tombolAduan}</td>
             </tr>`;
         });
         tbody.innerHTML = html; paginasiContainer.innerHTML = createTabPaginationUI('AduanRT', page, filteredAduanRT.length);
