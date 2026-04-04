@@ -679,8 +679,9 @@
         const paginasiContainer = document.getElementById('paginationDaftarWargaRT');
         if (!tbody || !paginasiContainer) return;
 
+        // 🔥 Ubah colspan jadi 6 karena kolomnya nambah
         if (filteredDaftarWargaRT.length === 0) { 
-            tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada warga terdata yang cocok dengan pencarian.</td></tr>`; 
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500 font-medium">Belum ada warga terdata yang cocok dengan pencarian.</td></tr>`; 
             paginasiContainer.innerHTML = ''; return; 
         }
         
@@ -695,14 +696,27 @@
 
             html += `
             <tr class="hover:bg-emerald-50/30 border-b border-gray-50 transition-colors">
-                <td class="p-4 text-center text-gray-500 text-xs font-bold">${start + index + 1}</td>
+                <td class="p-4 text-center text-gray-500 text-sm font-bold">${start + index + 1}</td>
+                
                 <td class="p-4">
-                    <p class="font-black text-gray-800">${steril(w.nama_lengkap)}</p>
-                    <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded inline-block mt-1">${labelWilayah}</span>
+                    <p class="font-black text-gray-800 text-sm md:text-base">${steril(w.nama_lengkap)}</p>
                 </td>
-                <td class="p-4 text-center text-gray-500 font-bold">${w.jenis_kelamin === 'Laki-laki' ? 'L' : 'P'}</td>
-                <td class="p-4 text-gray-600 text-xs">${steril(w.pekerjaan)}</td>
-                <td class="p-4 text-center"><span class="px-2 py-1 rounded-md text-[9px] font-bold uppercase border shadow-sm ${badgeStatus}">${steril(w.status_warga)}</span></td>
+                
+                <td class="p-4 text-center text-gray-700 font-bold text-sm md:text-base">${w.jenis_kelamin === 'Laki-laki' ? 'L' : 'P'}</td>
+                
+                <td class="p-4 text-center">
+                    <span class="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs md:text-sm font-black whitespace-nowrap shadow-sm">
+                        ${labelWilayah}
+                    </span>
+                </td>
+                
+                <td class="p-4 text-gray-600 text-xs md:text-sm">${steril(w.pekerjaan)}</td>
+                
+                <td class="p-4 text-center">
+                    <span class="px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase border shadow-sm ${badgeStatus}">
+                        ${steril(w.status_warga)}
+                    </span>
+                </td>
             </tr>`;
         });
         

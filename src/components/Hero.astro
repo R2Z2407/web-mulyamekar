@@ -1,8 +1,10 @@
 ---
 // src/components/Hero.astro
 ---
-<section id="home" class="min-h-screen flex items-center justify-center pt-24 pb-12 bg-white overflow-hidden">
-  <div class="container mx-auto px-4 max-w-7xl">
+<section id="home" class="min-h-screen flex items-center justify-center pt-24 pb-12 bg-white overflow-hidden relative">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+  <div class="container mx-auto px-4 max-w-7xl relative z-10">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-md:landscape:gap-6">
       
       <div class="space-y-6 max-md:landscape:space-y-3" data-aos="fade-up" data-aos-delay="100">
@@ -22,15 +24,66 @@
         </div>
       </div>
 
-      <div class="relative max-md:landscape:max-w-xs max-md:landscape:mx-auto" data-aos="fade-left" data-aos-delay="300">
-        <div class="absolute -inset-4 bg-teal-100/50 rounded-full blur-3xl opacity-70"></div>
-        <img 
-          src="https://images.unsplash.com/photo-1596401349880-997f37f3743c?q=80&w=600&h=600&auto=format&fit=crop" 
-          alt="Balai Desa Mulyamekar" 
-          class="w-full h-auto rounded-3xl shadow-2xl relative z-10 aspect-square object-cover border-8 border-white"
-        />
+      <div class="relative w-full max-w-lg mx-auto" data-aos="fade-left" data-aos-delay="300">
+        <div class="absolute -inset-4 bg-teal-100/50 rounded-3xl blur-3xl opacity-70"></div>
+        
+        <div class="swiper hero-swiper rounded-3xl shadow-2xl relative z-10 border-8 border-white overflow-hidden aspect-video bg-gray-100">
+          <div class="swiper-wrapper" id="heroSliderWadah">
+            
+            <div class="swiper-slide">
+              <img src="https://images.unsplash.com/photo-1596401349880-997f37f3743c?q=80&w=800&h=450&auto=format&fit=crop" alt="Balai Desa Mulyamekar" class="w-full h-full object-cover" />
+            </div>
+            
+            <div class="swiper-slide">
+              <img src="https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=800&h=450&auto=format&fit=crop" alt="Kegiatan Desa" class="w-full h-full object-cover" />
+            </div>
+
+            <div class="swiper-slide">
+              <img src="https://images.unsplash.com/photo-1518544801976-3e159e50e5bb?q=80&w=800&h=450&auto=format&fit=crop" alt="Pemandangan Desa" class="w-full h-full object-cover" />
+            </div>
+
+          </div>
+          <div class="swiper-pagination"></div>
+        </div>
       </div>
 
     </div>
   </div>
 </section>
+
+<script is:inline src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<script is:inline>
+  // Inisialisasi Slider saat halaman dimuat
+  document.addEventListener('DOMContentLoaded', () => {
+    const swiper = new Swiper('.hero-swiper', {
+      loop: true, // Muter terus tanpa henti
+      grabCursor: true, // Kursor berubah jadi tangan pas diarahin (bisa di-drag)
+      effect: 'slide', 
+      autoplay: {
+        delay: 5000, // 🔥 Ganti gambar otomatis tiap 5 detik
+        disableOnInteraction: false, // Tetap auto-slide biarpun abis digeser manual
+      },
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+        dynamicBullets: true,
+      },
+    });
+
+  });
+</script>
+
+<style>
+  /* Kustomisasi warna titik pagination biar senada sama tema web lu */
+  .swiper-pagination-bullet {
+    background-color: #cbd5e1; /* Warna abu-abu redup */
+    opacity: 1;
+  }
+  .swiper-pagination-bullet-active {
+    background-color: #0f766e; /* Warna teal-700 */
+    width: 24px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+</style>
