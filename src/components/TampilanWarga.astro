@@ -194,7 +194,8 @@ import AvatarWarga from './AvatarWarga.astro';
             // 2. Tarik data dari tabel profil_user berdasarkan ID
             const { data: profil, error: errProfil } = await supabase
                 .from('profil_user')
-                .select('nama_lengkap, nik, wilayah_rt, jenis_kelamin, email, phone, avatar_url')
+                // 🔥 TIMPA BAGIAN INI (Pastikan rt dan rw sudah masuk) 🔥
+                .select('nama_lengkap, nik, wilayah_rt, rt, rw, jenis_kelamin, email, phone, avatar_url') 
                 .eq('id', user.id)
                 .single();
             if (errProfil) throw errProfil;

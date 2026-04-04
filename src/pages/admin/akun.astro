@@ -72,16 +72,26 @@ import AdminLayout from '../../layout/AdminLayout.astro';
                         <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">2. Pilih Jabatan Baru</label>
                         <select id="pilihRole" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-bold text-slate-900 cursor-pointer">
                             <option value="" disabled selected>-- Pilih Jabatan --</option>
-                            <option value="rt_rw">Ketua RT / RW</option>
+                            <option value="rt">Ketua RT</option>
+                            <option value="rw">Ketua RW</option>
                             <option value="admin">Admin Desa</option>
                         </select>
                     </div>
 
-                    <div id="bungkusWilayah" class="hidden">
-                        <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">3. Wilayah Tugas</label>
-                        <select id="pilihWilayah" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-bold text-slate-900 cursor-pointer">
-                            <option value="" disabled selected>-- Pilih Wilayah --</option>
+                    <div id="bungkusWilayah" class="hidden space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">3. Pilih Nomor RW</label>
+                            <select id="pilihRW" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-bold text-slate-900 cursor-pointer">
+                                <option value="" disabled selected>-- Pilih RW --</option>
                             </select>
+                        </div>
+                        
+                        <div id="wadahRT">
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">4. Pilih Nomor RT</label>
+                            <select id="pilihRT" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-bold text-slate-900 cursor-pointer">
+                                <option value="" disabled selected>-- Pilih RT --</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="pt-4 border-t border-slate-100 mt-4">
@@ -121,19 +131,31 @@ import AdminLayout from '../../layout/AdminLayout.astro';
                 window.location.href = '/'; return;
             }
 
-            // 2. Tarik Data Wilayah RT untuk Dropdown
+            // 2. Tarik Data Wilayah RT dan RW untuk Dropdown
             const { data: dataRT } = await supabase.from('master_wilayah').select('*');
+            
             if (dataRT) {
-                daftarRT_Dinamic = dataRT.map(item => {
-                    if (!item.nomor_rt || item.nomor_rt.trim() === '' || item.nomor_rt === '00' || item.nomor_rt === '-') return `RW ${item.nomor_rw}`;
-                    return `RT ${item.nomor_rt} / RW ${item.nomor_rw}`;
+                let setRW_Unik = new Set(); // Set() otomatis membuang data yang kembar/dobel
+                let listRT_Lengkap = [];
+
+                dataRT.forEach(item => {
+                    const formatRW = `RW ${item.nomor_rw}`;
+                    
+                    // 1. Simpan format RW-nya saja ke dalam Set (Otomatis unik)
+                    setRW_Unik.add(formatRW); 
+
+                    // 2. Simpan format lengkap RT/RW (Abaikan kalau RT kosong/00/-)
+                    if (item.nomor_rt && item.nomor_rt.trim() !== '' && item.nomor_rt !== '00' && item.nomor_rt !== '-') {
+                        listRT_Lengkap.push(`RT ${item.nomor_rt} / ${formatRW}`);
+                    }
                 });
-                
-                // Isi dropdown di Modal
-                const selWilayah = document.getElementById('pilihWilayah');
-                daftarRT_Dinamic.forEach(rt => {
-                    selWilayah.innerHTML += `<option value="${rt}">${rt}</option>`;
-                });
+
+                // 3. Gabungkan daftar RW unik dan daftar RT lengkap ke dalam satu wadah
+                // Array.from() mengubah Set kembali menjadi Array biasa
+                daftarRT_Dinamic = [...Array.from(setRW_Unik).sort(), ...listRT_Lengkap.sort()];
+
+                // 🔥 PENTING: Bagian 'Isi dropdown di Modal' (selWilayah.innerHTML += ...) DIHAPUS.
+                // Karena pengisian dropdown sekarang diatur otomatis saat tombol "Pilih Jabatan" diklik!
             }
 
             // 3. Render Tabel Pejabat Aktif
@@ -177,7 +199,15 @@ import AdminLayout from '../../layout/AdminLayout.astro';
                     badgeJabatan = `<span class="bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-blue-200">Admin Desa</span>`;
                     wilayahText = `<p class="text-xs text-slate-400 mt-1">Akses Seluruh Sistem</p>`;
                 } else if(user.role === 'rt_rw') {
-                    badgeJabatan = `<span class="bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-emerald-200">Ketua RT / RW</span>`;
+                    // Deteksi apakah dia RW (Tidak ada kata RT di string wilayah_rt-nya)
+                    const isRW = user.wilayah_rt && !user.wilayah_rt.includes('RT');
+                    
+                    if (isRW) {
+                        badgeJabatan = `<span class="bg-amber-100 text-amber-700 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-amber-200">Ketua RW</span>`;
+                    } else {
+                        badgeJabatan = `<span class="bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-emerald-200">Ketua RT</span>`;
+                    }
+                    
                     wilayahText = `<p class="text-xs font-bold text-slate-700 mt-1">Wilayah: ${steril(user.wilayah_rt) || 'Belum Diset'}</p>`;
                 }
 
@@ -303,27 +333,58 @@ import AdminLayout from '../../layout/AdminLayout.astro';
     };
 
     // Logic memunculkan dropdown wilayah jika pilih RT
-    document.getElementById('pilihRole')?.addEventListener('change', (e) => {
+    // Logic memunculkan dropdown wilayah & Filter Otomatis
+    document.getElementById('pilihRole')?.addEventListener('change', async (e) => {
         const wadahWilayah = document.getElementById('bungkusWilayah');
-        const selectWilayah = document.getElementById('pilihWilayah');
-        if(e.target.value === 'rt_rw') {
+        const wadahRT = document.getElementById('wadahRT');
+        const selRW = document.getElementById('pilihRW');
+        const selRT = document.getElementById('pilihRT');
+        const role = e.target.value;
+
+        if (role === 'rt' || role === 'rw') {
             wadahWilayah.classList.remove('hidden');
-            selectWilayah.required = true;
+            selRW.required = true;
+
+            // Tarik data wilayah unik dari master
+            const { data } = await supabase.from('master_wilayah').select('*');
+            if (data) {
+                // Isi Dropdown RW (Gunakan Set agar angka tidak dobel)
+                const listRW = [...new Set(data.map(i => i.nomor_rw))].sort();
+                selRW.innerHTML = '<option value="" disabled selected>-- Pilih RW --</option>';
+                listRW.forEach(rw => selRW.innerHTML += `<option value="${rw}">${rw}</option>`);
+
+                // Jika pilih RW, sembunyikan kotak RT. Jika pilih RT, munculkan kotak RT.
+                if (role === 'rw') {
+                    wadahRT.classList.add('hidden');
+                    selRT.required = false;
+                    selRT.value = '';
+                } else {
+                    wadahRT.classList.remove('hidden');
+                    selRT.required = true;
+                    
+                    // Isi Dropdown RT (Cuma angka)
+                    const listRT = [...new Set(data.map(i => i.nomor_rt))].filter(rt => rt && rt !== '00').sort();
+                    selRT.innerHTML = '<option value="" disabled selected>-- Pilih RT --</option>';
+                    listRT.forEach(rt => selRT.innerHTML += `<option value="${rt}">${rt}</option>`);
+                }
+            }
         } else {
             wadahWilayah.classList.add('hidden');
-            selectWilayah.required = false;
-            selectWilayah.value = '';
         }
     });
 
+    // ================= EKSEKUSI SIMPAN JABATAN BARU =================
     // ================= EKSEKUSI SIMPAN JABATAN BARU =================
     document.getElementById('formTambahJabatan')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const userId = document.getElementById('selectedWargaId').value;
-        const roleBaru = document.getElementById('pilihRole').value;
+        const inputRole = document.getElementById('pilihRole').value;
         const wilayahBaru = document.getElementById('pilihWilayah').value;
         
+        // Kembalikan ke format database 'rt_rw' jika RT/RW yang dipilih
+        const roleDB = (inputRole === 'rt' || inputRole === 'rw') ? 'rt_rw' : inputRole;
+
         if(!userId) {
             alert("Harap cari dan pilih warga terlebih dahulu!");
             return;
@@ -332,10 +393,18 @@ import AdminLayout from '../../layout/AdminLayout.astro';
         const btn = document.getElementById('btnSimpanJabatan');
         btn.disabled = true; btn.innerHTML = "Memproses...";
 
+        const rtBaru = document.getElementById('pilihRT').value || null;
+        const rwBaru = document.getElementById('pilihRW').value || null;
+        
+        // Buat label gabungan untuk kolom wilayah_rt lama (biar tampilan lain gak error)
+        const labelWilayah = rtBaru ? `RT ${rtBaru} / RW ${rwBaru}` : `RW ${rwBaru}`;
+
         try {
             const { error } = await supabase.from('profil_user').update({ 
-                role: roleBaru, 
-                wilayah_rt: wilayahBaru || null 
+                role: roleDB, 
+                rt: rtBaru,         // Kolom baru 1
+                rw: rwBaru,         // Kolom baru 2
+                wilayah_rt: labelWilayah // Label untuk tampilan
             }).eq('id', userId);
 
             if (error) throw error;

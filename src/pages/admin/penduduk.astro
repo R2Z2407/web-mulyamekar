@@ -437,14 +437,14 @@ import AdminLayout from '../../layout/AdminLayout.astro';
             const filterRt = document.getElementById('filterRT').value;
 
             filteredData = rawData.filter(d => {
-                const matchKeyword = (d.nama_lengkap||'').toLowerCase().includes(keyword) || (d.nik||'').includes(keyword);
-                const matchStatus = filterStat === 'Semua' ? true : d.status_warga === filterStat;
-                
-                const w_rt = d.wilayah_rt || "";
-                const matchRW = filterRw === 'Semua' ? true : w_rt.includes('RW ' + filterRw);
-                const matchRT = filterRt === 'Semua' ? true : w_rt.includes('RT ' + filterRt);
-                
-                return matchKeyword && matchStatus && matchRW && matchRT;
+            const matchKeyword = (d.nama_lengkap||'').toLowerCase().includes(keyword) || (d.nik||'').includes(keyword);
+            const matchStatus = filterStat === 'Semua' ? true : d.status_warga === filterStat;
+            
+            // 🔥 LOGIKA BARU: Filter ngebut murni dari kolom rt dan rw
+            const matchRW = filterRw === 'Semua' ? true : d.rw === filterRw;
+            const matchRT = filterRt === 'Semua' ? true : d.rt === filterRt;
+            
+            return matchKeyword && matchStatus && matchRW && matchRT;
             });
             renderData(1);
         }
@@ -583,14 +583,20 @@ import AdminLayout from '../../layout/AdminLayout.astro';
             document.getElementById('no_telp').value = d.no_telp || '';
             document.getElementById('status_warga').value = d.status_warga;
 
-            if (d.wilayah_rt && d.wilayah_rt.includes('/')) {
+            // 🔥 LOGIKA BARU: Langsung ambil dari kolom rw dan rt
+            if (d.rw && d.rt) {
+                document.getElementById('pilihRW').value = d.rw;
+                updateDropdownRT('pilihRW', 'pilihRT', false);
+                setTimeout(() => { document.getElementById('pilihRT').value = d.rt; }, 50);
+            } 
+            // Fallback: Jaga-jaga kalau ada data lama yang belum ke-update rt/rw-nya
+            else if (d.wilayah_rt && d.wilayah_rt.includes('/')) {
                 const parts = d.wilayah_rt.split('/');
                 const textRT = parts[0].trim().replace('RT ', ''); 
                 const textRW = parts[1].trim().replace('RW ', ''); 
                 
                 document.getElementById('pilihRW').value = textRW;
-                updateDropdownRT('pilihRW', 'pilihRT', false); 
-                
+                updateDropdownRT('pilihRW', 'pilihRT', false);
                 setTimeout(() => { document.getElementById('pilihRT').value = textRT; }, 50);
             } else {
                 document.getElementById('pilihRW').value = '';
@@ -631,7 +637,9 @@ import AdminLayout from '../../layout/AdminLayout.astro';
             const btn = document.getElementById('btnSimpan');
             btn.disabled = true; btn.innerHTML = "Menyimpan...";
 
-            const finalWilayahRT = `RT ${document.getElementById('pilihRT').value} / RW ${document.getElementById('pilihRW').value}`;
+            const rtDipilih = document.getElementById('pilihRT').value;
+            const rwDipilih = document.getElementById('pilihRW').value;
+            const finalWilayahRT = `RT ${rtDipilih} / RW ${rwDipilih}`;
 
             const payload = {
                 no_kk: encrypt(document.getElementById('no_kk').value),
@@ -642,10 +650,16 @@ import AdminLayout from '../../layout/AdminLayout.astro';
                 
                 nama_lengkap: document.getElementById('nama_lengkap').value.toUpperCase(),
                 tempat_lahir: document.getElementById('tempat_lahir').value.toUpperCase(),
+                
                 jenis_kelamin: document.getElementById('jenis_kelamin').value,
                 pendidikan: document.getElementById('pendidikan').value,
                 pekerjaan: document.getElementById('pekerjaan').value,
-                wilayah_rt: finalWilayahRT,
+                
+                // 🔥 TRANSISI BARU: Simpan ke 3 kolom sekaligus
+                wilayah_rt: finalWilayahRT, 
+                rt: rtDipilih, 
+                rw: rwDipilih,
+                
                 status_warga: document.getElementById('status_warga').value
             };
 
@@ -701,17 +715,22 @@ import AdminLayout from '../../layout/AdminLayout.astro';
             if(dataCSV.length === 0) return alert('File CSV kosong atau format salah!');
 
             // Mapping & Enkripsi data otomatis
+            // Mapping & Enkripsi data otomatis
             const payloads = dataCSV.map(row => {
                 return {
                     no_kk: encrypt(row.no_kk),
                     nik: encrypt(row.nik),
-                    nama_lengkap: row.nama_lengkap, // Biasanya nama tidak dienkripsi agar bisa dicari
+                    nama_lengkap: row.nama_lengkap,
                     tempat_lahir: row.tempat_lahir,
                     tanggal_lahir: encrypt(row.tanggal_lahir),
                     jenis_kelamin: row.jenis_kelamin,
                     alamat: encrypt(row.alamat),
+                    
+                    // 🔥 Pastikan 3 pilar wilayah ini masuk semua
                     rw: row.rw,
                     rt: row.rt,
+                    wilayah_rt: `RT ${row.rt} / RW ${row.rw}`,
+                    
                     pekerjaan: row.pekerjaan,
                     pendidikan: row.pendidikan,
                     status_warga: row.status_warga,

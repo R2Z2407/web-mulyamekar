@@ -23,10 +23,12 @@
     let rawRiwayatWarga = [];  let filteredRiwayatWarga = [];
     let rawRiwayatAduan = [];  let filteredRiwayatAduan = [];
     let rawSuratRT = [];       let filteredSuratRT = [];
-    let rawAduanRT = [];       let filteredAduanRT = [];
-    
+    let rawAduanRT = [];       let filteredAduanRT = [];    
     // 🔥 VARIABEL BARU UNTUK TABEL DAFTAR WARGA RT 🔥
     let rawDaftarWargaRT = []; let filteredDaftarWargaRT = [];
+
+    // Inisialisasi mode awal
+    window.currentDashboardMode = 'WARGA';
 
     function steril(teks) {
         if (!teks) return '';
@@ -177,8 +179,8 @@
                     const parts = profil.wilayah_rt.split('/');
                     const elRT = document.getElementById('tampil_rt');
                     const elRW = document.getElementById('tampil_rw');
-                    if(elRT) elRT.value = parts[0].trim();
-                    if(elRW) elRW.value = parts[1].trim();
+                    if(elRT) elRT.value = profil.rt || '';
+                    if(elRW) elRW.value = profil.rw || '';
                 }
             }
 
@@ -230,13 +232,37 @@
             btnLaporan.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-purple-500 text-purple-800 bg-purple-100/50 whitespace-nowrap flex items-center gap-2";
     };
 
-    window.gantiMode = (isModeRT) => {
-        if (isModeRT) {
-            document.getElementById('tampilanWarga').classList.add('hidden');
-            document.getElementById('tampilanRT').classList.remove('hidden');
+    window.gantiMode = (mode) => {
+        // Anti-bug buat tombol lama yang ngirim 'false'
+        const modeFix = (mode === false || mode === 'WARGA') ? 'WARGA' : mode;
+        window.currentDashboardMode = modeFix;
+
+        const tampilanWarga = document.getElementById('tampilanWarga');
+        const tampilanRT = document.getElementById('tampilanRT');
+        const teksJabatan = document.getElementById('userRole'); 
+
+        if (tampilanWarga) tampilanWarga.classList.add('hidden');
+        if (tampilanRT) tampilanRT.classList.add('hidden');
+
+        if (modeFix === 'WARGA') {
+            if (tampilanWarga) tampilanWarga.classList.remove('hidden');
         } else {
-            document.getElementById('tampilanRT').classList.add('hidden');
-            document.getElementById('tampilanWarga').classList.remove('hidden');
+            if (tampilanRT) tampilanRT.classList.remove('hidden');
+            
+            if (teksJabatan) {
+                teksJabatan.innerText = modeFix === 'RW' ? 'Panel Ketua RW' : 'Panel Ketua RT';
+            }
+            
+            const labelWilayah = document.getElementById('wilayahRTLabel');
+            if (labelWilayah && profilWarga?.rw) {
+                // Langsung panggil profilWarga.rw, jauh lebih rapi!
+                labelWilayah.innerText = modeFix === 'RW' ? `RW ${profilWarga.rw}` : (profilWarga.wilayah_rt || `RT ${profilWarga.rt} / RW ${profilWarga.rw}`);
+            }
+
+            // Sekarang fungsi ini pasti bisa dipanggil karena sudah nempel di window
+            window.loadSuratRT();
+            window.loadAduanRT();
+            window.loadDaftarWargaRT();
         }
     };
 
@@ -280,12 +306,20 @@
         dataTampil.forEach(s => {
             const tgl = new Date(s.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
             const statusRtText = s.status_rt || ''; 
-            let bDesa = s.status === 'Menunggu' ? 'bg-amber-50 text-amber-600 border-amber-200' : (s.status === 'Diproses' ? 'bg-blue-50 text-blue-600 border-blue-200' : (s.status === 'Ditolak' ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'));
-            let bRT = statusRtText === 'Menunggu ACC RT' ? 'bg-amber-50 text-amber-600 border-amber-200' : (statusRtText.includes('Disetujui') ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : (statusRtText.includes('Ditolak') ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-gray-100 text-gray-500 border-gray-200'));
             let catatanHTML = '';
+            let bDesa = s.status === 'Menunggu' ? 'bg-amber-50 text-amber-600 border-amber-200' : (s.status === 'Diproses' ? 'bg-blue-50 text-blue-600 border-blue-200' : (s.status === 'Ditolak' ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'));
+            
+            // 🔥 LOGIKA WARNA STATUS BARU (Bisa ngebaca Menunggu RW)
+            let bRT = 'bg-gray-100 text-gray-500 border-gray-200';
+            if (statusRtText === 'Menunggu ACC RT') bRT = 'bg-amber-50 text-amber-600 border-amber-200';
+            else if (statusRtText === 'Menunggu ACC RW') bRT = 'bg-indigo-50 text-indigo-600 border-indigo-200';
+            else if (statusRtText === 'Disetujui RW' || statusRtText === 'Bypass RT' || statusRtText === 'Laporan RT') bRT = 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            else if (statusRtText.includes('Ditolak')) bRT = 'bg-rose-50 text-rose-600 border-rose-200';
+
+            // Logika pesan di bawah surat
             if (s.status === 'Selesai' && s.file_hasil) catatanHTML = `<a href="${s.file_hasil}" target="_blank" class="mt-3 inline-block bg-emerald-500 text-white px-4 py-2 rounded-xl text-[11px] font-bold shadow-md hover:bg-emerald-600 transition-all hover:-translate-y-0.5">📥 Download Surat (PDF)</a>`;
             else if (s.status === 'Ditolak' && s.alasan_penolakan) catatanHTML = `<div class="mt-3 bg-rose-50 p-3 rounded-xl border border-rose-100"><p class="text-[10px] font-black text-rose-800 uppercase">Alasan Penolakan:</p><p class="text-xs text-rose-600 font-medium mt-1">${steril(s.alasan_penolakan)}</p></div>`;
-            else if (statusRtText === 'Ditolak RT') catatanHTML = `<div class="mt-3 bg-rose-50 p-3 rounded-xl border border-rose-100"><p class="text-xs text-rose-600 font-medium">Ditolak oleh RT. Silakan hubungi Pak RT.</p></div>`;
+            else if (statusRtText.includes('Ditolak')) catatanHTML = `<div class="mt-3 bg-rose-50 p-3 rounded-xl border border-rose-100"><p class="text-xs text-rose-600 font-medium">Ditolak oleh Pengurus Wilayah (RT/RW). Silakan hubungi pengurus terkait.</p></div>`;
             html += `<div class="p-5 border border-gray-100 rounded-3xl hover:border-teal-200 bg-white flex flex-col md:flex-row justify-between gap-4 shadow-sm transition-all hover:shadow-md"><div class="flex-grow"><h3 class="font-black text-teal-950 text-base">${steril(s.jenis_surat)}</h3><p class="text-[11px] text-gray-500 font-medium mt-1">Tgl Pengajuan: ${tgl}</p>${catatanHTML}</div><div class="flex flex-col gap-2 shrink-0 items-start md:items-end"><span class="px-3 py-1.5 rounded-lg text-[10px] font-bold border ${bRT} whitespace-nowrap">RT: ${statusRtText || 'Menunggu'}</span><span class="px-3 py-1.5 rounded-lg text-[10px] font-bold border ${bDesa} whitespace-nowrap">Desa: ${s.status}</span></div></div>`;
         });
         container.innerHTML = html; paginasiContainer.innerHTML = createTabPaginationUI('Warga', page, filteredRiwayatWarga.length);
@@ -331,10 +365,37 @@
     });
 
     async function loadSuratRT() {
-        if (!profilWarga.wilayah_rt) return;
-        const { data, error } = await supabase.from('pengajuan_surat').select('*').eq('wilayah_rt', profilWarga.wilayah_rt).order('created_at', { ascending: false });
+        if (!profilWarga?.rw) return;
+        let query = supabase.from('pengajuan_surat').select('*');
+        if (window.currentDashboardMode === 'RW') query = query.eq('rw', profilWarga.rw);
+        else query = query.eq('rw', profilWarga.rw).eq('rt', profilWarga.rt);
+
+        const { data, error } = await query.order('created_at', { ascending: false });
         if (error) return;
         rawSuratRT = data || []; filteredSuratRT = rawSuratRT; renderSuratRT(1);
+    }
+
+    async function loadAduanRT() {
+        if (!profilWarga?.rw) return;
+        let query = supabase.from('aduan_warga').select('*');
+        if (window.currentDashboardMode === 'RW') query = query.eq('rw', profilWarga.rw);
+        else query = query.eq('rw', profilWarga.rw).eq('rt', profilWarga.rt);
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (error) return;
+        rawAduanRT = data || []; filteredAduanRT = rawAduanRT; renderAduanRT(1);
+    }
+
+    async function loadDaftarWargaRT() {
+        if (!profilWarga?.rw) return;
+        let query = supabase.from('data_penduduk').select('nama_lengkap, jenis_kelamin, pekerjaan, status_warga, wilayah_rt');
+        if (window.currentDashboardMode === 'RW') query = query.eq('rw', profilWarga.rw);
+        else query = query.eq('rw', profilWarga.rw).eq('rt', profilWarga.rt);
+
+        const { data, error } = await query.order('nama_lengkap', { ascending: true });
+        if (error) { console.error("Gagal narik data warga RT:", error); return; }
+        
+        rawDaftarWargaRT = data || []; filteredDaftarWargaRT = rawDaftarWargaRT; renderDaftarWargaRT(1);
     }
 
     function renderSuratRT(page) {
@@ -351,9 +412,51 @@
             if (isExpired && s.status === 'Menunggu') { berkasHTML = `<span class="inline-block mt-2 bg-rose-50 border border-rose-200 text-rose-600 font-bold px-2 py-1 rounded text-[10px]">⚠️ Berkas Hangus (>24 Jam)</span>`; }
             else if (s.file_persyaratan) { try { const files = JSON.parse(s.file_persyaratan); berkasHTML = `<div class="mt-2 space-y-1">`; for (const [nama, url] of Object.entries(files)) { berkasHTML += `<a href="${url}" target="_blank" class="block text-[10px] text-blue-600 hover:underline">📄 Cek ${nama}</a>`; } berkasHTML += `</div>`; } catch(e) { berkasHTML = `<a href="${s.file_persyaratan}" target="_blank" class="text-[10px] text-blue-600 underline">Lihat Berkas</a>`; } }
             let tombolAksi = '';
-            if (s.status !== 'Menunggu') { tombolAksi = `<span class="text-[9px] text-gray-500 font-bold uppercase bg-gray-100 px-2 py-1.5 rounded border border-gray-200 shadow-inner block"><span class="text-xs">🔒</span> Terkunci Oleh Desa</span>`; }
-            else { if (statusRtText === 'Menunggu ACC RT') { tombolAksi = `<div class="flex flex-col gap-1.5"><button onclick="updateStatusRT('${s.id}', 'Disetujui RT')" class="bg-emerald-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-emerald-600">ACC</button><button onclick="updateStatusRT('${s.id}', 'Ditolak RT')" class="bg-rose-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-rose-600">Tolak</button></div>`; } else if (statusRtText === 'Bypass RT') { tombolAksi = `<span class="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded border border-blue-100">Otomatis Desa</span>`; } else { let btnText = statusRtText === 'Disetujui RT' ? 'Batal ACC' : 'Batal Tolak'; tombolAksi = `<button onclick="updateStatusRT('${s.id}', 'Menunggu ACC RT')" class="text-[10px] text-gray-500 underline hover:text-gray-800 font-bold">${btnText}</button>`; } }
-            html += `<tr class="hover:bg-amber-50/30 border-b border-gray-50"><td class="p-4 text-gray-500 text-xs">${tgl}</td><td class="p-4"><p class="font-bold text-gray-900">${steril(s.nama_lengkap)}</p><p class="text-[10px] text-gray-500 font-mono mt-1 bg-gray-100 inline-block px-1.5 py-0.5 rounded">${steril(s.nik)}</p>${berkasHTML}</td><td class="p-4 text-gray-600 text-sm"><p class="font-bold text-gray-800 text-xs">${steril(s.jenis_surat)}</p><p class="text-[11px] text-gray-500 mt-1 line-clamp-2">${steril(s.keperluan)}</p></td><td class="p-4 text-center"><span class="px-2 py-1 rounded-md text-[9px] font-bold uppercase ${bRT}">${statusRtText}</span></td><td class="p-4 text-center align-middle">${tombolAksi}</td></tr>`;
+            if (s.status !== 'Menunggu') { 
+                tombolAksi = `<span class="text-[9px] text-gray-500 font-bold uppercase bg-gray-100 px-2 py-1.5 rounded border border-gray-200 shadow-inner block"><span class="text-xs">🔒</span> Terkunci Desa</span>`;
+            } else { 
+                if (window.currentDashboardMode === 'RW') {
+                    // 👑 TAMPILAN JIKA MODE RW AKTIF
+                    if (statusRtText === 'Menunggu ACC RW') { 
+                        tombolAksi = `<div class="flex flex-col gap-1.5"><button onclick="updateStatusRT('${s.id}', 'Disetujui RW')" class="bg-blue-600 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-blue-700">ACC RW</button><button onclick="updateStatusRT('${s.id}', 'Ditolak RW')" class="bg-rose-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-rose-600">Tolak</button></div>`;
+                    } else if (statusRtText === 'Menunggu ACC RT') { 
+                        tombolAksi = `<span class="text-[9px] text-amber-600 font-bold bg-amber-50 px-2 py-1 rounded border border-amber-100 block text-center">Menunggu RT</span>`;
+                    } else if (statusRtText === 'Disetujui RW') { 
+                        tombolAksi = `<button onclick="updateStatusRT('${s.id}', 'Menunggu ACC RW')" class="text-[10px] text-gray-500 underline hover:text-gray-800 font-bold">Batal ACC</button>`;
+                    } else {
+                        tombolAksi = `-`;
+                    }
+                } else {
+                    // 🎩 TAMPILAN JIKA MODE RT AKTIF
+                    if (statusRtText === 'Menunggu ACC RT') { 
+                        tombolAksi = `<div class="flex flex-col gap-1.5"><button onclick="updateStatusRT('${s.id}', 'Menunggu ACC RW')" class="bg-emerald-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-emerald-600">ACC RT</button><button onclick="updateStatusRT('${s.id}', 'Ditolak RT')" class="bg-rose-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-rose-600">Tolak</button></div>`;
+                    } else if (statusRtText === 'Menunggu ACC RW') { 
+                        tombolAksi = `<button onclick="updateStatusRT('${s.id}', 'Menunggu ACC RT')" class="text-[10px] text-gray-500 underline hover:text-gray-800 font-bold">Batal ACC</button>`;
+                    } else if (statusRtText === 'Disetujui RW') { 
+                        tombolAksi = `<span class="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-100 block text-center">Sudah di RW</span>`;
+                    } else {
+                        tombolAksi = `-`;
+                    }
+                }
+            }
+            html += `
+            <tr class="hover:bg-amber-50/30 border-b border-gray-50">
+                <td class="p-4 text-gray-500 text-xs">${tgl}</td>
+                <td class="p-4">
+                    <p class="font-bold text-gray-900">${steril(s.nama_lengkap)}</p>
+                    <div class="flex flex-wrap gap-1 mt-1">
+                        <p class="text-[10px] text-gray-500 font-mono bg-gray-100 px-1.5 py-0.5 rounded">${steril(s.nik)}</p>
+                        <p class="text-[10px] text-amber-700 font-bold bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">${steril(s.wilayah_rt)}</p>
+                    </div>
+                    ${berkasHTML}
+                </td>
+                <td class="p-4 text-gray-600 text-sm">
+                    <p class="font-bold text-gray-800 text-xs">${steril(s.jenis_surat)}</p>
+                    <p class="text-[11px] text-gray-500 mt-1 line-clamp-2">${steril(s.keperluan)}</p>
+                </td>
+                <td class="p-4 text-center"><span class="px-2 py-1 rounded-md text-[9px] font-bold uppercase ${bRT}">${statusRtText}</span></td>
+                <td class="p-4 text-center align-middle">${tombolAksi}</td>
+            </tr>`;
         });
         tbody.innerHTML = html; paginasiContainer.innerHTML = createTabPaginationUI('SuratRT', page, filteredSuratRT.length);
     }
@@ -362,12 +465,12 @@
         let payload = { status_rt: statusBaru };
 
         // 🔥 LOGIKA PINTAR: OTOMATISASI PENOLAKAN 🔥
-        if (statusBaru === 'Ditolak RT') {
-            payload.status = 'Ditolak'; // Otomatis ubah status Desa jadi Ditolak
-            payload.alasan_penolakan = 'Pengajuan dibatalkan/ditolak oleh Ketua RT setempat.';
+        if (statusBaru.includes('Ditolak')) {
+            payload.status = 'Ditolak';
+            payload.alasan_penolakan = 'Pengajuan dibatalkan/ditolak oleh Pengurus Wilayah (RT/RW) setempat.';
         } 
-        // Jaga-jaga kalau RT klik "Batal Tolak/Batal ACC", kita balikin lagi status Desanya
-        else if (statusBaru === 'Menunggu ACC RT') {
+        // Jaga-jaga kalau RT/RW klik "Batal Tolak" atau "Batal ACC", kita pastikan status Desanya kembali aman
+        else {
             payload.status = 'Menunggu';
             payload.alasan_penolakan = null;
         }
@@ -390,13 +493,6 @@
         renderSuratRT(1);
     });
 
-    async function loadAduanRT() {
-        if (!profilWarga.wilayah_rt) return;
-        const { data, error } = await supabase.from('aduan_warga').select('*').eq('wilayah_rt', profilWarga.wilayah_rt).order('created_at', { ascending: false });
-        if (error) return;
-        rawAduanRT = data || []; filteredAduanRT = rawAduanRT; renderAduanRT(1);
-    }
-
     function renderAduanRT(page) {
         const tbody = document.getElementById('tableAduanRT');
         const paginasiContainer = document.getElementById('paginationAduanRT');
@@ -408,7 +504,20 @@
             let bStatus = a.status === 'Menunggu' ? 'bg-amber-100 text-amber-700' : (a.status === 'Diproses' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700');
             let fotoHTML = a.foto_url ? `<button type="button" onclick="lihatFoto('${a.foto_url}')" class="block mt-2 text-[10px] font-bold text-blue-600 hover:underline inline-flex items-center gap-1">📸 Lihat Foto</button>` : '';
             let deskripsiHTML = steril(a.deskripsi).replace(/\(Maps:\s*(-?\d+\.\d+),\s*(-?\d+\.\d+)\)/g, '<a href="https://www.google.com/maps?q=$1,$2" target="_blank" class="text-blue-600 font-bold underline bg-blue-50 px-2 py-0.5 rounded-lg hover:bg-blue-100 transition-colors inline-flex items-center gap-1 mt-1">🗺️ Buka di Google Maps</a>');
-            html += `<tr class="hover:bg-rose-50/30 border-b border-gray-50"><td class="p-4 align-top"><p class="font-bold text-gray-900">${steril(a.nama_pelapor)}</p><p class="text-[10px] text-gray-500 mt-1">${tgl}</p></td><td class="p-4 align-top"><span class="text-[9px] font-bold text-rose-600 uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100 block w-max mb-1">${steril(a.kategori)}</span><p class="text-sm font-bold text-gray-800">${steril(a.judul)}</p><p class="text-xs text-gray-600 mt-1 whitespace-pre-wrap">${deskripsiHTML}</p>${fotoHTML}</td><td class="p-4 text-center align-top"><span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase ${bStatus} border shadow-sm">${a.status}</span></td></tr>`;
+            html += `<tr class="hover:bg-rose-50/30 border-b border-gray-50">
+                <td class="p-4 align-top">
+                    <p class="font-bold text-gray-900">${steril(a.nama_pelapor)}</p>
+                    <p class="text-[10px] text-rose-700 font-bold bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded mt-1 inline-block">${steril(a.wilayah_rt)}</p>
+                    <p class="text-[10px] text-gray-500 mt-1">${tgl}</p>
+                </td>
+                <td class="p-4 align-top">
+                    <span class="text-[9px] font-bold text-rose-600 uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100 block w-max mb-1">${steril(a.kategori)}</span>
+                    <p class="text-sm font-bold text-gray-800">${steril(a.judul)}</p>
+                    <p class="text-xs text-gray-600 mt-1 whitespace-pre-wrap">${deskripsiHTML}</p>
+                    ${fotoHTML}
+                </td>
+                <td class="p-4 text-center align-top"><span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase ${bStatus} border shadow-sm">${a.status}</span></td>
+            </tr>`;
         });
         tbody.innerHTML = html; paginasiContainer.innerHTML = createTabPaginationUI('AduanRT', page, filteredAduanRT.length);
     }
@@ -418,25 +527,6 @@
         filteredAduanRT = rawAduanRT.filter(a => a.nama_pelapor?.toLowerCase().includes(keyword) || a.judul?.toLowerCase().includes(keyword) || a.kategori?.toLowerCase().includes(keyword));
         renderAduanRT(1);
     });
-
-    // 🔥 FUNGSI BARU: MUAT TABEL DAFTAR WARGA RT 🔥
-    async function loadDaftarWargaRT() {
-        if (!profilWarga.wilayah_rt) return;
-        // Kita HANYA request data umum (Nama, LP, Pekerjaan, Status), jadi TIDAK perlu decrypt
-        const { data, error } = await supabase.from('data_penduduk')
-            .select('nama_lengkap, jenis_kelamin, pekerjaan, status_warga')
-            .eq('wilayah_rt', profilWarga.wilayah_rt)
-            .order('nama_lengkap', { ascending: true });
-        
-        if (error) {
-            console.error("Gagal narik data warga RT:", error);
-            return;
-        }
-        
-        rawDaftarWargaRT = data || []; 
-        filteredDaftarWargaRT = rawDaftarWargaRT; 
-        renderDaftarWargaRT(1);
-    }
 
     function renderDaftarWargaRT(page) {
         const tbody = document.getElementById('tableDaftarWargaRT');
@@ -457,7 +547,10 @@
             html += `
             <tr class="hover:bg-emerald-50/30 border-b border-gray-50 transition-colors">
                 <td class="p-4 text-center text-gray-500 text-xs font-bold">${start + index + 1}</td>
-                <td class="p-4 font-black text-gray-800">${steril(w.nama_lengkap)}</td>
+                <td class="p-4">
+                    <p class="font-black text-gray-800">${steril(w.nama_lengkap)}</p>
+                    <p class="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded mt-1 inline-block">${steril(w.wilayah_rt)}</p>
+                </td>
                 <td class="p-4 text-center text-gray-500 font-bold">${w.jenis_kelamin === 'Laki-laki' ? 'L' : 'P'}</td>
                 <td class="p-4 text-gray-600 text-xs">${steril(w.pekerjaan)}</td>
                 <td class="p-4 text-center"><span class="px-2 py-1 rounded-md text-[9px] font-bold uppercase border shadow-sm ${badgeStatus}">${steril(w.status_warga)}</span></td>
@@ -498,12 +591,13 @@
         const btn = document.getElementById('btnSimpanWargaRT'); btn.disabled = true; btn.innerHTML = "Menyimpan...";
         const wilayahRT = document.getElementById('rt_wilayah_rt').value;
         const payload = {
-            no_kk: encrypt(document.getElementById('rt_no_kk').value), nik: encrypt(document.getElementById('rt_nik').value),
-            tanggal_lahir: encrypt(document.getElementById('rt_tanggal_lahir').value), alamat: encrypt(document.getElementById('rt_alamat').value),
-            no_telp: encrypt(document.getElementById('rt_no_telp').value), nama_lengkap: document.getElementById('rt_nama_lengkap').value.toUpperCase(),
-            tempat_lahir: document.getElementById('rt_tempat_lahir').value.toUpperCase(), jenis_kelamin: document.getElementById('rt_jenis_kelamin').value,
-            pendidikan: document.getElementById('rt_pendidikan').value, pekerjaan: document.getElementById('rt_pekerjaan').value,
-            wilayah_rt: wilayahRT, status_warga: document.getElementById('rt_status_warga').value
+            no_kk: encrypt(document.getElementById('rt_no_kk').value), 
+            nik: encrypt(document.getElementById('rt_nik').value),
+            // ... (lanjutan kodingan lu) ...
+            wilayah_rt: wilayahRT,
+            rt: profilWarga.rt, // 🔥 TAMBAHAN TRANSISI
+            rw: profilWarga.rw, // 🔥 TAMBAHAN TRANSISI
+            status_warga: document.getElementById('rt_status_warga').value
         };
         const { error } = await supabase.from('data_penduduk').insert([payload]);
         btn.disabled = false; btn.innerHTML = "🔒 Enkripsi & Simpan Data Warga";
@@ -516,10 +610,11 @@
             // KEMBALIKAN TAMPILAN RT & RW SETELAH FORM DI-RESET
             if (profilWarga.wilayah_rt && profilWarga.wilayah_rt.includes('/')) {
                 const parts = profilWarga.wilayah_rt.split('/');
+                // KEMBALIKAN TAMPILAN RT & RW SETELAH FORM DI-RESET
                 const elRT = document.getElementById('tampil_rt');
                 const elRW = document.getElementById('tampil_rw');
-                if(elRT) elRT.value = parts[0].trim();
-                if(elRW) elRW.value = parts[1].trim();
+                if(elRT) elRT.value = profilWarga.rt || '';
+                if(elRW) elRW.value = profilWarga.rw || '';
             }
 
             // PERBARUI TABEL DAFTAR WARGA (Realtime Update)
@@ -712,12 +807,14 @@
                 user_id: currentUser.id, 
                 nama_lengkap: profilWarga.nama_lengkap || 'Ketua RT', 
                 nik: profilWarga.nik || '-',                          
-                wilayah_rt: profilWarga.wilayah_rt || 'Belum Diset',  
+                wilayah_rt: profilWarga.wilayah_rt || 'Belum Diset',
+                rt: profilWarga.rt, // 🔥 TAMBAHAN TRANSISI
+                rw: profilWarga.rw, // 🔥 TAMBAHAN TRANSISI
                 jenis_surat: jenisSuratKhusus,
                 keperluan: detailKeperluan,
                 status: 'Menunggu',
-                status_rt: 'Laporan RT', // <--- INI KUNCINYA, BIAR NGGAK MINTA ACC LAGI
-                alamat: '-' 
+                status_rt: 'Menunggu ACC RW', // <--- Diteruskan langsung ke RW
+                alamat: '-'
             });
 
             if (error) throw error;
@@ -766,5 +863,16 @@
             kontenAduan.classList.add('block');
         }
     };
+    // Daftarkan fungsi LOAD ke window agar bisa dipanggil gantiMode
+    window.loadSuratRT = loadSuratRT;
+    window.loadAduanRT = loadAduanRT;
+    window.loadDaftarWargaRT = loadDaftarWargaRT;
+
+    // Daftarkan fungsi RENDER ke window agar bisa dipanggil gantiHalaman (Paginasi)
+    window.renderRiwayatWarga = renderRiwayatWarga;
+    window.renderRiwayatAduan = renderRiwayatAduan;
+    window.renderSuratRT = renderSuratRT;
+    window.renderAduanRT = renderAduanRT;
+    window.renderDaftarWargaRT = renderDaftarWargaRT;
     initDashboard();
 </script>
