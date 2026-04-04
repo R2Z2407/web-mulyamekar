@@ -165,31 +165,41 @@
         if(document.getElementById('inputRT') && profil.wilayah_rt) document.getElementById('inputRT').value = steril(profil.wilayah_rt);
 
         // Kalo dia Pak RT, aktifkan tab RT
-        if (profil.role === 'rt_rw') {
+        // 🔥 LOGIKA BARU: Cek spesifik apakah dia RT atau RW
+        if (profil.role === 'rt' || profil.role === 'rw') {
             document.getElementById('kontrolModeRT').classList.remove('hidden');
-            document.getElementById('namaRT').innerText = safeName || 'Ketua RT';
-            document.getElementById('wilayahRTLabel').innerText = steril(profil.wilayah_rt) || 'Belum Diatur';
+            
+            // Nama jabatannya menyesuaikan otomatis
+            const labelJabatan = profil.role === 'rw' ? 'Ketua RW' : 'Ketua RT';
+            document.getElementById('namaRT').innerText = safeName || labelJabatan;
             
             if(profil.wilayah_rt) {
                 const inputHidden = document.getElementById('rt_wilayah_rt');
                 if(inputHidden) inputHidden.value = profil.wilayah_rt;
                 
                 // MENGISI KOTAK TAMPILAN RT & RW (Readonly)
-                if (profil.wilayah_rt.includes('/')) {
-                    const parts = profil.wilayah_rt.split('/');
-                    const elRT = document.getElementById('tampil_rt');
-                    const elRW = document.getElementById('tampil_rw');
-                    if(elRT) elRT.value = profil.rt || '';
-                    if(elRW) elRW.value = profil.rw || '';
-                }
+                const elRT = document.getElementById('tampil_rt');
+                const elRW = document.getElementById('tampil_rw');
+                if(elRT) elRT.value = profil.rt || '';
+                if(elRW) elRW.value = profil.rw || '';
+            }
+
+            // Ubah teks di UI
+            const teksJabatan = document.getElementById('teksJabatanPanel');
+            if (teksJabatan) teksJabatan.innerText = `Panel ${labelJabatan}`;
+            
+            const labelWilayah = document.getElementById('wilayahRTLabel');
+            if (labelWilayah) {
+                labelWilayah.innerText = profil.role === 'rw' 
+                    ? `Wilayah RW ${profil.rw}` 
+                    : `Wilayah RT ${profil.rt} / RW ${profil.rw}`;
             }
 
             loadSuratRT();
             loadAduanRT();
-            loadDaftarWargaRT(); // 🔥 SEDOT DAFTAR WARGA 🔥
-            switchTabRT('surat'); 
+            loadDaftarWargaRT();
+            switchTabRT('surat');
         }
-
         loadRiwayatSurat();
         loadRiwayatAduan();
         cekStatusToko();
@@ -247,22 +257,25 @@
         if (modeFix === 'WARGA') {
             if (tampilanWarga) tampilanWarga.classList.remove('hidden');
         } else {
+            // Mode Pejabat (RT/RW)
             if (tampilanRT) tampilanRT.classList.remove('hidden');
             
+            // 🔥 LOGIKA BARU: Cek langsung dari profilWarga.role
             if (teksJabatan) {
-                teksJabatan.innerText = modeFix === 'RW' ? 'Panel Ketua RW' : 'Panel Ketua RT';
+                teksJabatan.innerText = profilWarga.role === 'rw' ? 'Panel Ketua RW' : 'Panel Ketua RT';
             }
             
             const labelWilayah = document.getElementById('wilayahRTLabel');
-            if (labelWilayah && profilWarga?.rw) {
-                // Langsung panggil profilWarga.rw, jauh lebih rapi!
-                labelWilayah.innerText = modeFix === 'RW' ? `RW ${profilWarga.rw}` : (profilWarga.wilayah_rt || `RT ${profilWarga.rt} / RW ${profilWarga.rw}`);
+            if (labelWilayah && profilWarga.rw) {
+                labelWilayah.innerText = profilWarga.role === 'rw' 
+                    ? `Wilayah RW ${profilWarga.rw}` 
+                    : `Wilayah RT ${profilWarga.rt} / RW ${profilWarga.rw}`;
             }
 
-            // Sekarang fungsi ini pasti bisa dipanggil karena sudah nempel di window
-            window.loadSuratRT();
-            window.loadAduanRT();
-            window.loadDaftarWargaRT();
+            // Panggil ulang load data (opsional, untuk memastikan data fresh saat pindah tab)
+            if (typeof window.loadSuratRT === 'function') window.loadSuratRT();
+            if (typeof window.loadAduanRT === 'function') window.loadAduanRT();
+            if (typeof window.loadDaftarWargaRT === 'function') window.loadDaftarWargaRT();
         }
     };
 
@@ -311,10 +324,26 @@
             
             // 🔥 LOGIKA WARNA STATUS BARU (Bisa ngebaca Menunggu RW)
             let bRT = 'bg-gray-100 text-gray-500 border-gray-200';
-            if (statusRtText === 'Menunggu ACC RT') bRT = 'bg-amber-50 text-amber-600 border-amber-200';
-            else if (statusRtText === 'Menunggu ACC RW') bRT = 'bg-indigo-50 text-indigo-600 border-indigo-200';
-            else if (statusRtText === 'Disetujui RW' || statusRtText === 'Bypass RT' || statusRtText === 'Laporan RT') bRT = 'bg-emerald-50 text-emerald-600 border-emerald-200';
-            else if (statusRtText.includes('Ditolak')) bRT = 'bg-rose-50 text-rose-600 border-rose-200';
+            let teksAlur = statusRtText; // Default text
+
+            if (statusRtText === 'Menunggu ACC RT') {
+                bRT = 'bg-amber-50 text-amber-600 border-amber-200';
+                teksAlur = '⏳ Menunggu RT';
+            } else if (statusRtText === 'Menunggu ACC RW') {
+                bRT = 'bg-indigo-50 text-indigo-600 border-indigo-200';
+                // Cerdas: Kalau dari awal ga punya RT, jangan tampilin tulisan "ACC RT"
+                if (!s.rt || s.rt === '00' || s.rt === '') {
+                    teksAlur = '⏳ Menunggu RW';
+                } else {
+                    teksAlur = '✅ ACC RT ➔ ⏳ Menunggu RW'; 
+                }
+            } else if (statusRtText === 'Disetujui RW' || statusRtText === 'Laporan RW' || statusRtText === 'Laporan RT' || statusRtText === 'Bypass RT') {
+                bRT = 'bg-emerald-50 text-emerald-600 border-emerald-200';
+                teksAlur = '✅ ACC Wilayah ➔ ⏳ Ke Desa';
+            } else if (statusRtText.includes('Ditolak')) {
+                bRT = 'bg-rose-50 text-rose-600 border-rose-200';
+                teksAlur = '❌ ' + statusRtText;
+            }
 
             // Logika pesan di bawah surat
             if (s.status === 'Selesai' && s.file_hasil) catatanHTML = `<a href="${s.file_hasil}" target="_blank" class="mt-3 inline-block bg-emerald-500 text-white px-4 py-2 rounded-xl text-[11px] font-bold shadow-md hover:bg-emerald-600 transition-all hover:-translate-y-0.5">📥 Download Surat (PDF)</a>`;
@@ -364,38 +393,59 @@
         renderRiwayatAduan(1);
     });
 
+    // 1. FUNGSI LOAD SURAT
     async function loadSuratRT() {
+        const tbody = document.getElementById('tableSuratRT');
         if (!profilWarga?.rw) return;
-        let query = supabase.from('pengajuan_surat').select('*');
-        if (window.currentDashboardMode === 'RW') query = query.eq('rw', profilWarga.rw);
-        else query = query.eq('rw', profilWarga.rw).eq('rt', profilWarga.rt);
+        try {
+            let query = supabase.from('pengajuan_surat').select('*');
+            
+            // 🔥 LOGIKA BARU: Tarik data sesuai jabatannya
+            if (profilWarga.role === 'rw') query = query.eq('rw', profilWarga.rw);
+            else query = query.eq('rw', profilWarga.rw).eq('rt', profilWarga.rt);
 
-        const { data, error } = await query.order('created_at', { ascending: false });
-        if (error) return;
-        rawSuratRT = data || []; filteredSuratRT = rawSuratRT; renderSuratRT(1);
+            const { data, error } = await query.order('created_at', { ascending: false });
+            if (error) throw error;
+            rawSuratRT = data || []; filteredSuratRT = rawSuratRT; renderSuratRT(1);
+        } catch (err) {
+            if(tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-rose-500 font-bold bg-rose-50 rounded-xl">Error: ${err.message}</td></tr>`;
+        }
     }
 
+    // 2. FUNGSI LOAD ADUAN
     async function loadAduanRT() {
+        const tbody = document.getElementById('tableAduanRT');
         if (!profilWarga?.rw) return;
-        let query = supabase.from('aduan_warga').select('*');
-        if (window.currentDashboardMode === 'RW') query = query.eq('rw', profilWarga.rw);
-        else query = query.eq('rw', profilWarga.rw).eq('rt', profilWarga.rt);
+        try {
+            let query = supabase.from('aduan_warga').select('*');
+            
+            if (profilWarga.role === 'rw') query = query.eq('rw', profilWarga.rw);
+            else query = query.eq('rw', profilWarga.rw).eq('rt', profilWarga.rt);
 
-        const { data, error } = await query.order('created_at', { ascending: false });
-        if (error) return;
-        rawAduanRT = data || []; filteredAduanRT = rawAduanRT; renderAduanRT(1);
+            const { data, error } = await query.order('created_at', { ascending: false });
+            if (error) throw error;
+            rawAduanRT = data || []; filteredAduanRT = rawAduanRT; renderAduanRT(1);
+        } catch (err) {
+            if(tbody) tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-rose-500 font-bold bg-rose-50 rounded-xl">Error: ${err.message}</td></tr>`;
+        }
     }
 
+    // 3. FUNGSI LOAD WARGA
     async function loadDaftarWargaRT() {
+        const tbody = document.getElementById('tableDaftarWargaRT');
         if (!profilWarga?.rw) return;
-        let query = supabase.from('data_penduduk').select('nama_lengkap, jenis_kelamin, pekerjaan, status_warga, wilayah_rt');
-        if (window.currentDashboardMode === 'RW') query = query.eq('rw', profilWarga.rw);
-        else query = query.eq('rw', profilWarga.rw).eq('rt', profilWarga.rt);
+        try {
+            let query = supabase.from('data_penduduk').select('nama_lengkap, jenis_kelamin, pekerjaan, status_warga, wilayah_rt, rt, rw');
+            
+            if (profilWarga.role === 'rw') query = query.eq('rw', profilWarga.rw);
+            else query = query.eq('rw', profilWarga.rw).eq('rt', profilWarga.rt);
 
-        const { data, error } = await query.order('nama_lengkap', { ascending: true });
-        if (error) { console.error("Gagal narik data warga RT:", error); return; }
-        
-        rawDaftarWargaRT = data || []; filteredDaftarWargaRT = rawDaftarWargaRT; renderDaftarWargaRT(1);
+            const { data, error } = await query.order('nama_lengkap', { ascending: true });
+            if (error) throw error;
+            rawDaftarWargaRT = data || []; filteredDaftarWargaRT = rawDaftarWargaRT; renderDaftarWargaRT(1);
+        } catch (err) {
+            if(tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-rose-500 font-bold bg-rose-50 rounded-xl">Error: ${err.message}</td></tr>`;
+        }
     }
 
     function renderSuratRT(page) {
@@ -415,24 +465,28 @@
             if (s.status !== 'Menunggu') { 
                 tombolAksi = `<span class="text-[9px] text-gray-500 font-bold uppercase bg-gray-100 px-2 py-1.5 rounded border border-gray-200 shadow-inner block"><span class="text-xs">🔒</span> Terkunci Desa</span>`;
             } else { 
-                // LOGIKA TOMBOL BERJENJANG (RT -> RW)
-                if (window.currentDashboardMode === 'RW') {
-                    // Tampilan buat Pak RW
+                // 🔥 LOGIKA TOMBOL BERDASARKAN ROLE MUTLAK 🔥
+                if (profilWarga.role === 'rw') {
+                    // Tampilan khusus Ketua RW
                     if (statusRtText === 'Menunggu ACC RW') { 
                         tombolAksi = `<div class="flex flex-col gap-1.5"><button onclick="updateStatusRT('${s.id}', 'Disetujui RW')" class="bg-blue-600 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-blue-700">ACC RW</button><button onclick="updateStatusRT('${s.id}', 'Ditolak RW')" class="bg-rose-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-rose-600">Tolak</button></div>`;
                     } else if (statusRtText === 'Menunggu ACC RT') { 
                         tombolAksi = `<span class="text-[9px] text-amber-600 font-bold bg-amber-50 px-2 py-1 rounded border border-amber-100 block text-center">Menunggu RT</span>`;
-                    } else if (statusRtText === 'Disetujui RW') { 
+                    } else if (statusRtText === 'Disetujui RW' || statusRtText === 'Bypass RT' || statusRtText === 'Laporan RT') { 
                         tombolAksi = `<button onclick="updateStatusRT('${s.id}', 'Menunggu ACC RW')" class="text-[10px] text-gray-500 underline hover:text-gray-800 font-bold">Batal ACC</button>`;
+                    } else {
+                        tombolAksi = '-';
                     }
                 } else {
-                    // Tampilan buat Pak RT
+                    // Tampilan khusus Ketua RT
                     if (statusRtText === 'Menunggu ACC RT') { 
                         tombolAksi = `<div class="flex flex-col gap-1.5"><button onclick="updateStatusRT('${s.id}', 'Menunggu ACC RW')" class="bg-emerald-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-emerald-600">ACC RT</button><button onclick="updateStatusRT('${s.id}', 'Ditolak RT')" class="bg-rose-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm hover:bg-rose-600">Tolak</button></div>`;
                     } else if (statusRtText === 'Menunggu ACC RW') { 
                         tombolAksi = `<button onclick="updateStatusRT('${s.id}', 'Menunggu ACC RT')" class="text-[10px] text-gray-500 underline hover:text-gray-800 font-bold">Batal ACC</button>`;
-                    } else if (statusRtText === 'Disetujui RW') { 
+                    } else if (statusRtText === 'Disetujui RW' || statusRtText === 'Bypass RT' || statusRtText === 'Laporan RT') { 
                         tombolAksi = `<span class="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded border border-emerald-100 block text-center">Sudah di RW</span>`;
+                    } else {
+                        tombolAksi = '-';
                     }
                 }
             }
@@ -459,26 +513,33 @@
     }
 
     window.updateStatusRT = async (id, statusBaru) => {
-        let payload = { status_rt: statusBaru };
+        // Cari data surat ini di memory (rawSuratRT)
+        const suratInfo = rawSuratRT.find(s => s.id === id);
+        
+        // 🔥 LOGIKA BYPASS: Kalau RT meng-ACC laporan milik Ketua RW
+        // Kita langsung set ke 'Disetujui RW' agar langsung ke Desa
+        if (statusBaru === 'Menunggu ACC RW' && suratInfo?.jenis_surat?.includes('LAPORAN RW')) {
+            statusBaru = 'Disetujui RW';
+        }
 
-        // 🔥 LOGIKA PINTAR: OTOMATISASI PENOLAKAN 🔥
+        const payload = { status_rt: statusBaru };
+
+        // Logika penolakan (Sama seperti sebelumnya)
         if (statusBaru.includes('Ditolak')) {
             payload.status = 'Ditolak';
-            payload.alasan_penolakan = 'Pengajuan ditolak oleh Pengurus Wilayah (RT/RW).';
-        } else {
-            payload.status = 'Menunggu';
+            payload.alasan_penolakan = 'Pengajuan ditolak oleh Pengurus Wilayah.';
+        } else if (statusBaru === 'Disetujui RW') {
+            payload.status = 'Menunggu'; // Menunggu eksekusi Desa
             payload.alasan_penolakan = null;
         }
 
-        // Eksekusi ke database
         const { error } = await supabase.from('pengajuan_surat').update(payload).eq('id', id);
         
         if (!error) {
             loadSuratRT();
+            if(typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Berhasil', `Status surat diperbarui ke: ${statusBaru}`);
         } else {
-            console.error("Gagal update status RT:", error);
-            if(typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
-            else alert("Gagal mengubah status: " + error.message);
+            alert("Gagal: " + error.message);
         }
     };
 
@@ -509,19 +570,36 @@
             let bStatus = a.status === 'Menunggu' ? 'bg-amber-100 text-amber-700' : (a.status === 'Diproses' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700');
             let fotoHTML = a.foto_url ? `<button type="button" onclick="lihatFoto('${a.foto_url}')" class="block mt-2 text-[10px] font-bold text-blue-600 hover:underline inline-flex items-center gap-1">📸 Lihat Foto</button>` : '';
             let deskripsiHTML = steril(a.deskripsi).replace(/\(Maps:\s*(-?\d+\.\d+),\s*(-?\d+\.\d+)\)/g, '<a href="https://www.google.com/maps?q=$1,$2" target="_blank" class="text-blue-600 font-bold underline bg-blue-50 px-2 py-0.5 rounded-lg hover:bg-blue-100 transition-colors inline-flex items-center gap-1 mt-1">🗺️ Buka di Google Maps</a>');
+           // 🔥 LOGIKA BARU: RT/RW Hanya Memantau, Eksekusi oleh Desa
             let tombolAduan = '-';
-            if (a.status === 'Menunggu') {
-                tombolAduan = `<div class="flex flex-col gap-1.5">
-                    <button onclick="updateStatusAduan('${a.id}', 'Diproses')" class="bg-emerald-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm">Proses</button>
-                    <button onclick="updateStatusAduan('${a.id}', 'Ditolak')" class="bg-rose-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] shadow-sm">Tolak</button>
-                </div>`;
+            
+            if (a.status === 'Menunggu' || a.status === 'Diproses') {
+                tombolAduan = `<span class="text-[9px] text-slate-500 font-bold uppercase bg-slate-100 px-2 py-1.5 rounded border border-slate-200 shadow-inner block text-center" title="Aduan ini ditindaklanjuti oleh Admin Desa">
+                    <span class="text-xs">🏢</span> Wewenang Desa
+                </span>`;
+            } else if (a.status === 'Selesai') {
+                tombolAduan = `<span class="text-[9px] text-emerald-600 font-bold uppercase bg-emerald-50 px-2 py-1.5 rounded border border-emerald-200 block text-center">✅ Diselesaikan Desa</span>`;
+            } else if (a.status === 'Ditolak') {
+                tombolAduan = `<span class="text-[9px] text-rose-600 font-bold uppercase bg-rose-50 px-2 py-1.5 rounded border border-rose-200 block text-center">❌ Ditolak Desa</span>`;
             }
 
             html += `<tr class="hover:bg-rose-50/30 border-b border-gray-50">
-                <td class="p-4 align-top"><p class="font-bold text-gray-900">${steril(a.nama_pelapor)}</p><p class="text-[10px] text-gray-500 mt-1">${tgl}</p></td>
-                <td class="p-4 align-top"><span class="text-[9px] font-bold text-rose-600 uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100 block w-max mb-1">${steril(a.kategori)}</span><p class="text-sm font-bold text-gray-800">${steril(a.judul)}</p><p class="text-xs text-gray-600 mt-1 whitespace-pre-wrap">${deskripsiHTML}</p>${fotoHTML}</td>
-                <td class="p-4 text-center align-top"><span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase ${bStatus} border shadow-sm">${a.status}</span></td>
-                <td class="p-4 text-center align-middle">${tombolAduan}</td>
+                <td class="p-4 align-top">
+                    <p class="font-bold text-gray-900">${steril(a.nama_pelapor)}</p>
+                    <p class="text-[10px] text-gray-500 mt-1">${tgl}</p>
+                </td>
+                <td class="p-4 align-top">
+                    <span class="text-[9px] font-bold text-rose-600 uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100 block w-max mb-1">${steril(a.kategori)}</span>
+                    <p class="text-sm font-bold text-gray-800">${steril(a.judul)}</p>
+                    <p class="text-xs text-gray-600 mt-1 whitespace-pre-wrap">${deskripsiHTML}</p>
+                    ${fotoHTML}
+                </td>
+                <td class="p-4 text-center align-top">
+                    <span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase ${bStatus} border shadow-sm">${a.status}</span>
+                </td>
+                <td class="p-4 text-center align-middle">
+                    ${tombolAduan}
+                </td>
             </tr>`;
         });
         tbody.innerHTML = html; paginasiContainer.innerHTML = createTabPaginationUI('AduanRT', page, filteredAduanRT.length);
@@ -778,9 +856,9 @@
     document.getElementById('btnLogoutWarga')?.addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = '/'; });
     document.getElementById('btnLogout')?.addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = '/'; });
 
-    // --- SUBMIT LAPORAN KHUSUS RT ---
+   // --- SUBMIT LAPORAN KHUSUS PENGURUS WILAYAH ---
     document.getElementById('formLaporanRT')?.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Mencegah halaman refresh otomatis
+        e.preventDefault();
         
         const btn = document.getElementById('btnSubmitLaporanRT');
         const kategori = document.getElementById('laporan_kategori').value;
@@ -788,59 +866,49 @@
         const nikTarget = document.getElementById('laporan_nik_warga').value;
         const keterangan = document.getElementById('laporan_keterangan').value;
 
-        // Validasi Kategori
         if (!kategori) {
             if (typeof showCustomAlert !== 'undefined') showCustomAlert('warning', 'Pilih Kategori!', 'Kategori laporan harus diisi.');
-            else alert('Kategori laporan harus diisi.');
             return;
         }
 
-        // Animasi Tombol Loading
         btn.disabled = true;
         btn.innerHTML = "<i class='bi bi-hourglass-split animate-spin'></i> Mengirim...";
 
         try {
-            // Label khusus biar Admin gampang ngenalin
-            const jenisSuratKhusus = `LAPORAN RT: ${kategori}`;
-            
-            // Gabungin data warga yang dilaporin ke dalam kolom keterangan
-            const detailKeperluan = `Target Warga: ${namaTarget || 'Tidak spesifik'} (NIK: ${nikTarget || '-'}) \nKeterangan RT:\n${keterangan}`.trim();
+            const labelJabatan = profilWarga.role === 'rw' ? 'RW' : 'RT';
+            const jenisSuratKhusus = `LAPORAN ${labelJabatan}: ${kategori}`;
+            const detailKeperluan = `Target Warga: ${namaTarget || 'Tidak spesifik'} (NIK: ${nikTarget || '-'}) \nKeterangan ${labelJabatan}:\n${keterangan}`.trim();
 
-            // 🔥 PERBAIKAN: Masukkan data diri Pak RT ke kolom wajib 🔥
-            // 🔥 PERBAIKAN FINAL: Tambah status_rt otomatis bypass 🔥
             const { error } = await supabase.from('pengajuan_surat').insert({
                 user_id: currentUser.id, 
-                nama_lengkap: profilWarga.nama_lengkap || 'Ketua RT', 
+                nama_lengkap: profilWarga.nama_lengkap || `Ketua ${labelJabatan}`, 
                 nik: profilWarga.nik || '-',                          
                 wilayah_rt: profilWarga.wilayah_rt || 'Belum Diset',
-                rt: profilWarga.rt, // 🔥 TAMBAHAN TRANSISI
-                rw: profilWarga.rw, // 🔥 TAMBAHAN TRANSISI
+                rt: profilWarga.rt, 
+                rw: profilWarga.rw, 
                 jenis_surat: jenisSuratKhusus,
                 keperluan: detailKeperluan,
                 status: 'Menunggu',
-                status_rt: 'Menunggu ACC RW', // <--- Diteruskan langsung ke RW
+                // 🔥 LOGIKA BARU: RT langsung ke RW, RW balik ke RT dulu
+                status_rt: profilWarga.role === 'rt' ? 'Menunggu ACC RW' : 'Menunggu ACC RT', 
                 alamat: '-'
             });
 
             if (error) throw error;
 
-            // Berhasil
-            if (typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Laporan Terkirim!', 'Laporan Anda telah masuk ke meja Admin Desa.');
-            else alert('Laporan Terkirim!');
-            
-            // Bersihkan form
+            if (typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Laporan Terkirim!', 'Laporan berhasil diteruskan sesuai alur wilayah.');
             document.getElementById('formLaporanRT').reset();
+            if (typeof loadSuratRT === 'function') loadSuratRT();
 
         } catch (error) {
-            console.error("Gagal kirim laporan:", error);
+            console.error(error);
             if (typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', error.message);
-            else alert('Gagal: ' + error.message);
         } finally {
-            // Kembalikan tombol ke keadaan semula
             btn.disabled = false;
-            btn.innerHTML = "<i class='bi bi-send-fill'></i> Kirim Laporan ke Admin Desa";
+            btn.innerHTML = "<i class='bi bi-send-fill'></i> Kirim Laporan";
         }
     });
+
     // === LOGIKA TAB SURAT & ADUAN ===
     window.pindahTabWarga = (tab) => {
         const tabSurat = document.getElementById('tab_surat');

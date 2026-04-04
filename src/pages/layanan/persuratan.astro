@@ -91,21 +91,24 @@ import BaseLayout from '../../layout/BaseLayout.astro';
     </main>
     <script>
         import { supabase } from '../../lib/supabase.js';
-
-        let userProfile = null; // Tambahkan wadah untuk nyimpen profil
+        
+        let profilWargaAktif = null; // 🔥 Wadah penyimpan domisili warga
 
         async function cekAksesMasuk() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error', 'Akses Ditolak!', 'Anda harus Masuk/Daftar terlebih dahulu untuk menggunakan layanan E-Surat.');
-                else alert('Akses Ditolak! Anda harus login terlebih dahulu.');
+                if(typeof showCustomAlert !== 'undefined') {
+                    await showCustomAlert('error', 'Akses Ditolak!', 'Anda harus Masuk/Daftar terlebih dahulu untuk menggunakan layanan E-Surat.');
+                } else {
+                    alert('Akses Ditolak! Anda harus login terlebih dahulu.');
+                }
                 window.location.href = '/';
                 return;
             }
 
-            // 🔥 TARIK DATA WILAYAH WARGA 🔥
-            const { data } = await supabase.from('profil_user').select('rt, rw, wilayah_rt').eq('id', session.user.id).single();
-            userProfile = data;
+            // 🔥 TARIK DATA RT & RW WARGA DARI DATABASE 🔥
+            const { data: profil } = await supabase.from('profil_user').select('rt, rw, wilayah_rt').eq('id', session.user.id).single();
+            profilWargaAktif = profil;
 
             document.getElementById('mainContent').classList.remove('hidden');
         }
@@ -332,6 +335,11 @@ import BaseLayout from '../../layout/BaseLayout.astro';
 
                 btn.innerText = "Mengirim Pengajuan...";
 
+                let statusAwal = 'Menunggu ACC RT';
+                if (!profilWargaAktif?.rt || profilWargaAktif?.rt === '00' || profilWargaAktif?.rt === '') {
+                    statusAwal = 'Menunggu ACC RW';
+                }
+
                 // 3. Simpan ke Tabel `pengajuan_surat`
                 const payload = {
                     nik: document.getElementById('inputNik').value,
@@ -342,12 +350,7 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                     file_persyaratan: JSON.stringify(urlsPersyaratan),
                     status: 'Menunggu',
                     status_rt: 'Menunggu ACC RT',
-                    user_id: userId,
-                    
-                    // 🔥 WAJIB DIKIRIM AGAR PAK RT BISA BACA SURATNYA 🔥
-                    rt: userProfile?.rt || null,
-                    rw: userProfile?.rw || null,
-                    wilayah_rt: userProfile?.wilayah_rt || 'Belum Diset'
+                    user_id: userId
                 };
 
                 const { error: dbError } = await supabase.from('pengajuan_surat').insert([payload]);

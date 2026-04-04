@@ -250,6 +250,7 @@ import BaseLayout from '../../layout/BaseLayout.astro';
 
                 // 2. SIMPAN KE TABEL `aduan_warga`
                 document.getElementById('statusPesan').innerText = "Menyimpan laporan ke sistem desa...";
+                
                 const payload = {
                     nama_pelapor: userProfile.nama_lengkap || userProfile.nama || 'Warga',
                     kategori: document.getElementById('kategori').value,
@@ -257,7 +258,12 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                     deskripsi: gabunganDeskripsi, // <--- Lokasi & koordinat masuk sini!
                     foto_url: fotoUrl, 
                     status: 'Menunggu',
-                    wilayah_rt: userProfile.wilayah_rt,
+                    
+                    // 🔥 WAJIB DIKIRIM AGAR RT/RW BISA MEMANTAU ADUAN INI 🔥
+                    rt: userProfile.rt || null,
+                    rw: userProfile.rw || null,
+                    wilayah_rt: userProfile.wilayah_rt || 'Belum Diset',
+                    
                     user_id: userProfile.id
                 };
 
@@ -272,7 +278,7 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                 }
 
                 formAduan.reset();
-                window.location.href = '/warga'; // Balikin warga ke dashboard setelah lapor
+                window.location.href = '/pengguna'; // Balikin warga ke dashboard setelah lapor
 
             } catch (err) {
                 console.error(err);
