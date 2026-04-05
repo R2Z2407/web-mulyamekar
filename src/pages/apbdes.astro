@@ -91,18 +91,19 @@ import BaseLayout from '../layout/BaseLayout.astro';
                 
                 let rekap = {
                     Pendapatan: { anggaran: 0, realisasi: 0, warna: 'emerald' },
-                    Belanja: { anggaran: 0, realisasi: 0, warna: 'amber' },
-                    Pembiayaan: { anggaran: 0, realisasi: 0, warna: 'blue' }
+                    Belanja: { anggaran: 0, realisasi: 0, warna: 'rose' },     // Diubah ke Merah/Rose
+                    Pembiayaan: { anggaran: 0, realisasi: 0, warna: 'amber' }   // Diubah ke Oranye/Amber
                 };
                 
                 let htmlRincian = '<div class="grid lg:grid-cols-2 gap-6">';
-                const kategoriUnik = ['Pendapatan', 'Belanja', 'Pembiayaan'];
+                const kategoriUnik = ['Pendapatan', 'Pembiayaan', 'Belanja'];
 
                 kategoriUnik.forEach(kat => {
                     const itemKategori = dataTahunIni.filter(d => d.kategori === kat);
                     
                     if(itemKategori.length > 0) {
                         const warnaTema = rekap[kat].warna;
+ 
                         htmlRincian += `
                             <div class="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 shadow-sm">
                                 <div class="flex items-center gap-3 mb-6 border-b border-gray-200 pb-4">
@@ -113,7 +114,7 @@ import BaseLayout from '../layout/BaseLayout.astro';
                                 </div>
                                 <div class="space-y-4">
                         `;
-                        
+
                         itemKategori.forEach((item, index) => {
                             rekap[kat].anggaran += item.anggaran;
                             rekap[kat].realisasi += item.realisasi;
@@ -121,14 +122,14 @@ import BaseLayout from '../layout/BaseLayout.astro';
                             const persentase = item.anggaran > 0 ? Math.round((item.realisasi / item.anggaran) * 100) : 0;
                             const persenAman = persentase > 100 ? 100 : persentase;
 
-                            // 🌟 LOGIKA INDIKATOR STATUS 🌟
+                            // LOGIKA INDIKATOR STATUS
                             let statusText, statusColor, statusIcon;
                             if (kat === 'Pendapatan') {
                                 if (persentase >= 100) { statusText = 'Target Terlampaui'; statusColor = 'emerald'; statusIcon = '🌟'; }
                                 else if (persentase >= 75) { statusText = 'Hampir Memenuhi Target'; statusColor = 'blue'; statusIcon = '🔵'; }
                                 else if (persentase > 0) { statusText = 'Masih Jauh dari Target'; statusColor = 'amber'; statusIcon = '🟡'; }
                                 else { statusText = 'Belum Ada Pemasukan'; statusColor = 'gray'; statusIcon = '⏳'; }
-                            } else { // Belanja & Pembiayaan
+                            } else { 
                                 if (persentase > 100) { statusText = 'Anggaran Membengkak'; statusColor = 'rose'; statusIcon = '⚠️'; }
                                 else if (persentase === 100) { statusText = 'Tepat Sasaran'; statusColor = 'emerald'; statusIcon = '✅'; }
                                 else if (persentase >= 50) { statusText = 'Penyerapan Sedang'; statusColor = 'blue'; statusIcon = '🔵'; }
@@ -136,8 +137,7 @@ import BaseLayout from '../layout/BaseLayout.astro';
                                 else { statusText = 'Belum Ada Realisasi'; statusColor = 'gray'; statusIcon = '⏳'; }
                             }
 
-                            // 🌟 LOGIKA PARSER JSON & JUDUL 🌟
-                            // Jika uraian berisi JSON, kita cari kolom lain buat dijadikan judul.
+                            // PARSER JSON & JUDUL
                             let judulUraian = steril(item.uraian);
                             let htmlListRincian = '';
 
@@ -145,24 +145,25 @@ import BaseLayout from '../layout/BaseLayout.astro';
                                 let dataRincian = null;
                                 if (item.uraian && typeof item.uraian === 'string' && item.uraian.trim().startsWith('[')) {
                                     dataRincian = JSON.parse(item.uraian);
-                                    // Fallback Title (Kalau uraian kepakai JSON, cari nama_kegiatan/judul di db)
                                     judulUraian = steril(item.nama_kegiatan || item.nama_program || item.judul || item.bidang || 'Detail Kegiatan / Program');
                                 } else if (item.rincian && typeof item.rincian === 'string' && item.rincian.trim().startsWith('[')) {
                                     dataRincian = JSON.parse(item.rincian);
                                 }
 
                                 if (Array.isArray(dataRincian) && dataRincian.length > 0) {
-                                    htmlListRincian = '<div class="mt-4 space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-inner">';
+                                    htmlListRincian = '<div class="mt-5 space-y-3 bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-100 shadow-inner">';
                                     dataRincian.forEach(detail => {
                                         const namaDetail = detail.nama || detail.uraian || 'Item Kegiatan';
                                         const hargaDetail = detail.harga || detail.anggaran || 0;
+   
+                                        // 🔥 2. FONT DIPERBESAR (Ramah Lansia) 🔥
                                         htmlListRincian += `
-                                            <div class="flex justify-between items-center gap-3 border-b border-slate-200/60 pb-2 last:border-0 last:pb-0">
-                                                <div class="flex items-start gap-2 text-[11px] text-slate-600 font-bold leading-tight">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-${warnaTema}-400 mt-1 shrink-0"></span>
+                                            <div class="flex justify-between items-center gap-3 border-b border-slate-200/60 pb-3 last:border-0 last:pb-0">
+                                                <div class="flex items-start gap-2.5 text-sm md:text-base text-slate-700 font-bold leading-snug">
+                                                    <span class="w-2 h-2 rounded-full bg-${warnaTema}-400 mt-1.5 shrink-0"></span>
                                                     <span>${steril(namaDetail)}</span>
                                                 </div>
-                                                <span class="text-[10px] font-bold text-slate-800 bg-white px-2 py-1 rounded shadow-sm border border-slate-200 shrink-0">
+                                                <span class="text-xs md:text-sm font-black text-slate-800 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 shrink-0">
                                                     ${formatRp(hargaDetail)}
                                                 </span>
                                             </div>
@@ -174,59 +175,56 @@ import BaseLayout from '../layout/BaseLayout.astro';
                                 console.warn("Bukan JSON:", e);
                             }
 
-                            // ID UNIK UNTUK AKORDION
                             const accordionId = `rincian-${index}-${kat}`;
-
                             htmlRincian += `
-                                <div class="group flex flex-col justify-between bg-white p-4 md:p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all">
+                                <div class="group flex flex-col justify-between bg-white p-5 md:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all">
                                     
                                     <div class="cursor-pointer flex justify-between items-start gap-4" onclick="toggleRincian('${accordionId}')">
                                         <div class="flex-grow">
-                                            <h4 class="font-extrabold text-gray-800 text-sm group-hover:text-${warnaTema}-600 transition-colors leading-snug">${judulUraian}</h4>
+                                            <h4 class="font-extrabold text-gray-800 text-base md:text-lg group-hover:text-${warnaTema}-600 transition-colors leading-snug">${judulUraian}</h4>
                                             
-                                            <div class="inline-flex items-center gap-1.5 mt-2 text-[9px] md:text-[10px] font-bold text-${statusColor}-700 bg-${statusColor}-50 px-2 py-1 rounded-md border border-${statusColor}-100">
+                                            <div class="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-${statusColor}-700 bg-${statusColor}-50 px-2.5 py-1 rounded-md border border-${statusColor}-100">
                                                 <span>${statusIcon}</span> ${statusText}
                                             </div>
                                         </div>
                                         
                                         <div class="flex flex-col items-end shrink-0 gap-2">
-                                            <span class="text-[11px] font-black text-${warnaTema}-600 bg-${warnaTema}-50 px-2.5 py-1 rounded-lg border border-${warnaTema}-100">
+                                            <span class="text-xs font-black text-${warnaTema}-600 bg-${warnaTema}-50 px-3 py-1 rounded-lg border border-${warnaTema}-100">
                                                 ${persenAman}%
                                             </span>
-                                            <svg id="icon-${accordionId}" class="w-5 h-5 text-gray-400 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                            <svg id="icon-${accordionId}" class="w-6 h-6 text-gray-400 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                         </div>
-                                    </div>
+                                     </div>
 
-                                    <div id="${accordionId}" class="hidden mt-4 pt-4 border-t border-gray-50 transition-all">
+                                    <div id="${accordionId}" class="hidden mt-5 pt-5 border-t border-gray-100 transition-all">
                                         ${htmlListRincian}
 
-                                        <div class="mt-4 flex justify-between text-[11px] mb-2 font-mono bg-gray-50/50 p-3 rounded-xl border border-gray-100">
-                                            <span class="text-gray-500 flex flex-col">
-                                                <span class="text-[9px] uppercase tracking-wider mb-0.5 font-bold">Anggaran</span>
-                                                <span class="font-bold text-gray-800">${formatRp(item.anggaran)}</span>
+                                        <div class="mt-5 flex justify-between text-xs md:text-sm mb-3 font-mono bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                                            <span class="text-gray-600 flex flex-col">
+                                                <span class="text-[10px] md:text-xs uppercase tracking-wider mb-1 font-bold">Anggaran</span>
+                                                <span class="font-black text-gray-900">${formatRp(item.anggaran)}</span>
                                             </span>
-                                            <span class="text-gray-500 flex flex-col text-right">
-                                                <span class="text-[9px] uppercase tracking-wider mb-0.5 font-bold">Realisasi</span>
-                                                <span class="font-bold text-${warnaTema}-700">${formatRp(item.realisasi)}</span>
+                                            <span class="text-gray-600 flex flex-col text-right">
+                                                <span class="text-[10px] md:text-xs uppercase tracking-wider mb-1 font-bold">Realisasi</span>
+                                                <span class="font-black text-${warnaTema}-700">${formatRp(item.realisasi)}</span>
                                             </span>
                                         </div>
                                         
-                                        <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden shadow-inner">
-                                            <div class="bg-${warnaTema}-500 h-2.5 rounded-full transition-all duration-1000" style="width: ${persenAman}%"></div>
+                                        <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden shadow-inner">
+                                            <div class="bg-${warnaTema}-500 h-3 rounded-full transition-all duration-1000" style="width: ${persenAman}%"></div>
                                         </div>
                                     </div>
-                                </div>
+                                 </div>
                             `;
                         });
 
                         htmlRincian += `</div></div>`;
                     }
                 });
-                
                 htmlRincian += '</div>';
                 document.getElementById('rincianContainer').innerHTML = htmlRincian;
 
-                // 6. Cetak Ringkasan Atas
+                // 6. Cetak Ringkasan Atas (KARTU ATAS DISESUAIKAN WARNANYA)
                 let htmlRingkasan = '';
                 Object.keys(rekap).forEach(kat => {
                     const dataRekap = rekap[kat];
@@ -234,8 +232,8 @@ import BaseLayout from '../layout/BaseLayout.astro';
                     
                     let bgClass = ''; let iconClass = '';
                     if(kat === 'Pendapatan') { bgClass = 'from-emerald-500 to-teal-600'; iconClass = 'text-emerald-100'; }
-                    if(kat === 'Belanja') { bgClass = 'from-amber-400 to-orange-500'; iconClass = 'text-amber-100'; }
-                    if(kat === 'Pembiayaan') { bgClass = 'from-blue-500 to-indigo-600'; iconClass = 'text-blue-100'; }
+                    if(kat === 'Pembiayaan') { bgClass = 'from-amber-400 to-orange-500'; iconClass = 'text-amber-100'; } // Orange
+                    if(kat === 'Belanja') { bgClass = 'from-rose-500 to-rose-600'; iconClass = 'text-rose-100'; } // Merah
 
                     htmlRingkasan += `
                         <div class="bg-gradient-to-br ${bgClass} p-6 md:p-8 rounded-3xl shadow-lg text-white relative overflow-hidden transform hover:-translate-y-1 transition-transform">

@@ -6,165 +6,189 @@ import BaseLayout from '../../layout/BaseLayout.astro';
 <BaseLayout title="Dashboard Admin - Desa Mulyamekar">
     
     <main class="flex-grow pt-20 pb-16 bg-slate-50 min-h-screen">
-    <div class="container mx-auto px-4 md:px-6 max-w-7xl">
-        
-        <!-- HERO HEADER (desktop tetap elegan, mobile lebih ringkas) -->
-        <div class="bg-gradient-to-br from-teal-900 via-teal-800 to-teal-950 rounded-3xl p-8 md:p-12 lg:p-16 text-white shadow-2xl mb-12 flex flex-col lg:flex-row justify-between items-center gap-8 relative overflow-hidden">
-            <div class="absolute -right-12 -bottom-12 w-72 h-72 bg-teal-700/30 rounded-full blur-3xl"></div>
-            <div class="absolute -left-20 -top-10 w-56 h-56 bg-teal-600/20 rounded-full blur-3xl"></div>
-            
-            <div class="relative z-10 text-center lg:text-left">
-                <p class="text-amber-400 font-semibold text-sm tracking-[2px] uppercase mb-2">Pusat Kendali Desa</p>
-                <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">Dashboard Admin</h1>
-                <p class="text-teal-100 text-base md:text-lg max-w-md">Kelola layanan surat, aduan warga, publikasi berita, hingga keuangan desa dari satu tempat.</p>
+        <div class="container mx-auto px-4 md:px-6 max-w-7xl">
+
+            <div class="bg-gradient-to-br from-teal-900 via-teal-800 to-teal-950 rounded-3xl p-8 md:p-12 lg:p-16 text-white shadow-2xl mb-12 flex flex-col lg:flex-row justify-between items-center gap-8 relative overflow-hidden">
+                <div class="absolute -right-12 -bottom-12 w-72 h-72 bg-teal-700/30 rounded-full blur-3xl"></div>
+                <div class="absolute -left-20 -top-10 w-56 h-56 bg-teal-600/20 rounded-full blur-3xl"></div>
+
+                <div class="relative z-10 text-center lg:text-left">
+                    <p class="text-amber-400 font-semibold text-sm tracking-[2px] uppercase mb-2">Pusat Kendali Desa</p>
+                    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">Dashboard Admin</h1>
+                    <p class="text-teal-100 text-base md:text-lg max-w-md">Kelola layanan surat, aduan warga, publikasi berita, hingga keuangan desa dari satu tempat.</p>
+                </div>
+
+                <div class="relative z-10 w-full lg:w-auto">
+                    <button id="btnLogout" class="group w-full lg:w-auto bg-white/10 hover:bg-white/20 hover:shadow-xl backdrop-blur-md border border-white/30 hover:border-white/50 text-white px-8 md:px-10 py-4 rounded-3xl font-semibold transition-all duration-300 flex items-center justify-center gap-3 active:scale-95">
+                        Keluar Sistem
+                    </button>
+                </div>
             </div>
-            
-            <div class="relative z-10 w-full lg:w-auto">
-        <button id="btnLogout" 
-                class="group w-full lg:w-auto bg-white/10 hover:bg-white/20 hover:shadow-xl backdrop-blur-md border border-white/30 hover:border-white/50 text-white px-8 md:px-10 py-4 rounded-3xl font-semibold transition-all duration-300 flex items-center justify-center gap-3 active:scale-95">
-            Keluar Sistem
-        </button>
-    </div>
-        </div>
 
-        <!-- GRID CARDS – RAPI DI MOBILE -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-            
-            <!-- Contoh card (semua card lain ikuti pola yang sama) -->
-            <a href="/admin/layanan" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center">
-                <div class="relative w-14 h-14 md:w-16 md:h-16 bg-teal-50 text-teal-600 rounded-3xl flex items-center justify-center mb-4 md:mb-6 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    <span id="badgeSurat" class="hidden absolute -top-1 -right-1 bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-2xl border-2 border-white shadow">0</span>
-                </div>
-                <h2 class="font-semibold text-teal-950 text-lg md:text-xl">Surat Warga</h2>
-            </a>
-            <a href="/admin/aduan" class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-amber-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center">
-                <div class="relative w-16 h-16 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
-                    <span id="badgeAduan" class="hidden absolute -top-1 -right-1 bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-2xl border-2 border-white shadow">0</span>
-                </div>
-                <h2 class="font-semibold text-teal-950 text-xl">Aduan Warga</h2>
-            </a>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-start mt-12">
 
-            <a href="/admin/penduduk" class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-blue-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
-                <div class="absolute top-6 right-6 bg-blue-500 text-white text-xs font-bold px-4 py-1 rounded-2xl">DUKCAPIL</div>
-                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
-                </div>
-                <h2 class="font-semibold text-teal-950 text-xl">Data Penduduk</h2>
-                <p id="infoPenduduk" class="text-blue-600 font-medium bg-blue-50 mt-3 px-5 py-2 rounded-2xl text-sm">Memuat...</p>
-            </a>
-
-            <a href="/admin/wilayah" class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-indigo-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
-                <div class="absolute top-6 right-6 bg-indigo-500 text-white text-xs font-bold px-4 py-1 rounded-2xl">PEMETAAN</div>
-                <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
-                </div>
-                <h2 class="font-semibold text-teal-950 text-xl">Wilayah RT/RW</h2>
-                <p id="infoWilayah" class="text-indigo-600 font-medium bg-indigo-50 mt-3 px-5 py-2 rounded-2xl text-sm">Memuat...</p>
-            </a>
-
-            <a href="/admin/umkm" class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-orange-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center">
-                <div class="w-16 h-16 bg-orange-50 text-orange-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-orange-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
-                </div>
-                <h2 class="font-semibold text-orange-950 text-xl">Kelola UMKM</h2>
-                <p id="infoUmkm" class="text-orange-600 font-medium bg-orange-50 mt-3 px-5 py-2 rounded-2xl text-sm">Memuat...</p>
-            </a>
-
-            <a href="/admin/bansos" class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-rose-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
-                <div class="absolute top-6 right-6 bg-rose-500 text-white text-xs font-bold px-4 py-1 rounded-2xl">SOSIAL</div>
-                <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-rose-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                </div>
-                <h2 class="font-semibold text-teal-950 text-xl">Kelola Bansos</h2>
-                <p id="infoBansos" class="text-rose-600 font-medium bg-rose-50 mt-3 px-5 py-2 rounded-2xl text-sm">Memuat...</p>
-            </a>
-
-            <a href="/admin/apbdes" class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-emerald-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
-                <div class="absolute top-6 right-6 bg-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-2xl">KEUANGAN</div>
-                <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <h2 class="font-semibold text-teal-950 text-xl">Kelola APBDes</h2>
-            </a>
-
-            <a href="/admin/berita" class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center">
-                <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
-                </div>
-                <h2 class="font-semibold text-teal-950 text-xl">Portal Berita</h2>
-            </a>
-
-            <a href="/admin/statistik" class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center">
-                <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                </div>
-                <h2 class="font-semibold text-teal-950 text-xl">Statistik Desa</h2>
-            </a>
-
-            <a href="/admin/laporan" class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center">
-                <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                </div>
-                <h2 class="font-semibold text-teal-950 text-xl">Export Laporan</h2>
-            </a>
-
-            <a href="/admin/akun" class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center">
-                <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                </div>
-                <h2 class="font-semibold text-teal-950 text-xl">Hak Akses</h2>
-            </a>
-
-            <a href="/admin/pemerintahan" class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
-                <div class="absolute top-6 right-6 bg-teal-600 text-white text-xs font-bold px-4 py-1 rounded-2xl">PROFIL</div>
-                <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                </div>
-                <h2 class="font-semibold text-teal-950 text-xl">Pemerintahan</h2>
-            </a>
-
-            <a href="/admin/profil-desa" class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-amber-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
-                <div class="absolute top-6 right-6 bg-amber-500 text-white text-xs font-bold px-4 py-1 rounded-2xl">WEBSITE</div>
-                <div class="w-16 h-16 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                </div>
-                <h2 class="font-semibold text-teal-950 text-xl">Edit Profil Desa</h2>
-                <p class="text-amber-600 text-sm mt-2">Visi, Misi & Sejarah</p>
-            </a>
-            <a href="/admin/slider" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md hover:border-teal-300 transition-all group relative overflow-hidden">
-                <div class="absolute -right-6 -top-6 w-24 h-24 bg-teal-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-                <div class="relative z-10 flex items-start gap-4">
-                    <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-teal-600 group-hover:text-white transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    </div>
+                <div class="space-y-10">
+                    
                     <div>
-                        <h3 class="text-lg font-bold text-gray-800 group-hover:text-teal-700 transition-colors">Slider Beranda</h3>
-                        <p class="text-sm text-gray-500 mt-1">Ganti gambar banner yang tampil di halaman depan website Mulyamekar.</p>
+                        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-3 border-b border-slate-200 pb-2">
+                            <div class="w-1.5 h-6 bg-teal-500 rounded-full"></div>
+                            PELAYANAN WARGA
+                        </h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <a href="/admin/layanan" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-teal-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
+                                <span id="badgeSurat" class="hidden absolute top-4 right-4 md:top-6 md:right-6 bg-rose-500 text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-2xl shadow-md border-2 border-white z-10 animate-pulse">0</span>
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-teal-50 text-teal-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-teal-600 group-hover:text-white transition-all duration-300">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Surat Warga</h2>
+                            </a>
+                            <a href="/admin/aduan" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-amber-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
+                                <span id="badgeAduan" class="hidden absolute top-4 right-4 md:top-6 md:right-6 bg-rose-500 text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-2xl shadow-md border-2 border-white z-10 animate-pulse">0</span>
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Aduan Warga</h2>
+                            </a>
+                        </div>
                     </div>
+
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-3 border-b border-slate-200 pb-2">
+                            <div class="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
+                            KEUANGAN & BANTUAN
+                        </h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <a href="/admin/apbdes" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-emerald-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Kelola APBDes</h2>
+                            </a>
+                            <a href="/admin/bansos" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-rose-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-rose-50 text-rose-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-rose-600 group-hover:text-white transition-all duration-300">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Kelola Bansos</h2>
+                                <p id="infoBansos" class="text-rose-600 font-medium bg-rose-50 mt-3 px-3 py-1 rounded-xl text-[10px] md:text-xs w-full text-center">Memuat...</p>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-3 border-b border-slate-200 pb-2">
+                            <div class="w-1.5 h-6 bg-purple-500 rounded-full"></div>
+                            PUBLIKASI & LAPORAN
+                        </h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <a href="/admin/berita" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-purple-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Portal Berita</h2>
+                            </a>
+                            <a href="/admin/statistik" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-purple-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Statistik Desa</h2>
+                            </a>
+                            <a href="/admin/laporan" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-purple-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Export Laporan</h2>
+                            </a>
+                        </div>
+                    </div>
+
                 </div>
-            </a>
-            </div>    
-        </div>
+
+                <div class="space-y-10">
+
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-3 border-b border-slate-200 pb-2">
+                            <div class="w-1.5 h-6 bg-blue-500 rounded-full"></div>
+                            DATA KEPENDUDUKAN & WILAYAH
+                        </h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <a href="/admin/penduduk" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-blue-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 relative z-0">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Data Penduduk</h2>
+                                <p id="infoPenduduk" class="text-blue-600 font-medium bg-blue-50 mt-3 px-3 py-1 rounded-xl text-[10px] md:text-xs w-full text-center relative z-0">Memuat...</p>
+                            </a>
+                            <a href="/admin/wilayah" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-indigo-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 relative z-0">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Wilayah RT/RW</h2>
+                                <p id="infoWilayah" class="text-indigo-600 font-medium bg-indigo-50 mt-3 px-3 py-1 rounded-xl text-[10px] md:text-xs w-full text-center relative z-0">Memuat...</p>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-3 border-b border-slate-200 pb-2">
+                            <div class="w-1.5 h-6 bg-orange-500 rounded-full"></div>
+                            EKONOMI DESA
+                        </h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <a href="/admin/umkm" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-orange-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-orange-50 text-orange-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-orange-600 group-hover:text-white transition-all duration-300">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-orange-950 text-sm md:text-base">Manajemen UMKM</h2>
+                                <p id="infoUmkm" class="text-orange-600 font-medium bg-orange-50 mt-3 px-3 py-1 rounded-xl text-[10px] md:text-xs w-full text-center">Memuat...</p>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-3 border-b border-slate-200 pb-2">
+                            <div class="w-1.5 h-6 bg-slate-500 rounded-full"></div>
+                            PENGATURAN
+                        </h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <a href="/admin/profil-desa" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-slate-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-slate-100 text-slate-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-slate-600 group-hover:text-white transition-all duration-300 relative z-0">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Edit Profil Desa</h2>
+                            </a>
+                            <a href="/admin/slider" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-slate-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-slate-100 text-slate-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-slate-600 group-hover:text-white transition-all duration-300 relative z-0">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Slider Beranda</h2>
+                            </a>
+                            <a href="/admin/pemerintahan" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-slate-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center relative overflow-hidden">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-slate-100 text-slate-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-slate-700 group-hover:text-white transition-all duration-300 relative z-0">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Pemerintahan</h2>
+                            </a>
+                            <a href="/admin/akun" class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 hover:border-slate-400 hover:shadow-2xl transition-all duration-300 group flex flex-col items-center text-center">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-slate-100 text-slate-600 rounded-3xl flex items-center justify-center mb-4 group-hover:bg-slate-600 group-hover:text-white transition-all duration-300">
+                                    <svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                </div>
+                                <h2 class="font-semibold text-teal-950 text-sm md:text-base">Hak Akses Sistem</h2>
+                            </a>
+                        </div>
+                    </div>
+
+                </div> </div> </div>
     </main>
 
     <script>
         import { supabase } from '../../lib/supabase.js';
-
+        
         async function initPage() {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 if (!session) { window.location.href = '/'; return; }
 
-                const { data: profil, error } = await supabase
-                    .from('profil_user')
-                    .select('role')
-                    .eq('id', session.user.id)
-                    .single();
-
+                const { data: profil, error } = await supabase.from('profil_user').select('role').eq('id', session.user.id).single();
                 if (error || !profil || profil.role !== 'admin') {
                     if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error','Akses Ditolak!',' Anda bukan Admin.');
                     else alert('Akses Ditolak! Anda bukan Admin.');
@@ -180,7 +204,6 @@ import BaseLayout from '../../layout/BaseLayout.astro';
 
         async function loadDashboardStats() {
             try {
-                // Statistik Surat Baru
                 const { count: countSurat } = await supabase.from('pengajuan_surat').select('*', { count: 'exact', head: true }).eq('status', 'Menunggu');
                 const badgeSurat = document.getElementById('badgeSurat');
                 if (countSurat > 0) {
@@ -188,7 +211,6 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                     badgeSurat.classList.remove('hidden');
                 }
 
-                // Statistik Aduan Baru
                 const { count: countAduan } = await supabase.from('aduan_warga').select('*', { count: 'exact', head: true }).eq('status', 'Menunggu');
                 const badgeAduan = document.getElementById('badgeAduan');
                 if (countAduan > 0) {
@@ -196,21 +218,18 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                     badgeAduan.classList.remove('hidden');
                 }
 
-                // Statistik UMKM
                 const { count: countToko } = await supabase.from('umkm_toko').select('*', { count: 'exact', head: true });
                 const { count: countProduk } = await supabase.from('umkm_produk').select('*', { count: 'exact', head: true });
                 document.getElementById('infoUmkm').innerText = `${countToko || 0} Toko | ${countProduk || 0} Produk`;
 
-                // Statistik Bansos
                 const { data: dataBansos, error: errBansos } = await supabase.from('usulan_bansos').select('status_usulan');
                 let bansosDiberikan = 0;
                 if (!errBansos && dataBansos) {
                     bansosDiberikan = dataBansos.filter(b => b.status_usulan === 'Disetujui' || b.status_usulan === 'Disalurkan' || b.status_usulan === 'Selesai').length;
-                    if (bansosDiberikan === 0 && dataBansos.length > 0) bansosDiberikan = dataBansos.length; 
+                    if (bansosDiberikan === 0 && dataBansos.length > 0) bansosDiberikan = dataBansos.length;
                 }
                 document.getElementById('infoBansos').innerText = `${bansosDiberikan} Disalurkan`;
 
-                // 🔥 STATISTIK DUKCAPIL 🔥
                 try {
                     const { count: countPenduduk, error: errPenduduk } = await supabase.from('data_penduduk').select('*', { count: 'exact', head: true });
                     if (!errPenduduk) {
@@ -222,7 +241,6 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                     document.getElementById('infoPenduduk').innerText = "Buat Database Dulu";
                 }
 
-                // 🔥 STATISTIK PEMETAAN RT/RW 🔥
                 try {
                     const { count: countWilayah, error: errWilayah } = await supabase.from('master_wilayah').select('*', { count: 'exact', head: true });
                     if (!errWilayah) {

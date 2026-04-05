@@ -3,6 +3,8 @@
 import '../global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import CustomAlert from '../components/CustomAlert.astro';
+import KontakModal from '../components/KontakModal.astro';
 
 // Menangkap properti title dari halaman yang memanggil layout ini
 const { title = "Desa Mulyamekar Smart Village" } = Astro.props;
@@ -24,6 +26,53 @@ const { title = "Desa Mulyamekar Smart Village" } = Astro.props;
     <slot />
     
     <Footer />
+    <CustomAlert/>
+    <KontakModal />
 <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>  
+<div id="layarTransisi" class="fixed inset-0 bg-teal-950 z-[99999] flex flex-col items-center justify-center transition-all duration-500 ease-in-out opacity-100 pointer-events-none">
+        
+        <svg class="w-12 h-12 text-orange-400 mb-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        <p class="text-teal-100 font-bold tracking-widest text-sm animate-pulse">MEMUAT HALAMAN...</p>
+        
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const layar = document.getElementById("layarTransisi");
+            
+            // 1. TRANSISI MASUK (Saat Halaman Selesai Dimuat)
+            // Kasih jeda sedikit (300ms) lalu tarik layar ke atas (-translate-y-full)
+            setTimeout(() => {
+                layar.classList.remove("opacity-100");
+                layar.classList.add("opacity-0", "-translate-y-full"); 
+            }, 300);
+
+            // 2. TRANSISI KELUAR (Saat Link Apapun Diklik)
+            // Pilih semua tag <a> kecuali yang buka tab baru atau link anchor (#)
+            const semuaLink = document.querySelectorAll("a:not([target='_blank']):not([href^='#']):not([href^='javascript'])");
+            
+            semuaLink.forEach(link => {
+                link.addEventListener("click", function(e) {
+                    
+                    // Biarkan perilaku default kalau user klik kanan, tahan tombol Ctrl/Cmd untuk buka tab baru
+                    if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
+                    
+                    e.preventDefault(); // Tahan proses pindah halaman bawaan browser
+                    const urlTujuan = this.getAttribute("href");
+                    
+                    // Turunkan kembali layar loading menutupi konten
+                    layar.classList.remove("opacity-0", "-translate-y-full");
+                    layar.classList.add("opacity-100", "translate-y-0");
+
+                    // Pindah halaman secara otomatis setelah durasi animasi Tailwind selesai (500ms)
+                    setTimeout(() => {
+                        window.location.href = urlTujuan;
+                    }, 500);
+                });
+            });
+        });
+    </script>
 </body>
 </html>

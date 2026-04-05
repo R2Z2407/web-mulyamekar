@@ -1,9 +1,9 @@
 ---
 // src/components/TransparencyWidget.astro
 import { supabase } from '../lib/supabase.js';
-import ModalRincian from './ModalRincianAPBDes.astro';
+import ModalRincian from '../components/ModalRincianAPBDes.astro';
 
-// 1. Tarik semua data APBDes
+// 1. Tarik semua data APBDes 
 const { data: allData, error } = await supabase
   .from('apbdes')
   .select('*')
@@ -18,18 +18,15 @@ let tahunTerbaru = new Date().getFullYear();
 let ringkasan = [];
 
 if (allData && allData.length > 0) {
-  // Ambil tahun paling atas (terbaru)
   tahunTerbaru = allData[0].tahun;
   const dataTahunIni = allData.filter(d => d.tahun === tahunTerbaru);
 
-  // Siapkan wadah untuk menghitung total
   const rekap = {
     'Pendapatan': { anggaran: 0, realisasi: 0 },
     'Belanja': { anggaran: 0, realisasi: 0 },
     'Pembiayaan': { anggaran: 0, realisasi: 0 }
   };
 
-  // Jumlahkan semua baris yang tahunnya sama
   dataTahunIni.forEach(item => {
     if (rekap[item.kategori]) {
       rekap[item.kategori].anggaran += item.anggaran || 0;
@@ -37,83 +34,92 @@ if (allData && allData.length > 0) {
     }
   });
 
-  // Masukkan ke array agar bisa di-map di HTML
   ringkasan = [
     { kategori: 'Pendapatan', anggaran: rekap['Pendapatan'].anggaran, realisasi: rekap['Pendapatan'].realisasi },
     { kategori: 'Pembiayaan', anggaran: rekap['Pembiayaan'].anggaran, realisasi: rekap['Pembiayaan'].realisasi },
     { kategori: 'Belanja', anggaran: rekap['Belanja'].anggaran, realisasi: rekap['Belanja'].realisasi }
-  ];
+  ]; 
 }
 
-// 3. Fungsi sakti format Rupiah
+// 3. Fungsi format Rupiah 
 const formatRp = (angka) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
 };
 
-// 4. Fungsi pembantu buat ngasih warna & ikon (Sesuaikan dengan nama kategori di Database)
+// 4. Fungsi pewarnaan visual
 const getVisuals = (kategori) => {
   if (kategori === 'Pendapatan') return { color: "bg-emerald-500", textColor: "text-emerald-700", icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" };
   if (kategori === 'Belanja') return { color: "bg-rose-500", textColor: "text-rose-700", icon: "M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" };
-  return { color: "bg-amber-500", textColor: "text-amber-700", icon: "M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" }; // Pembiayaan
+  return { color: "bg-amber-500", textColor: "text-amber-700", icon: "M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" };
 };
 ---
 
-<section id="transparansi" class="min-h-screen flex flex-col justify-center py-20 max-md:landscape:py-16 max-md:landscape:min-h-[400px] bg-white relative">
+<section id="transparansi" class="min-h-screen flex flex-col justify-center py-16 lg:py-20 bg-white relative">
   <div class="container mx-auto px-4 max-w-6xl relative z-10">
     
-    <div class="flex flex-col md:flex-row justify-between items-end mb-12 max-md:landscape:mb-6 border-b-2 border-gray-100 pb-6 max-md:landscape:pb-4 gap-6 max-md:landscape:gap-3" data-aos="fade-up">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-12 border-b-2 border-gray-100 pb-6 gap-6" data-aos="fade-up">
       <div>
-        <h2 class="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-2">Transparansi Publik</h2>
-        <h3 class="text-3xl md:text-4xl font-extrabold text-teal-950 max-md:landscape:text-2xl">APBDes Mulyamekar {tahunTerbaru}</h3>
-        <p class="text-gray-500 mt-2 max-md:landscape:text-sm">Ringkasan realisasi anggaran pendapatan dan belanja desa.</p>
+        <h2 class="text-sm font-bold uppercase tracking-widest text-emerald-700 mb-2">Transparansi Publik</h2>
+        <h3 class="text-3xl md:text-4xl font-extrabold text-teal-950">APBDes Mulyamekar {tahunTerbaru}</h3>
+        <p class="text-gray-600 mt-2 text-sm md:text-base font-medium">Ringkasan realisasi anggaran pendapatan dan belanja desa.</p>
       </div>
-      <a href="/apbdes" class="shrink-0 bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold py-2.5 px-6 max-md:landscape:py-2 max-md:landscape:px-4 rounded-full transition-colors text-sm border border-teal-200 group flex items-center gap-2">
-        Lihat Rincian Penuh <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+ 
+      <a href="/apbdes" class="w-full md:w-auto text-center bg-teal-50 hover:bg-teal-100 text-teal-800 font-extrabold py-3.5 px-6 rounded-2xl transition-colors border border-teal-200 group flex items-center justify-center gap-2 shadow-sm active:scale-95">
+        Lihat Seluruh Laporan <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
       </a>
     </div>
 
     {error || ringkasan.length === 0 ? (
-      <div class="text-center py-10 bg-gray-50 text-gray-500 rounded-2xl border border-dashed border-gray-200" data-aos="fade-up">Data APBDes belum dipublikasikan oleh Pemerintah Desa.</div>
+      <div class="text-center py-12 bg-gray-50 text-gray-500 font-bold rounded-3xl border-2 border-dashed border-gray-200" data-aos="fade-up">Data APBDes belum dipublikasikan oleh Pemerintah Desa.</div>
     ) : (
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-md:landscape:gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
         {ringkasan.map((item, index) => {
-          // Pake item.anggaran, bukan item.target!
-          const persentase = item.anggaran > 0 ? Math.round((item.realisasi / item.anggaran) * 100) : 0;
-          const visual = getVisuals(item.kategori);
+          const persentase = item.anggaran > 0 ? Math.round((item.realisasi / item.anggaran) * 100) : 0; 
+          const visual = getVisuals(item.kategori); 
           
           return (
-            <div onclick={`bukaModalRincian('${item.kategori}')`} class="cursor-pointer bg-gray-50 rounded-3xl p-6 md:p-8 max-md:landscape:p-4 border border-gray-100 shadow-sm hover:shadow-xl hover:border-teal-200 transition-all hover:-translate-y-2 group" data-aos="fade-up" data-aos-delay={index * 150}>
-              <div class="flex items-center gap-4 mb-8 max-md:landscape:mb-4">
-                <div class={`w-14 h-14 max-md:landscape:w-10 max-md:landscape:h-10 rounded-2xl flex items-center justify-center text-white shadow-inner ${visual.color}`}>
-                  <svg class="w-7 h-7 max-md:landscape:w-5 max-md:landscape:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div onclick={`bukaModalRincian('${item.kategori}')`} class="cursor-pointer bg-gray-50 rounded-3xl p-6 lg:p-8 border border-gray-200 shadow-sm hover:shadow-xl hover:border-teal-300 transition-all hover:-translate-y-2 group flex flex-col" data-aos="fade-up" data-aos-delay={index * 150}>
+              
+              <div class="flex items-center gap-4 mb-6">
+                <div class={`w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-inner ${visual.color}`}>
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={visual.icon}></path>
                   </svg>
                 </div>
-                <h4 class="text-xl max-md:landscape:text-lg font-extrabold text-gray-800">{item.kategori}</h4>
+                <h4 class="text-2xl font-black text-gray-900">{item.kategori}</h4>
               </div>
 
-              <div class="space-y-5 max-md:landscape:space-y-3">
-                <div class="border-b border-gray-200/60 pb-4 max-md:landscape:pb-2">
-                  <div class="flex justify-between text-sm max-md:landscape:text-xs mb-2">
-                    <span class="text-gray-500 font-medium">Anggaran</span>
-                    <span class="font-extrabold text-gray-800">{formatRp(item.anggaran)}</span>
-                  </div>
-                  <div class="flex justify-between text-sm max-md:landscape:text-xs">
-                    <span class="text-gray-500 font-medium">Realisasi</span>
-                    <span class={`font-extrabold ${visual.textColor}`}>{formatRp(item.realisasi)}</span>
-                  </div>
+              <div class="space-y-5 mb-6 flex-grow border-b border-gray-200 pb-6">
+                
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                  <p class="text-sm font-bold text-gray-500 mb-1 uppercase tracking-wider">Total Anggaran</p>
+                  <p class="text-xl lg:text-2xl font-black text-gray-900">{formatRp(item.anggaran)}</p>
+                </div>
+                
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                  <p class="text-sm font-bold text-gray-500 mb-1 uppercase tracking-wider">Sudah Terealisasi</p>
+                  <p class={`text-xl lg:text-2xl font-black ${visual.textColor}`}>{formatRp(item.realisasi)}</p>
                 </div>
 
-                <div class="pt-2">
-                  <div class="flex justify-between text-xs font-bold mb-3 max-md:landscape:mb-1.5">
-                    <span class="text-gray-400">Terserap</span>
-                    <span class={visual.textColor}>{persentase}%</span>
-                  </div>
-                  <div class="w-full bg-gray-200 rounded-full h-3 max-md:landscape:h-2 overflow-hidden shadow-inner">
-                    <div class={`h-3 max-md:landscape:h-2 rounded-full ${visual.color} transition-all duration-1000 ease-out`} style={`width: ${persentase > 100 ? 100 : persentase}%`}></div>
-                  </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-end mb-2">
+                  <span class="text-sm font-extrabold text-gray-700">Terserap</span>
+                  <span class={`text-lg font-black bg-white px-3 py-1 rounded-xl shadow-sm border border-gray-100 ${visual.textColor}`}>{persentase}%</span>
+                </div>
+                
+                <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
+                  <div class={`h-4 rounded-full ${visual.color} transition-all duration-1000 ease-out`} style={`width: ${persentase > 100 ? 100 : persentase}%`}></div>
                 </div>
               </div>
+
+              <div class="mt-6 pt-4 border-t border-gray-200/60 text-center">
+                <span class={`text-sm font-bold flex items-center justify-center gap-2 ${visual.textColor} group-hover:scale-105 transition-transform`}>
+                  Ketuk untuk lihat rincian <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </span>
+              </div>
+
             </div>
           );
         })}

@@ -1,216 +1,236 @@
 ---
 // src/pages/admin/slider.astro
-import BaseLayout from '../../layout/BaseLayout.astro';
+import AdminLayout from '../../layout/AdminLayout.astro';
 ---
 
-<BaseLayout title="Kelola Slider Beranda - Admin Desa">
-    <main class="flex-grow pb-20 bg-gray-50 min-h-screen pt-24">
-        <div class="container mx-auto px-4 max-w-5xl">
-            
-            <div class="mb-8">
-                <h1 class="text-3xl font-extrabold text-teal-900">🖼️ Manajemen Slider Beranda</h1>
-                <p class="text-gray-600 mt-2">Upload, hapus, dan atur gambar yang muncul di halaman depan website Mulyamekar.</p>
-            </div>
+<AdminLayout 
+    title="Kelola Slider Beranda - Admin Mulyamekar"
+    pageTitle="Manajemen Slider"
+    pageDesc="Kelola gambar banner yang tampil bergeser di halaman beranda."
+>
+    <button slot="action" onclick="bukaModalSlider()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+        Upload Gambar Baru
+    </button>
 
-            <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 mb-8">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b border-gray-100 pb-3">Tambah Gambar Baru</h2>
-                <form id="formSlider" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Upload Foto (Landscape / 16:9) *</label>
-                            <input type="file" id="inputFotoSlider" required accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-all cursor-pointer border border-gray-200 rounded-xl">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Teks Alternatif / Judul Foto *</label>
-                            <input type="text" id="inputAltText" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all" placeholder="Misal: Kegiatan Gotong Royong Warga">
-                        </div>
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-8 p-6 md:p-8">
+        <div id="wadahGaleri" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <p class="text-slate-400 font-bold col-span-full text-center py-12 animate-pulse">Memuat data slider...</p>
+        </div>
+    </div>
+
+    <div slot="modal" id="modalSlider" class="fixed inset-0 z-[100] bg-slate-900/80 hidden items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="modalSliderBox" class="bg-white rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
+            
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
+                <div>
+                    <h2 class="text-xl font-black text-slate-800">Upload Slider Baru</h2>
+                    <p class="text-xs text-slate-500 mt-1">Gunakan foto landscape (16:9) agar maksimal.</p>
+                </div>
+                <button onclick="tutupModalSlider()" class="text-slate-400 hover:text-rose-500 bg-white p-2 rounded-full shadow-sm transition-colors border border-slate-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto">
+                <form id="formSlider" class="space-y-5">
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">1. Pilih Foto Gambar</label>
+                        <input type="file" id="inputFotoSlider" required accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-all cursor-pointer border border-slate-200 rounded-xl">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">2. Judul / Teks Alternatif</label>
+                        <input type="text" id="inputAltText" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-bold text-slate-900 transition-all" placeholder="Misal: Peresmian Balai Desa">
                     </div>
 
                     <div id="statusContainer" class="hidden bg-amber-50 p-4 rounded-xl border border-amber-200">
                         <p id="statusPesan" class="text-sm font-bold text-amber-700 flex items-center gap-2">
                             <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            <span>Mengunggah gambar...</span>
+                            <span>Memproses gambar...</span>
                         </p>
                     </div>
 
-                    <button type="submit" id="btnUpload" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                        Upload ke Beranda
-                    </button>
+                    <div class="pt-4 border-t border-slate-100 mt-4">
+                        <button type="submit" id="btnUpload" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-black py-3.5 rounded-xl shadow-md transition-all active:scale-95 flex justify-center items-center gap-2">
+                            Simpan & Upload Slider
+                        </button>
+                    </div>
+
                 </form>
             </div>
-
-            <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 border-b border-gray-100 pb-3">Galeri Slider Aktif</h2>
-                <div id="wadahGaleri" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                    <p class="text-gray-400 font-medium col-span-full animate-pulse">Memuat gambar...</p>
-                </div>
-            </div>
-
         </div>
-    </main>
+    </div>
+</AdminLayout>
+
 <script>
-        import { supabase } from '../../lib/supabase.js';
-        
-        const formSlider = document.getElementById('formSlider');
-        const btnUpload = document.getElementById('btnUpload');
-        const wadahGaleri = document.getElementById('wadahGaleri');
-        const statusContainer = document.getElementById('statusContainer');
-        const statusPesan = document.getElementById('statusPesan').querySelector('span');
+    import { supabase } from '../../lib/supabase.js';
+    
+    // ================= INISIALISASI & PROTEKSI HALAMAN =================
+    async function initPage() {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = '/login'; return; }
 
-        // --- FUNGSI LOAD GAMBAR DARI DATABASE ---
-        async function loadSliders() {
-            try {
-                const { data, error } = await supabase.from('hero_slider').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
-
-                if (!data || data.length === 0) {
-                    wadahGaleri.innerHTML = `<p class="text-gray-400 font-medium col-span-full text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200">Belum ada gambar slider. Silakan upload baru.</p>`;
-                    return;
-                }
-
-                let html = '';
-                data.forEach(item => {
-                    html += `
-                    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all group relative">
-                        <img src="${item.image_url}" alt="${item.alt_text}" class="w-full aspect-video object-cover bg-gray-100">
-                        <div class="p-4">
-                            <p class="text-sm font-bold text-gray-800 truncate">${item.alt_text || 'Tanpa Judul'}</p>
-                        </div>
-                        <button onclick="hapusSlider('${item.id}', '${item.image_url}')" class="absolute top-3 right-3 bg-white text-rose-500 hover:bg-rose-500 hover:text-white p-2 rounded-lg shadow-lg transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </div>`;
-                });
-                wadahGaleri.innerHTML = html;
-            } catch (err) {
-                console.error(err);
-                wadahGaleri.innerHTML = `<p class="text-rose-500 font-bold col-span-full">Gagal memuat data: ${err.message}</p>`;
+            const { data: profilAdmin, error: errProfil } = await supabase.from('profil_user').select('role').eq('id', session.user.id).single();
+            if (errProfil || !profilAdmin || profilAdmin.role !== 'admin') {
+                if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error','Akses Ditolak!',' Hanya Admin yang bisa buka halaman ini.');
+                else alert('Akses Ditolak! Khusus Admin.');
+                window.location.href = '/'; return;
             }
+
+            loadSliders();
+        } catch (error) {
+            console.error(error);
+            document.getElementById('wadahGaleri').innerHTML = `<p class="text-rose-500 font-bold col-span-full text-center bg-rose-50 p-4 rounded-xl">Terjadi error sistem: ${error.message}</p>`;
         }
+    }
 
-        // --- FUNGSI HAPUS GAMBAR (Hapus dari DB & Bucket) ---
-        window.hapusSlider = async (id, imageUrl) => {
-            if (!confirm('Yakin ingin menghapus gambar ini dari Beranda?')) return;
-            try {
-                // 1. Ekstrak nama file dari URL untuk dihapus dari Bucket
-                const urlParts = imageUrl.split('/');
-                const fileName = urlParts[urlParts.length - 1];
+    // ================= FUNGSI ANIMASI MODAL =================
+    window.bukaModalSlider = () => {
+        document.body.classList.add('overflow-hidden');
+        const m = document.getElementById('modalSlider');
+        const b = document.getElementById('modalSliderBox');
+        m.classList.remove('hidden'); m.classList.add('flex');
+        setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+    };
 
-                // Hapus dari Storage Supabase
-                const { error: storageError } = await supabase.storage.from('mulyamekar_assets').remove([`slider/${fileName}`]);
-                if (storageError) console.warn("Gagal hapus di storage, tapi lanjut hapus DB:", storageError);
+    window.tutupModalSlider = () => {
+        document.body.classList.remove('overflow-hidden');
+        const m = document.getElementById('modalSlider');
+        const b = document.getElementById('modalSliderBox');
+        m.classList.add('opacity-0'); b.classList.remove('scale-100'); b.classList.add('scale-95');
+        setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); document.getElementById('formSlider').reset(); }, 300);
+    };
 
-                // 2. Hapus dari Database
-                const { error: dbError } = await supabase.from('hero_slider').delete().eq('id', id);
-                if (dbError) throw dbError;
-                
-                alert('Gambar berhasil dihapus!');
-                loadSliders(); // Refresh tampilan
-            } catch (err) {
-                alert(`Gagal menghapus: ${err.message}`);
+    // ================= MUAT GALERI SLIDER =================
+    const wadahGaleri = document.getElementById('wadahGaleri');
+    
+    async function loadSliders() {
+        try {
+            const { data, error } = await supabase.from('hero_slider').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                wadahGaleri.innerHTML = `<p class="text-slate-400 font-bold col-span-full text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">Belum ada gambar beranda. Klik "Upload Gambar Baru".</p>`;
+                return;
             }
-        }
 
-        // --- FUNGSI AUTO COMPRESS (UKURAN LEBIH KECIL & RINGAN) ---
-        function compressImage(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        // 🔥 MAX_WIDTH dikecilin jadi 800px biar super ringan buat web
-                        const MAX_WIDTH = 800; 
-                        let width = img.width;
-                        let height = img.height;
-
-                        if (width > MAX_WIDTH) {
-                            height = Math.round((height * MAX_WIDTH) / width);
-                            width = MAX_WIDTH;
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        canvas.toBlob((blob) => {
-                            if (!blob) return reject(new Error('Gagal kompresi foto'));
-                            // Kasih nama file unik
-                            const namaFileUnik = "slider_" + Date.now() + ".jpg";
-                            const newFile = new File([blob], namaFileUnik, { type: 'image/jpeg' });
-                            resolve(newFile);
-                        }, 'image/jpeg', 0.6); // 🔥 Kualitas 60% (Bagus buat slider tanpa menuhin kuota)
-                    };
-                    img.onerror = err => reject(err);
-                };
-                reader.onerror = err => reject(err);
+            let html = '';
+            data.forEach(item => {
+                html += `
+                <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all group relative">
+                    <img src="${item.image_url}" alt="${item.alt_text}" class="w-full aspect-video object-cover bg-slate-100">
+                    <div class="p-4 bg-white relative z-10">
+                        <p class="text-sm font-bold text-slate-800 truncate">${item.alt_text || 'Tanpa Judul'}</p>
+                    </div>
+                    <button onclick="hapusSlider('${item.id}', '${item.image_url}')" class="absolute top-3 right-3 bg-white text-rose-500 hover:bg-rose-500 hover:text-white p-2 rounded-lg shadow-lg transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 z-20" title="Hapus Gambar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>`;
             });
+            wadahGaleri.innerHTML = html;
+        } catch (err) {
+            wadahGaleri.innerHTML = `<p class="text-rose-500 font-bold col-span-full">Gagal memuat: ${err.message}</p>`;
         }
+    }
 
-        // --- FUNGSI UPLOAD KE BUCKET SUPABASE ---
-        async function uploadKeSupabase(file) {
-            // Upload ke folder 'slider' di dalam bucket 'mulyamekar_assets'
-            const { data, error } = await supabase.storage
-                .from('mulyamekar_assets')
-                .upload(`slider/${file.name}`, file, {
-                    cacheControl: '3600',
-                    upsert: true
-                });
+    // ================= FUNGSI HAPUS =================
+    window.hapusSlider = async (id, imageUrl) => {
+        if (!confirm('Hapus gambar ini dari slider beranda?')) return;
+        try {
+            const urlParts = imageUrl.split('/');
+            const fileName = urlParts[urlParts.length - 1];
 
-            if (error) throw new Error("Gagal mengupload ke storage: " + error.message);
-
-            // Ambil URL Publiknya
-            const { data: publicUrlData } = supabase.storage
-                .from('mulyamekar_assets')
-                .getPublicUrl(`slider/${file.name}`);
-
-            return publicUrlData.publicUrl;
+            await supabase.storage.from('mulyamekar_assets').remove([`slider/${fileName}`]);
+            const { error } = await supabase.from('hero_slider').delete().eq('id', id);
+            if (error) throw error;
+            
+            if(typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Dihapus', 'Gambar berhasil dihapus!');
+            loadSliders();
+        } catch (err) {
+            alert(`Gagal menghapus: ${err.message}`);
         }
+    }
 
-        // --- SUBMIT FORM ---
-        formSlider.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const fileAsli = document.getElementById('inputFotoSlider').files[0];
-            const altText = document.getElementById('inputAltText').value;
-            if (!fileAsli) return;
+    // ================= FUNGSI KOMPRESI & UPLOAD =================
+    function compressImage(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1200; 
+                    let width = img.width;
+                    let height = img.height;
 
-            btnUpload.disabled = true;
-            statusContainer.classList.remove('hidden');
-            
-            try {
-                statusPesan.innerText = "Mengompres ukuran gambar...";
-                const fileKompres = await compressImage(fileAsli);
-                
-                statusPesan.innerText = "Mengunggah gambar ke Storage...";
-                const fotoUrl = await uploadKeSupabase(fileKompres);
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
+                    }
 
-                statusPesan.innerText = "Menyimpan ke sistem...";
-                const { error } = await supabase.from('hero_slider').insert([{
-                    image_url: fotoUrl,
-                    alt_text: altText
-                }]);
-
-                if (error) throw error;
-
-                alert('Gambar Berhasil Ditambahkan ke Beranda!');
-                formSlider.reset();
-                loadSliders(); // Refresh galeri
-
-            } catch (err) {
-                console.error(err);
-                alert(`Terjadi kesalahan: ${err.message}`);
-            } finally {
-                btnUpload.disabled = false;
-                statusContainer.classList.add('hidden');
-            }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    canvas.toBlob((blob) => {
+                        if (!blob) return reject(new Error('Gagal kompresi foto'));
+                        const newFile = new File([blob], "slider_" + Date.now() + ".jpg", { type: 'image/jpeg' });
+                        resolve(newFile);
+                    }, 'image/jpeg', 0.8);
+                };
+                img.onerror = err => reject(err);
+            };
+            reader.onerror = err => reject(err);
         });
+    }
 
-        // Muat data saat halaman dibuka
-        loadSliders();
-    </script>
-    </BaseLayout>
+    const formSlider = document.getElementById('formSlider');
+    const btnUpload = document.getElementById('btnUpload');
+    const statusContainer = document.getElementById('statusContainer');
+    const statusPesan = document.getElementById('statusPesan').querySelector('span');
+
+    formSlider.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fileAsli = document.getElementById('inputFotoSlider').files[0];
+        const altText = document.getElementById('inputAltText').value;
+        if (!fileAsli) return;
+
+        btnUpload.disabled = true; btnUpload.innerHTML = "Memproses...";
+        statusContainer.classList.remove('hidden');
+        
+        try {
+            statusPesan.innerText = "Mengompres gambar...";
+            const fileKompres = await compressImage(fileAsli);
+            
+            statusPesan.innerText = "Mengunggah ke Storage...";
+            const { error: storageErr } = await supabase.storage.from('mulyamekar_assets').upload(`slider/${fileKompres.name}`, fileKompres, { cacheControl: '3600', upsert: true });
+            if (storageErr) throw new Error(storageErr.message);
+
+            const { data: urlData } = supabase.storage.from('mulyamekar_assets').getPublicUrl(`slider/${fileKompres.name}`);
+
+            statusPesan.innerText = "Menyimpan ke sistem...";
+            const { error: dbErr } = await supabase.from('hero_slider').insert([{ image_url: urlData.publicUrl, alt_text: altText }]);
+            if (dbErr) throw dbErr;
+
+            if(typeof showCustomAlert !== 'undefined') showCustomAlert('success', 'Berhasil', 'Gambar baru sudah tayang di beranda!');
+            tutupModalSlider();
+            loadSliders();
+
+        } catch (err) {
+            if(typeof showCustomAlert !== 'undefined') showCustomAlert('error', 'Gagal', err.message);
+            else alert(`Error: ${err.message}`);
+        } finally {
+            btnUpload.disabled = false; btnUpload.innerHTML = "Simpan & Upload Slider";
+            statusContainer.classList.add('hidden');
+        }
+    });
+
+    // Jalankan inisialisasi saat halaman dibuka
+    initPage();
+</script>

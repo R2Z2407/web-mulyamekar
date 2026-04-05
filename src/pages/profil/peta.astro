@@ -1,0 +1,209 @@
+---
+// src/pages/peta.astro
+import BaseLayout from '../../layout/BaseLayout.astro';
+import { supabase } from '../../lib/supabase.js';
+
+// 1. Tarik Data Statistik dari Database 
+const { data: stats, error } = await supabase.from('statistik_desa').select('*').order('urutan', { ascending: true });
+
+const getVal = (label) => {
+    if(!stats) return '0';
+    const item = stats.find(s => s.label.toLowerCase() === label.toLowerCase());
+    return item ? item.nilai : '0'; 
+};
+
+// Ambil Data Sesuai Kebutuhan UI
+const luasWilayah = getVal('Luas Wilayah') || '5,2';
+const jumlahRW = getVal('Jumlah RW') || '11';
+const jumlahRT = getVal('Jumlah RT') || '44';
+const panjangJalan = getVal('Panjang Jalan Desa') || '18,4';
+
+const masjid = getVal('Masjid & Mushola') || '8';
+const sekolah = getVal('Gedung Sekolah (PAUD-SMP)') || '12';
+const kesehatan = getVal('Posyandu & Polindes') || '9';
+
+// 2. Tarik Data Wilayah untuk Pop-Up (Menghitung RT per RW)
+const { data: dataWilayah } = await supabase.from('master_wilayah').select('rw, rt').order('rw', { ascending: true });
+
+// Kelompokkan RT ke dalam RW masing-masing
+const rekapRW = {};
+if (dataWilayah) {
+    dataWilayah.forEach(item => {
+        const rw = item.rw || '00';
+        if (!rekapRW[rw]) rekapRW[rw] = [];
+        rekapRW[rw].push(item.rt);
+    });
+}
+---
+
+<BaseLayout title="Peta & Profil Wilayah - Desa Mulyamekar">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <main class="bg-[#F8FAFC] min-h-screen pb-24 font-sans text-slate-800">
+        
+        <div class="bg-teal-950 pt-24 pb-28 px-4 text-center rounded-b-[40px] shadow-lg relative overflow-hidden">
+            
+            <div class="absolute inset-0 bg-[linear-gradient(to_right,#0d9488_1px,transparent_1px),linear-gradient(to_bottom,#0d9488_1px,transparent_1px)] bg-[size:40px_40px] opacity-10"></div>
+            
+            <i class="bi bi-map-fill absolute -right-10 -bottom-10 text-[18rem] text-teal-800 opacity-20 transform -rotate-12"></i>
+            <i class="bi bi-compass absolute -left-16 top-10 text-[12rem] text-teal-800 opacity-10 transform rotate-12"></i>
+
+            <div class="absolute right-0 top-0 w-64 h-64 bg-teal-600 rounded-full blur-3xl opacity-30"></div>
+            
+            <div class="relative z-10 flex flex-col items-center">
+                <p class="text-[10px] md:text-xs text-orange-400 uppercase tracking-[0.3em] font-bold mb-2 flex items-center gap-2">
+                    <i class="bi bi-geo-alt"></i> Sistem Informasi Geografis
+                </p>
+                <h1 class="text-3xl md:text-5xl font-black text-white mb-3 tracking-tight uppercase drop-shadow-md">
+                    Peta <span class="text-orange-400">Mulyamekar</span>
+                </h1>
+                <p class="text-sm md:text-base text-teal-100 font-medium max-w-lg drop-shadow">
+                    Wilayah Administratif Kecamatan Babakancikao, Kabupaten Purwakarta.
+                </p>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4 max-w-4xl">
+            
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 -mt-12 relative z-10 mb-6">
+                <div class="bg-white p-4 md:p-5 rounded-2xl shadow-lg border border-slate-100 text-center flex flex-col justify-center transform transition-transform hover:-translate-y-1">
+                    <div class="w-10 h-10 mx-auto bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mb-2">
+                        <i class="bi bi-bounding-box-circles text-lg"></i>
+                    </div>
+                    <p class="text-[10px] md:text-xs font-bold text-slate-500 mb-0.5">Luas Wilayah</p>
+                    <p class="text-lg md:text-2xl font-black text-slate-800">{luasWilayah} <span class="text-xs font-bold text-slate-400">km²</span></p>
+                </div>
+                <div class="bg-white p-4 md:p-5 rounded-2xl shadow-lg border border-slate-100 text-center flex flex-col justify-center transform transition-transform hover:-translate-y-1">
+                    <div class="w-10 h-10 mx-auto bg-orange-50 text-orange-600 rounded-full flex items-center justify-center mb-2">
+                        <i class="bi bi-diagram-3-fill text-lg"></i>
+                    </div>
+                    <p class="text-[10px] md:text-xs font-bold text-slate-500 mb-0.5">Jumlah RW</p>
+                    <p class="text-lg md:text-2xl font-black text-slate-800">{jumlahRW} <span class="text-xs font-bold text-slate-400">RW</span></p>
+                </div>
+                <div class="bg-white p-4 md:p-5 rounded-2xl shadow-lg border border-slate-100 text-center flex flex-col justify-center transform transition-transform hover:-translate-y-1">
+                    <div class="w-10 h-10 mx-auto bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-2">
+                        <i class="bi bi-houses-fill text-lg"></i>
+                    </div>
+                    <p class="text-[10px] md:text-xs font-bold text-slate-500 mb-0.5">Jumlah RT</p>
+                    <p class="text-lg md:text-2xl font-black text-slate-800">{jumlahRT} <span class="text-xs font-bold text-slate-400">RT</span></p>
+                </div>
+                <div class="bg-white p-4 md:p-5 rounded-2xl shadow-lg border border-slate-100 text-center flex flex-col justify-center transform transition-transform hover:-translate-y-1">
+                    <div class="w-10 h-10 mx-auto bg-slate-100 text-slate-600 rounded-full flex items-center justify-center mb-2">
+                        <i class="bi bi-signpost-split-fill text-lg"></i>
+                    </div>
+                    <p class="text-[10px] md:text-xs font-bold text-slate-500 mb-0.5">Jalan Desa</p>
+                    <p class="text-lg md:text-2xl font-black text-slate-800">{panjangJalan} <span class="text-xs font-bold text-slate-400">km</span></p>
+                </div>
+            </div>
+
+            <div class="bg-white p-2 md:p-3 rounded-3xl shadow-sm border border-slate-200 mb-6 relative z-0" data-aos="fade-up">
+                <div class="w-full h-[350px] md:h-[450px] rounded-2xl overflow-hidden border border-slate-200 shadow-inner relative group bg-slate-100"> 
+                    
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d18856.684577026543!2d107.4445346240424!3d-6.505272065780127!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e690dc736e9218b%3A0xde1b5c1acf477787!2sMulyamekar%2C%20Kec.%20Babakancikao%2C%20Kabupaten%20Purwakarta%2C%20Jawa%20Barat!5e0!3m2!1sid!2sid!4v1773041713147!5m2!1sid!2sid" 
+                        width="100%" 
+                        height="100%" 
+                        style="border: 0;" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        referrerpolicy="no-referrer-when-downgrade" 
+                        class="grayscale-[30%] group-hover:grayscale-0 transition-all duration-700 absolute inset-0 z-0 transform md:scale-105 origin-center">
+                    </iframe> 
+                    
+                    <div class="absolute bottom-3 left-3 z-10 bg-white/90 backdrop-blur px-4 py-2 rounded-xl border border-slate-200 shadow-md pointer-events-none transition-all duration-500 group-hover:bg-white group-hover:shadow-lg group-hover:-translate-y-1"> 
+                        <p class="text-[11px] md:text-xs font-black text-slate-800 flex items-center gap-1.5 uppercase tracking-wide">
+                            <i class="bi bi-geo-alt-fill text-rose-500 text-sm md:text-base"></i> 
+                            Peta Mulyamekar
+                        </p> 
+                    </div> 
+                </div>
+            </div>
+
+            <div class="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-slate-100 mb-6" data-aos="fade-up" data-aos-delay="100">
+                <h2 class="text-sm md:text-base font-extrabold text-slate-800 mb-4 border-b border-slate-100 pb-2">Infrastruktur & Fasilitas Umum</h2>
+                
+                <div class="grid grid-cols-3 gap-3 md:gap-6 divide-x divide-slate-100">
+                    <div class="text-center px-1">
+                        <p class="text-[10px] md:text-xs font-bold text-slate-500 mb-1 leading-tight">Masjid & Mushola</p>
+                        <p class="text-xl md:text-3xl font-black text-teal-700">{masjid} <span class="text-[10px] font-bold text-slate-400">unit</span></p>
+                    </div>
+                    <div class="text-center px-1">
+                        <p class="text-[10px] md:text-xs font-bold text-slate-500 mb-1 leading-tight">Gedung Pendidikan</p>
+                        <p class="text-xl md:text-3xl font-black text-orange-600">{sekolah} <span class="text-[10px] font-bold text-slate-400">unit</span></p>
+                    </div>
+                    <div class="text-center px-1">
+                        <p class="text-[10px] md:text-xs font-bold text-slate-500 mb-1 leading-tight">Sarana Kesehatan</p>
+                        <p class="text-xl md:text-3xl font-black text-indigo-600">{kesehatan} <span class="text-[10px] font-bold text-slate-400">unit</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 mt-8">
+                <button onclick="bukaModalWilayah()" class="flex-1 bg-white border-2 border-teal-600 text-teal-700 hover:bg-teal-50 font-bold py-3.5 rounded-2xl transition-all shadow-sm active:scale-95 text-xs md:text-sm flex items-center justify-center gap-2">
+                    <i class="bi bi-list-columns-reverse text-lg"></i> Lihat Detail RW/RT
+                </button>
+                <button class="flex-1 bg-[#0f766e] hover:bg-teal-800 text-white font-bold py-3.5 rounded-2xl transition-all shadow-md active:scale-95 text-xs md:text-sm flex items-center justify-center gap-2">
+                    <i class="bi bi-layers text-lg"></i> Toggle Layer Fasilitas
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="modalWilayah" class="fixed inset-0 z-[100] bg-slate-900/60 hidden items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="modalWilayahBox" class="bg-white rounded-3xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh] overflow-hidden">
+            
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-teal-800 text-white rounded-t-3xl shrink-0">
+                <div>
+                    <h2 class="text-lg font-black tracking-wide">Detail Wilayah</h2>
+                    <p class="text-xs text-teal-200 mt-0.5">Rekapitulasi jumlah RT per RW</p>
+                </div>
+                <button onclick="tutupModalWilayah()" class="bg-white/20 hover:bg-white/40 p-2 rounded-full transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="p-0 overflow-y-auto divide-y divide-slate-100">
+                {Object.keys(rekapRW).length > 0 ? (
+                    Object.keys(rekapRW).sort().map((rw, index) => (
+                        <div class="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <span class="bg-teal-100 text-teal-800 w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs">{index + 1}</span>
+                                <span class="font-extrabold text-slate-800">Rukun Warga (RW) {rw}</span>
+                            </div>
+                            <span class="text-xs font-bold text-orange-600 bg-orange-100 px-3 py-1.5 rounded-full border border-orange-200">
+                                {rekapRW[rw].length} RT
+                            </span>
+                        </div>
+                    ))
+                ) : (
+                    <div class="p-8 text-center">
+                        <p class="text-slate-500 font-bold">Belum ada data wilayah di Database.</p>
+                    </div>
+                )}
+            </div>
+
+            <div class="p-4 border-t border-slate-100 bg-slate-50 rounded-b-3xl shrink-0">
+                <button onclick="tutupModalWilayah()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-all">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.bukaModalWilayah = () => {
+            document.body.classList.add('overflow-hidden');
+            const m = document.getElementById('modalWilayah');
+            const b = document.getElementById('modalWilayahBox');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            setTimeout(() => { m.classList.remove('opacity-0'); b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+        };
+
+        window.tutupModalWilayah = () => {
+            document.body.classList.remove('overflow-hidden');
+            const m = document.getElementById('modalWilayah');
+            const b = document.getElementById('modalWilayahBox');
+            m.classList.add('opacity-0'); b.classList.remove('scale-100'); b.classList.add('scale-95');
+            setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
+        };
+    </script>
+</BaseLayout>

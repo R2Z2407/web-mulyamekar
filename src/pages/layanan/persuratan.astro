@@ -88,6 +88,49 @@ import BaseLayout from '../../layout/BaseLayout.astro';
 
             </div>
         </div>
+
+        <section class="py-12 bg-white relative overflow-hidden">
+            <div class="container mx-auto px-4 max-w-5xl relative z-10">
+            
+              <div class="text-center mb-10" data-aos="fade-up">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-2">Panduan Layanan</h2>
+                <h3 class="text-2xl md:text-3xl font-black text-teal-950">Cara Mengajukan Surat Online</h3>
+                <p class="text-slate-500 mt-2 text-sm md:text-base">Ikuti 4 langkah mudah ini dari HP Anda tanpa harus antre di Balai Desa.</p>
+              </div>
+          
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+
+                <div class="hidden lg:block absolute top-12 left-0 w-full h-1 bg-slate-100 z-0"></div>
+
+                <div class="bg-slate-50 border border-slate-200 p-6 rounded-3xl relative z-10 flex flex-col items-center text-center shadow-sm hover:-translate-y-1 transition-transform" data-aos="fade-up" data-aos-delay="100">
+                  <div class="w-14 h-14 bg-amber-500 text-white rounded-full flex items-center justify-center text-2xl font-black mb-4 shadow-md ring-4 ring-white shrink-0">1</div>
+                  <h4 class="text-lg font-bold text-slate-800 mb-1.5">Siapkan Dokumen</h4>
+                  <p class="text-xs text-slate-500 leading-relaxed">Siapkan foto KTP, KK, atau surat pengantar RT/RW (jika diperlukan untuk jenis surat Anda).</p>
+                </div>
+            
+                <div class="bg-slate-50 border border-slate-200 p-6 rounded-3xl relative z-10 flex flex-col items-center text-center shadow-sm hover:-translate-y-1 transition-transform" data-aos="fade-up" data-aos-delay="200">
+                  <div class="w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center text-2xl font-black mb-4 shadow-md ring-4 ring-white shrink-0">2</div>
+                  <h4 class="text-lg font-bold text-slate-800 mb-1.5">Isi Formulir</h4>
+                  <p class="text-xs text-slate-500 leading-relaxed">Pilih jenis surat di bawah ini dan isi kelengkapan data diri Anda dengan benar.</p>
+                </div>
+            
+                <div class="bg-slate-50 border border-slate-200 p-6 rounded-3xl relative z-10 flex flex-col items-center text-center shadow-sm hover:-translate-y-1 transition-transform" data-aos="fade-up" data-aos-delay="300">
+                  <div class="w-14 h-14 bg-teal-600 text-white rounded-full flex items-center justify-center text-2xl font-black mb-4 shadow-md ring-4 ring-white shrink-0">3</div>
+                  <h4 class="text-lg font-bold text-slate-800 mb-1.5">Tunggu Proses</h4>
+                  <p class="text-xs text-slate-500 leading-relaxed">Pemerintah Desa akan memverifikasi data dan segera memproses pencetakan surat Anda.</p>
+                </div>
+            
+                <div class="bg-slate-50 border border-slate-200 p-6 rounded-3xl relative z-10 flex flex-col items-center text-center shadow-sm hover:-translate-y-1 transition-transform" data-aos="fade-up" data-aos-delay="400">
+                  <div class="w-14 h-14 bg-teal-900 text-white rounded-full flex items-center justify-center text-2xl font-black mb-4 shadow-md ring-4 ring-white shrink-0">4</div>
+                  <h4 class="text-lg font-bold text-slate-800 mb-1.5">Ambil Surat</h4>
+                  <p class="text-xs text-slate-500 leading-relaxed">Anda akan menerima pesan WhatsApp otomatis jika surat sudah ditandatangani dan siap diambil.</p>
+                </div>
+            
+              </div>
+          
+            </div>
+        </section>
+
     </main>
     <script>
         import { supabase } from '../../lib/supabase.js';
@@ -349,7 +392,7 @@ import BaseLayout from '../../layout/BaseLayout.astro';
                     keperluan: document.getElementById('inputKeperluan').value,
                     file_persyaratan: JSON.stringify(urlsPersyaratan),
                     status: 'Menunggu',
-                    status_rt: 'Menunggu ACC RT',
+                    status_rt: statusAwal, // <--- UBAH JADI SEPERTI INI
                     user_id: userId
                 };
 

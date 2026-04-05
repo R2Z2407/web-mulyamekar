@@ -26,15 +26,52 @@ const currentYear = new Date().getFullYear();
 
       <div>
         <h3 class="text-white font-bold text-lg mb-6 flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-amber-500"></span> Tautan Cepat
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span> Peta Situs
         </h3>
-        <ul class="space-y-3 text-sm text-teal-300">
-          <li><a href="/profil" class="hover:text-amber-400 hover:translate-x-1 inline-block transition-transform">Profil Desa</a></li>
-          <li><a href="/pemerintahan" class="hover:text-amber-400 hover:translate-x-1 inline-block transition-transform">Pemerintahan</a></li>
-          <li><a href="/transparansi" class="hover:text-amber-400 hover:translate-x-1 inline-block transition-transform">Transparansi Dana (APBDes)</a></li>
-          <li><a href="/informasi" class="hover:text-amber-400 hover:translate-x-1 inline-block transition-transform">Berita & Artikel</a></li>
-          <li><a href="/layanan" class="hover:text-amber-400 hover:translate-x-1 inline-block transition-transform">Layanan Surat Online</a></li>
-        </ul>
+        
+        <div class="grid grid-cols-2 lg:grid-cols-1 gap-x-2 gap-y-6 text-sm text-teal-300">
+          
+          <div>
+            <p class="font-bold text-white mb-2.5">Profil Desa</p>
+            <ul class="space-y-2.5 border-l-2 border-teal-800 ml-1 pl-3">
+              <li><a href="/profil/visi-misi-sejarah" class="hover:text-amber-400 transition-colors block">Sejarah & Visi</a></li>
+              <li><a href="/profil/struktur" class="hover:text-amber-400 transition-colors block">Struktur Org.</a></li>
+              <li><a href="/profil/demografi" class="hover:text-amber-400 transition-colors block">Demografi</a></li>
+              <li><a href="/profil/peta" class="hover:text-amber-400 transition-colors block">Peta Desa</a></li>
+            </ul>
+          </div>
+
+          <div class="flex flex-col gap-6">
+            
+            <div>
+              <p class="font-bold text-white mb-2.5">Layanan Publik</p>
+              <ul class="space-y-2.5 border-l-2 border-teal-800 ml-1 pl-3">
+                <li><a href="/layanan/persuratan" class="hover:text-amber-400 transition-colors block">Surat Online</a></li>
+                <li><a href="/layanan/aduan" class="hover:text-amber-400 transition-colors block">Aduan Warga</a></li>
+                <li><a href="/layanan/bansos" class="hover:text-amber-400 transition-colors block">Cek Bansos</a></li>
+              </ul>
+            </div>
+
+            <ul class="space-y-3">
+              <li>
+                <a href="/apbdes" class="font-bold text-white hover:text-amber-400 transition-colors flex items-start gap-2">
+                  <span class="w-1.5 h-1.5 bg-teal-600 rounded-full mt-1.5 shrink-0"></span> Transparansi
+                </a>
+              </li>
+              <li>
+                <a href="/berita" class="font-bold text-white hover:text-amber-400 transition-colors flex items-start gap-2">
+                  <span class="w-1.5 h-1.5 bg-teal-600 rounded-full mt-1.5 shrink-0"></span> Berita Desa
+                </a>
+              </li>
+              <li>
+                <a href="/umkm" class="font-bold text-white hover:text-amber-400 transition-colors flex items-start gap-2">
+                  <span class="w-1.5 h-1.5 bg-teal-600 rounded-full mt-1.5 shrink-0"></span> Produk UMKM
+                </a>
+              </li>
+            </ul>
+
+          </div>
+        </div>
       </div>
 
       <div>
@@ -88,5 +125,5 @@ const currentYear = new Date().getFullYear();
 </footer>
 <CustomAlert />
 <script is:inline>
-    
+     
 </script>

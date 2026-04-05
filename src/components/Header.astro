@@ -3,8 +3,9 @@
 import LoginModal from './LoginModal.astro';
 import RegisterModal from './RegisterModal.astro';
 import AvatarWarga from './AvatarWarga.astro';
+import KontakModal from './KontakModal.astro';
 
-// STRUKTUR MENU BARU YANG LEBIH RAPIH
+// STRUKTUR MENU (Menu Kontak dihapus dari sini)
 const navItems = [
   { name: 'Beranda', url: '/' },
   {
@@ -13,7 +14,7 @@ const navItems = [
       { name: 'Sejarah & Visi Misi', url: '/profil/visi-misi-sejarah' },
       { name: 'Struktur Organisasi', url: '/profil/struktur' },
       { name: 'Demografi Penduduk', url: '/profil/demografi' },
-      { name: 'Peta Desa', url: '/peta' },
+      { name: 'Peta Desa', url: '/profil/peta' },
     ]
   },
   {
@@ -24,16 +25,13 @@ const navItems = [
       { name: 'Cek Bansos', url: '/layanan/bansos' },
     ]
   },
-  {
-    name: 'Transparansi', url: '/apbdes'},
+  { name: 'Transparansi', url: '/apbdes'},
   { name: 'Berita', url: '/berita' },
-  { name: 'UMKM', url: '/umkm' },
-  { name: 'Kontak', url: '/kontak' },
+  { name: 'UMKM', url: '/umkm' }
 ];
-// 🔥 LOGIKA DETEKSI HALAMAN UNTUK GANTI WARNA 🔥
+
 const pathname = Astro.url.pathname;
 const isUMKM = pathname.includes('/umkm');
-
 const bgHeader = isUMKM ? 'bg-orange-600' : 'bg-teal-700';
 const bgMobileOverlay = isUMKM ? 'bg-orange-950/95' : 'bg-teal-950/95';
 ---
@@ -42,11 +40,7 @@ const bgMobileOverlay = isUMKM ? 'bg-orange-950/95' : 'bg-teal-950/95';
   <div class="container mx-auto px-4 py-3 flex justify-between items-center relative z-50">
     
     <a href="/" class="flex items-center gap-3 relative z-50 group shrink-0">
-      <img 
-        src="https://i.ibb.co.com/S7Wv5qST/logo-header.png" 
-        alt="Logo Desa Mulyamekar" 
-        class="w-10 h-10 object-contain rounded-full shadow-inner border border-white/40 group-hover:scale-105 transition-transform"
-      />
+      <img src="https://i.ibb.co.com/S7Wv5qST/logo-header.png" alt="Logo Desa Mulyamekar" class="w-10 h-10 object-contain rounded-full shadow-inner border border-white/40 group-hover:scale-105 transition-transform" />
       <div>
         <h1 class="text-lg font-bold leading-tight tracking-wide">Desa Mulyamekar</h1>
         <p class="text-[10px] text-teal-200 uppercase tracking-wider">Kab. Purwakarta</p>
@@ -78,21 +72,23 @@ const bgMobileOverlay = isUMKM ? 'bg-orange-950/95' : 'bg-teal-950/95';
         )
       ))}
       
+      <button onclick="bukaModalKontak()" class="text-sm font-medium hover:text-amber-400 transition-colors py-4 cursor-pointer focus:outline-none">
+        Kontak
+      </button>
+      
       <button id="btnNavLogin" onclick="bukaLoginModal()" class="hidden text-sm font-bold border-2 border-white hover:bg-white hover:text-teal-700 px-5 py-1.5 rounded-full transition-colors shadow-sm ml-2">
         Masuk / Daftar
       </button>
 
       <div id="navProfile" class="hidden items-center gap-4 border-l border-teal-600 pl-5 ml-2">
-        <a href="#" id="linkDashboard" class="flex items-center gap-2 group cursor-pointer" title="Buka Dashboard Saya">
+        <a href="#" id="linkDashboard" class="flex items-center gap-2 group cursor-pointer">
           <AvatarWarga id="headerAvatarDesktop" className="w-8 h-8 group-hover:ring-2 group-hover:ring-amber-400 transition-all" />
           <div class="flex flex-col">
             <span id="userName" class="text-sm font-bold leading-tight group-hover:text-amber-400 transition-colors max-w-[100px] truncate">Memuat...</span>
             <span id="userRole" class="text-[10px] text-teal-200 uppercase tracking-wider">Role</span>
           </div>
         </a>
-        <button id="btnNavLogout" class="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold transition-colors shadow-sm">
-          Keluar
-        </button>
+        <button id="btnNavLogout" class="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold transition-colors shadow-sm">Keluar</button>
       </div>
     </nav>
 
@@ -130,6 +126,11 @@ const bgMobileOverlay = isUMKM ? 'bg-orange-950/95' : 'bg-teal-950/95';
             </a>
           )
         ))}
+
+        <button onclick="bukaModalKontak(); document.getElementById('mobile-menu-btn').click();" class="text-lg font-bold text-white hover:text-amber-400 transition-colors tracking-wide py-3 border-b border-teal-800/50 block w-full cursor-pointer text-left focus:outline-none">
+          Kontak
+        </button>
+
       </div>
 
       <div class="flex flex-col items-center gap-4 mt-auto pt-6">
@@ -145,23 +146,17 @@ const bgMobileOverlay = isUMKM ? 'bg-orange-950/95' : 'bg-teal-950/95';
               <span id="mobileUserRole" class="text-teal-300 text-xs uppercase font-bold tracking-wider">Role</span>
             </div>
           </a>
-          <button id="btnMobileLogout" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors shadow-md">
-            Keluar dari Akun
-          </button>
+          <button id="btnMobileLogout" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors shadow-md">Keluar Akun</button>
         </div>
       </div>
-
     </nav>
-  </div>
-
-  <LoginModal />
+  </div> <LoginModal />
   <RegisterModal />
-</header>
+  <KontakModal /> </header>
 
 <script>
   import { supabase } from '../lib/supabase.js';
 
-  // --- LOGIKA MENU HAMBURGER MOBILE ---
   const btn = document.getElementById('mobile-menu-btn');
   const overlay = document.getElementById('mobile-menu-overlay');
   const navLinks = document.getElementById('mobile-nav-links');
@@ -195,42 +190,26 @@ const bgMobileOverlay = isUMKM ? 'bg-orange-950/95' : 'bg-teal-950/95';
     });
   }
 
-  // --- LOGIKA AUTENTIKASI HEADER (UI DINAMIS) ---
   async function checkHeaderAuth() {
     const { data: { session } } = await supabase.auth.getSession();
     const btnNavLogin = document.getElementById('btnNavLogin');
     const navProfile = document.getElementById('navProfile');
-    const linkDashboard = document.getElementById('linkDashboard');
-    
     const btnMobileLogin = document.getElementById('btnMobileLogin');
     const mobileProfile = document.getElementById('mobileProfile');
-    const mobileLinkDashboard = document.getElementById('mobileLinkDashboard');
 
     if (session) {
       const { data: profil } = await supabase.from('profil_user').select('nama_lengkap, role, avatar_url, jenis_kelamin').eq('id', session.user.id).single();
-
       if (profil) {
         let targetUrl = '/pengguna';
         let namaRole = 'Warga Desa';
-
-        if (profil.role === 'admin') { 
-            targetUrl = '/admin';
-            namaRole = 'Admin Desa'; 
-        } else if (profil.role === 'rt') { 
-            targetUrl = '/pengguna';
-            namaRole = 'Ketua RT'; 
-        }
-        else if (profil.role === 'rw') { 
-            targetUrl = '/pengguna';
-            namaRole = 'Ketua RW'; 
-        }
+        if (profil.role === 'admin') { targetUrl = '/admin'; namaRole = 'Admin Desa'; } 
+        else if (profil.role === 'rt') { namaRole = 'Ketua RT'; }
+        else if (profil.role === 'rw') { namaRole = 'Ketua RW'; }
 
         const namaPendek = profil.nama_lengkap ? profil.nama_lengkap.split(' ')[0] : 'User';
-
         let finalAvatar = profil.avatar_url;
-        if (profil.role === 'admin') {
-            finalAvatar = 'https://i.ibb.co.com/S7Wv5qST/logo-header.png';
-        } 
+
+        if (profil.role === 'admin') { finalAvatar = 'https://i.ibb.co.com/S7Wv5qST/logo-header.png'; } 
         else if (!finalAvatar) {
             const gender = profil.jenis_kelamin === 'Perempuan' ? 'Perempuan' : 'Laki-laki'; 
             finalAvatar = gender === 'Perempuan' 
@@ -274,6 +253,5 @@ const bgMobileOverlay = isUMKM ? 'bg-orange-950/95' : 'bg-teal-950/95';
 
   document.getElementById('btnNavLogout')?.addEventListener('click', handleLogout);
   document.getElementById('btnMobileLogout')?.addEventListener('click', handleLogout);
-
   document.addEventListener('DOMContentLoaded', checkHeaderAuth);
 </script>

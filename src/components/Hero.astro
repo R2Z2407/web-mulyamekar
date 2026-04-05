@@ -30,16 +30,8 @@
         <div class="swiper hero-swiper rounded-3xl shadow-2xl relative z-10 border-8 border-white overflow-hidden aspect-video bg-gray-100">
           <div class="swiper-wrapper" id="heroSliderWadah">
             
-            <div class="swiper-slide">
-              <img src="https://images.unsplash.com/photo-1596401349880-997f37f3743c?q=80&w=800&h=450&auto=format&fit=crop" alt="Balai Desa Mulyamekar" class="w-full h-full object-cover" />
-            </div>
-            
-            <div class="swiper-slide">
-              <img src="https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=800&h=450&auto=format&fit=crop" alt="Kegiatan Desa" class="w-full h-full object-cover" />
-            </div>
-
-            <div class="swiper-slide">
-              <img src="https://images.unsplash.com/photo-1518544801976-3e159e50e5bb?q=80&w=800&h=450&auto=format&fit=crop" alt="Pemandangan Desa" class="w-full h-full object-cover" />
+            <div class="swiper-slide flex items-center justify-center bg-gray-100 animate-pulse">
+                <p class="text-teal-600 font-bold text-sm">🔄 Memuat gambar...</p>
             </div>
 
           </div>
@@ -53,16 +45,63 @@
 
 <script is:inline src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-<script is:inline>
-  // Inisialisasi Slider saat halaman dimuat
-  document.addEventListener('DOMContentLoaded', () => {
-    const swiper = new Swiper('.hero-swiper', {
-      loop: true, // Muter terus tanpa henti
-      grabCursor: true, // Kursor berubah jadi tangan pas diarahin (bisa di-drag)
+<script>
+  import { supabase } from '../lib/supabase.js';
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const wadahSlider = document.getElementById('heroSliderWadah');
+    
+    try {
+        // 1. Tarik data dari Supabase
+        const { data, error } = await supabase
+            .from('hero_slider')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        let html = '';
+        
+        // 2. Jika database masih kosong, tampilkan gambar default 1 biji
+        if (!data || data.length === 0) {
+            html = `
+            <div class="swiper-slide">
+              <img src="https://images.unsplash.com/photo-1596401349880-997f37f3743c?q=80&w=1200&h=675&auto=format&fit=crop" alt="Balai Desa Mulyamekar Default" class="w-full h-full object-cover" />
+            </div>`;
+        } else {
+            // 3. Looping data gambar dari database
+            data.forEach(item => {
+                html += `
+                <div class="swiper-slide relative group">
+                  <img src="${item.image_url}" alt="${item.alt_text || 'Gambar Beranda'}" class="w-full h-full object-cover" />
+                  
+                  <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-teal-950/90 to-transparent p-5 pt-12 translate-y-2 group-hover:translate-y-0 transition-transform">
+                     <p class="text-white font-bold text-sm md:text-base line-clamp-1 drop-shadow-md">${item.alt_text || ''}</p>
+                  </div>
+                </div>`;
+            });
+        }
+
+        // 4. Suntik HTML ke dalam Slider
+        wadahSlider.innerHTML = html;
+
+    } catch (err) {
+        console.error("Gagal memuat slider beranda:", err);
+        wadahSlider.innerHTML = `
+            <div class="swiper-slide flex items-center justify-center bg-gray-100">
+               <p class="text-rose-500 font-bold text-xs">Gagal memuat gambar dari server.</p>
+            </div>`;
+    }
+
+    // 5. 🔥 INISIALISASI SWIPER WAJIB SETELAH GAMBAR DISUNTIKKAN 🔥
+    // Biar Swiper bisa ngitung jumlah gambar dan bikin titik-titik (pagination) dengan benar
+    new Swiper('.hero-swiper', {
+      loop: true,
+      grabCursor: true,
       effect: 'slide', 
       autoplay: {
-        delay: 5000, // 🔥 Ganti gambar otomatis tiap 5 detik
-        disableOnInteraction: false, // Tetap auto-slide biarpun abis digeser manual
+        delay: 5000, 
+        disableOnInteraction: false, 
       },
       pagination: {
         el: '.swiper-pagination',
@@ -74,14 +113,14 @@
   });
 </script>
 
-<style>
+<style is:global>
   /* Kustomisasi warna titik pagination biar senada sama tema web lu */
   .swiper-pagination-bullet {
-    background-color: #cbd5e1; /* Warna abu-abu redup */
-    opacity: 1;
+    background-color: #e2e8f0; /* Warna abu redup */
+    opacity: 0.8;
   }
   .swiper-pagination-bullet-active {
-    background-color: #0f766e; /* Warna teal-700 */
+    background-color: #0d9488; /* Warna teal-600 */
     width: 24px;
     border-radius: 10px;
     transition: all 0.3s ease;
