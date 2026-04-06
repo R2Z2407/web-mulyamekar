@@ -8,33 +8,36 @@ import AdminLayout from '../../layout/AdminLayout.astro';
 <AdminLayout 
     title="Kelola Statistik Desa - Admin Mulyamekar"
     pageTitle="Pusat Statistik Desa"
-    pageDesc="Perbarui angka demografi penduduk agar selalu akurat di halaman depan."
-    maxWidth="max-w-5xl"
+    pageDesc="Sistem akan membaca Buku Induk Penduduk dan mensinkronisasikannya dengan halaman depan secara otomatis."
+    maxWidth="max-w-6xl"
 >
 
     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-3xl p-6 mb-8 flex items-start sm:items-center gap-5 shadow-sm relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-500 opacity-10 rounded-full blur-2xl"></div>
-        <div class="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-3xl shrink-0 border border-blue-100 z-10">🔄</div>
+        <div class="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-3xl shrink-0 border border-blue-100 z-10 animate-pulse">⚙️</div>
         <div class="z-10">
-            <h3 class="text-blue-950 font-black text-lg">Sinkronisasi Dukcapil Aktif</h3>
+            <h3 class="text-blue-950 font-black text-lg">Mesin Auto-Sync Sedang Menyala</h3>
             <p class="text-blue-800 text-sm mt-1 leading-relaxed">
-                Sistem otomatis mendekripsi & menghitung jumlah penduduk, KK (Unik), status pekerjaan, hingga bayi baru lahir langsung dari <b class="font-extrabold">Buku Induk Penduduk</b>. Data berlabel <span class="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-widest mx-1 shadow-sm">Auto-Sync</span> dikunci karena selalu *update* otomatis.
+                Data demografi seperti Umur, Agama, Status Perkawinan, Bayi, hingga Jumlah KK saat ini <b class="font-extrabold">dihitung otomatis secara Real-Time</b> dari Data Dukcapil.
+                Kartu berlabel <span class="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-widest mx-1 shadow-sm">Auto</span> dikunci agar tidak bentrok dengan perhitungan mesin.
             </p>
         </div>
     </div>
-    <div id="gridStatistik" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    
+    <div id="gridStatistik" class="pb-10">
         <div class="col-span-full py-16 text-center text-slate-400 font-bold animate-pulse flex flex-col items-center justify-center gap-3 bg-white rounded-3xl border border-slate-200 shadow-sm">
             <span class="text-4xl">🧮</span> 
-            Sedang menghitung dan mensinkronisasi data Dukcapil...
+            Sedang menghitung ribuan data Dukcapil... Mohon tunggu.
         </div>
     </div>
+
 </AdminLayout>
 
     <script>
         import { supabase } from '../../lib/supabase.js';
 
         // 🔥 KUNCI RAHASIA UNTUK DEKRIPSI DATA DUKCAPIL 🔥
-        const SECRET_KEY = "DukcapilMulyamekarAman2026!"; 
+        const SECRET_KEY = "DukcapilMulyamekarAman2026!";
 
         function decrypt(ciphertext) {
             if (!ciphertext) return "";
@@ -54,212 +57,303 @@ import AdminLayout from '../../layout/AdminLayout.astro';
 
                 const { data: profil, error: errProfil } = await supabase.from('profil_user').select('role').eq('id', session.user.id).single();
                 if (errProfil || !profil || profil.role !== 'admin') {
-                    if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error','Akses Ditolak!',' Anda bukan Admin Desa.');
+                    if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error','Akses Ditolak!',' Kamu bukan Admin Desa.');
                     else alert('Akses Ditolak! Khusus Admin.');
                     window.location.href = '/'; return;
                 }
 
-                // Jalankan Mesin Penghitung
                 jalankanSinkronisasiDukcapil();
             } catch (error) {
                 console.error("Crash keamanan:", error);
             }
         }
         
-        // ================= MESIN AUTO-SYNC DUKCAPIL =================
+        // ================= MESIN AUTO-SYNC DUKCAPIL SUPER (100% AUTOPILOT) =================
         async function jalankanSinkronisasiDukcapil() {
             try {
-                // 1. Ambil seluruh data Dukcapil
                 const { data: dbPenduduk, error: errPenduduk } = await supabase.from('data_penduduk').select('*');
                 if (errPenduduk) throw errPenduduk;
 
-                // 1.5 Ambil data Master Wilayah untuk RT/RW
                 const { data: dbWilayah, error: errWilayah } = await supabase.from('master_wilayah').select('nomor_rt, nomor_rw');
                 if (errWilayah) throw errWilayah;
 
-                let rt = 0;
-                let rw = 0;
+                let rt = 0; let rw = 0;
                 if (dbWilayah && dbWilayah.length > 0) {
-                    // Jumlah RT = Total keseluruhan baris data
-                    rt = dbWilayah.length; 
-                    
-                    // KUMPULKAN DAN CARI RW TERTINGGI
-                    const kumpulanRW = dbWilayah.map(item => {
-                        // Ambil langsung dari kolom nomor_rw
-                        // Angka 10 di belakang penting agar "09" dibaca 9, bukan 0 atau error
-                        return parseInt(item.nomor_rw, 10) || 0;
-                    });
-
-                    // Tangkap angka paling besar
-                    rw = Math.max(...kumpulanRW); 
+                    rt = dbWilayah.length;
+                    const kumpulanRW = dbWilayah.map(item => parseInt(item.nomor_rw, 10) || 0);
+                    rw = Math.max(...kumpulanRW);
                 }
 
-                // 2. Siapkan Wadah Metrik
-                // 2. Siapkan Wadah Metrik
+                // 1. SIAPKAN WADAH METRIK SEMUA VARIABEL
                 let metrics = { 
-                    total_penduduk: 0, 
-                    laki_laki: 0, 
-                    perempuan: 0, 
-                    total_kk: 0, 
-                    bayi: 0, 
-                    bekerja: 0, 
-                    tidak_bekerja: 0, 
-                    pelajar: 0, 
-                    pensiunan: 0,
-                    rt: rt, // <--- TAMBAHKAN INI
-                    rw: rw  // <--- TAMBAHKAN INI
+                    total_penduduk: 0, laki_laki: 0, perempuan: 0, total_kk: 0, bayi: 0, 
+                    bekerja: 0, tidak_bekerja: 0, pelajar: 0, pensiunan: 0, rt: rt, rw: rw,
+                    
+                    // Umur
+                    'Usia 0-4 Laki': 0, 'Usia 5-14 Laki': 0, 'Usia 15-24 Laki': 0, 'Usia 25-34 Laki': 0, 
+                    'Usia 35-44 Laki': 0, 'Usia 45-54 Laki': 0, 'Usia 55-64 Laki': 0, 'Usia 65+ Laki': 0,
+                    'Usia 0-4 Pr': 0, 'Usia 5-14 Pr': 0, 'Usia 15-24 Pr': 0, 'Usia 25-34 Pr': 0, 
+                    'Usia 35-44 Pr': 0, 'Usia 45-54 Pr': 0, 'Usia 55-64 Pr': 0, 'Usia 65+ Pr': 0,
+                    
+                    // Agama & Perkawinan
+                    'Islam': 0, 'Kristen': 0, 'Katolik': 0, 'Hindu': 0, 'Buddha': 0, 'Konghucu': 0,
+                    'Belum Kawin': 0, 'Kawin': 0, 'Cerai Hidup': 0, 'Cerai Mati': 0,
+
+                    // Pendidikan Baru
+                    'Tidak/Belum Sekolah': 0, 'Tamat SD/Sederajat': 0, 'SLTP/Sederajat': 0, 
+                    'SLTA/Sederajat': 0, 'Diploma I/II/III': 0, 'Strata I': 0, 'Strata II/III': 0,
+
+                    // Pekerjaan Baru
+                    'Mengurus Rumah Tangga': 0, 'Petani/Pekebun': 0, 'Pedagang': 0, 
+                    'Karyawan Swasta': 0, 'PNS/TNI/POLRI': 0, 'Wiraswasta': 0
                 };
-                
+
                 const kkSet = new Set();
                 const today = new Date();
 
-                // 3. Proses Perhitungan (Termasuk Dekripsi Data Sensitif)
+                // 2. PROSES PERHITUNGAN SUPER MESIN
                 (dbPenduduk || []).forEach(d => {
-                    // Hindari menghitung warga yang sudah meninggal/pindah
                     if(d.status_warga === 'Meninggal' || d.status_warga === 'Pindah') return;
 
                     metrics.total_penduduk++;
                     
-                    if (d.jenis_kelamin === 'Laki-laki') metrics.laki_laki++;
-                    if (d.jenis_kelamin === 'Perempuan') metrics.perempuan++;
+                    const jk = d.jenis_kelamin;
+                    if (jk === 'Laki-laki') metrics.laki_laki++;
+                    if (jk === 'Perempuan') metrics.perempuan++;
 
-                    // Hitung KK Unik (Harus dekripsi dulu)
                     const kk = decrypt(d.no_kk);
                     if (kk) kkSet.add(kk);
 
-                    // Hitung Bayi Baru Lahir (Umur 0)
+                    // A. MENGHITUNG UMUR & BAYI
                     const tglLahir = decrypt(d.tanggal_lahir);
                     if (tglLahir) {
                         const birth = new Date(tglLahir);
                         let age = today.getFullYear() - birth.getFullYear();
                         const m = today.getMonth() - birth.getMonth();
                         if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-                        if (age === 0) metrics.bayi++; // Jika umur 0 tahun, anggap Bayi
+                        if (age === 0) metrics.bayi++;
+
+                        if (jk === 'Laki-laki') {
+                            if (age <= 4) metrics['Usia 0-4 Laki']++;
+                            else if (age <= 14) metrics['Usia 5-14 Laki']++;
+                            else if (age <= 24) metrics['Usia 15-24 Laki']++;
+                            else if (age <= 34) metrics['Usia 25-34 Laki']++;
+                            else if (age <= 44) metrics['Usia 35-44 Laki']++;
+                            else if (age <= 54) metrics['Usia 45-54 Laki']++;
+                            else if (age <= 64) metrics['Usia 55-64 Laki']++;
+                            else metrics['Usia 65+ Laki']++;
+                        } else if (jk === 'Perempuan') {
+                            if (age <= 4) metrics['Usia 0-4 Pr']++;
+                            else if (age <= 14) metrics['Usia 5-14 Pr']++;
+                            else if (age <= 24) metrics['Usia 15-24 Pr']++;
+                            else if (age <= 34) metrics['Usia 25-34 Pr']++;
+                            else if (age <= 44) metrics['Usia 35-44 Pr']++;
+                            else if (age <= 54) metrics['Usia 45-54 Pr']++;
+                            else if (age <= 64) metrics['Usia 55-64 Pr']++;
+                            else metrics['Usia 65+ Pr']++;
+                        }
                     }
 
-                    // Klastering Status Pekerjaan
-                    const p = d.pekerjaan || '';
-                    if (p.includes('PNS') || p.includes('BUMN') || p.includes('TNI') || p.includes('Swasta') || p.includes('Wiraswasta') || p.includes('Pekerja') || p.includes('Petani') || p.includes('Nelayan')) {
+                    // B. MENGHITUNG PENDIDIKAN (Smart Matching)
+                    const pdd = d.pendidikan || '';
+                    if (pdd.includes('SD')) metrics['Tamat SD/Sederajat']++;
+                    else if (pdd.includes('SLTP') || pdd.includes('SMP')) metrics['SLTP/Sederajat']++;
+                    else if (pdd.includes('SLTA') || pdd.includes('SMA') || pdd.includes('SMK')) metrics['SLTA/Sederajat']++;
+                    else if (pdd.includes('Diploma') || pdd.includes('D1') || pdd.includes('D2') || pdd.includes('D3')) metrics['Diploma I/II/III']++;
+                    else if (pdd.includes('Strata I') || pdd.includes('S1') || pdd.includes('D4')) metrics['Strata I']++;
+                    else if (pdd.includes('Strata II') || pdd.includes('S2') || pdd.includes('S3')) metrics['Strata II/III']++;
+                    else metrics['Tidak/Belum Sekolah']++; // Sisanya dianggap belum sekolah
+
+                    // C. MENGHITUNG PEKERJAAN
+                    const pkj = d.pekerjaan || '';
+                    
+                    // Kategori Global (Untuk Kartu Utama)
+                    if (pkj.includes('PNS') || pkj.includes('BUMN') || pkj.includes('TNI') || pkj.includes('Swasta') || pkj.includes('Wiraswasta') || pkj.includes('Pekerja') || pkj.includes('Petani') || pkj.includes('Nelayan') || pkj.includes('Dagang')) {
                         metrics.bekerja++;
-                    } else if (p.includes('Belum') || p.includes('Mengurus Rumah')) {
+                    } else if (pkj.includes('Belum') || pkj.includes('Mengurus Rumah')) {
                         metrics.tidak_bekerja++;
-                    } else if (p.includes('Pelajar') || p.includes('Mahasiswa')) {
+                    } else if (pkj.includes('Pelajar') || pkj.includes('Mahasiswa')) {
                         metrics.pelajar++;
-                    } else if (p.includes('Pensiun')) {
+                    } else if (pkj.includes('Pensiun')) {
                         metrics.pensiunan++;
                     } else {
-                        metrics.bekerja++; // Default cadangan
+                        metrics.bekerja++;
                     }
-                });
-                
-                metrics.total_kk = kkSet.size; // Total KK Murni (Tanpa Ganda)
 
-                // 4. Ambil Data Statistik yang ada di Database saat ini
+                    // Kategori Spesifik (Untuk Diagram Bar)
+                    if (pkj.includes('Rumah Tangga')) metrics['Mengurus Rumah Tangga']++;
+                    else if (pkj.includes('Petani') || pkj.includes('Kebun')) metrics['Petani/Pekebun']++;
+                    else if (pkj.includes('Dagang')) metrics['Pedagang']++;
+                    else if (pkj.includes('Swasta')) metrics['Karyawan Swasta']++;
+                    else if (pkj.includes('PNS') || pkj.includes('TNI') || pkj.includes('POLRI') || pkj.includes('Polri')) metrics['PNS/TNI/POLRI']++;
+                    else if (pkj.includes('Wiraswasta') || pkj.includes('Usaha')) metrics['Wiraswasta']++;
+
+                    // D. MENGHITUNG AGAMA & PERKAWINAN
+                    const agm = d.agama || '';
+                    if (metrics[agm] !== undefined) metrics[agm]++;
+
+                    const kwn = d.status_perkawinan || '';
+                    if (metrics[kwn] !== undefined) metrics[kwn]++;
+                });
+                metrics.total_kk = kkSet.size;
+
+                // 3. Ambil Data DB
                 const { data: dbStatistik, error: errStat } = await supabase.from('statistik_desa').select('*').order('urutan', { ascending: true });
                 if(errStat) throw errStat;
 
-                // 5. Blueprint Auto-Sync Metrik
+                // 4. Blueprint Auto-Sync (100% AUTOPILOT)
                 const blueprintSync = [
+                    // Utama
                     { label: 'Total Penduduk', satuan: 'Jiwa', key: 'total_penduduk', urutan: 1, icon: '👥' },
                     { label: 'Kepala Keluarga (KK)', satuan: 'Keluarga', key: 'total_kk', urutan: 2, icon: '🏡' },
                     { label: 'Warga Laki-laki', satuan: 'Jiwa', key: 'laki_laki', urutan: 3, icon: '👨' },
                     { label: 'Warga Perempuan', satuan: 'Jiwa', key: 'perempuan', urutan: 4, icon: '👩' },
                     { label: 'Kelahiran / Bayi', satuan: 'Jiwa', key: 'bayi', urutan: 5, icon: '👶' },
                     { label: 'Warga Bekerja', satuan: 'Jiwa', key: 'bekerja', urutan: 6, icon: '💼' },
-                    { label: 'Tidak/Belum Bekerja', satuan: 'Jiwa', key: 'tidak_bekerja', urutan: 7, icon: '🛋️' },
-                    { label: 'Pelajar & Mahasiswa', satuan: 'Jiwa', key: 'pelajar', urutan: 8, icon: '🎓' },
+                    { label: 'Belum/Tidak Bekerja', satuan: 'Jiwa', key: 'tidak_bekerja', urutan: 7, icon: '🛋️' },
+                    { label: 'Pelajar/Mahasiswa', satuan: 'Jiwa', key: 'pelajar', urutan: 8, icon: '🎓' },
                     { label: 'Pensiunan', satuan: 'Jiwa', key: 'pensiunan', urutan: 9, icon: '👴' },
                     { label: 'Jumlah RT', satuan: 'RT', key: 'rt', urutan: 10, icon: '🏘️' },
-                    { label: 'Jumlah RW', satuan: 'RW', key: 'rw', urutan: 11, icon: '🏘️' }
+                    { label: 'Jumlah RW', satuan: 'RW', key: 'rw', urutan: 11, icon: '🏘️' },
+
+                    // Pendidikan
+                    { label: 'Tidak/Belum Sekolah', satuan: 'Jiwa', key: 'Tidak/Belum Sekolah', urutan: 12, icon: '🎓' },
+                    { label: 'Tamat SD/Sederajat', satuan: 'Jiwa', key: 'Tamat SD/Sederajat', urutan: 13, icon: '🎓' },
+                    { label: 'SLTP/Sederajat', satuan: 'Jiwa', key: 'SLTP/Sederajat', urutan: 14, icon: '🎓' },
+                    { label: 'SLTA/Sederajat', satuan: 'Jiwa', key: 'SLTA/Sederajat', urutan: 15, icon: '🎓' },
+                    { label: 'Diploma I/II/III', satuan: 'Jiwa', key: 'Diploma I/II/III', urutan: 16, icon: '🎓' },
+                    { label: 'Strata I', satuan: 'Jiwa', key: 'Strata I', urutan: 17, icon: '🎓' },
+                    { label: 'Strata II/III', satuan: 'Jiwa', key: 'Strata II/III', urutan: 18, icon: '🎓' },
+
+                    // Pekerjaan Detail
+                    { label: 'Mengurus Rumah Tangga', satuan: 'Jiwa', key: 'Mengurus Rumah Tangga', urutan: 19, icon: '💼' },
+                    { label: 'Petani/Pekebun', satuan: 'Jiwa', key: 'Petani/Pekebun', urutan: 20, icon: '💼' },
+                    { label: 'Pedagang', satuan: 'Jiwa', key: 'Pedagang', urutan: 21, icon: '💼' },
+                    { label: 'Karyawan Swasta', satuan: 'Jiwa', key: 'Karyawan Swasta', urutan: 22, icon: '💼' },
+                    { label: 'PNS/TNI/POLRI', satuan: 'Jiwa', key: 'PNS/TNI/POLRI', urutan: 23, icon: '💼' },
+                    { label: 'Wiraswasta', satuan: 'Jiwa', key: 'Wiraswasta', urutan: 24, icon: '💼' },
+
+                    // Agama
+                    { label: 'Islam', satuan: 'Jiwa', key: 'Islam', urutan: 25, icon: '🕌' },
+                    { label: 'Kristen', satuan: 'Jiwa', key: 'Kristen', urutan: 26, icon: '⛪' },
+                    { label: 'Katolik', satuan: 'Jiwa', key: 'Katolik', urutan: 27, icon: '⛪' },
+                    { label: 'Hindu', satuan: 'Jiwa', key: 'Hindu', urutan: 28, icon: '🛕' },
+                    { label: 'Buddha', satuan: 'Jiwa', key: 'Buddha', urutan: 29, icon: '🏯' },
+                    { label: 'Konghucu', satuan: 'Jiwa', key: 'Konghucu', urutan: 29.5, icon: '⛩️' },
+
+                    // Perkawinan
+                    { label: 'Belum Kawin', satuan: 'Jiwa', key: 'Belum Kawin', urutan: 30, icon: '💍' },
+                    { label: 'Kawin', satuan: 'Jiwa', key: 'Kawin', urutan: 31, icon: '💍' },
+                    { label: 'Cerai Hidup', satuan: 'Jiwa', key: 'Cerai Hidup', urutan: 32, icon: '💔' },
+                    { label: 'Cerai Mati', satuan: 'Jiwa', key: 'Cerai Mati', urutan: 33, icon: '🖤' },
+
+                    // Usia Laki
+                    { label: 'Usia 0-4 Laki', satuan: 'Jiwa', key: 'Usia 0-4 Laki', urutan: 34, icon: '👦' },
+                    { label: 'Usia 5-14 Laki', satuan: 'Jiwa', key: 'Usia 5-14 Laki', urutan: 35, icon: '👦' },
+                    { label: 'Usia 15-24 Laki', satuan: 'Jiwa', key: 'Usia 15-24 Laki', urutan: 36, icon: '👨' },
+                    { label: 'Usia 25-34 Laki', satuan: 'Jiwa', key: 'Usia 25-34 Laki', urutan: 37, icon: '👨' },
+                    { label: 'Usia 35-44 Laki', satuan: 'Jiwa', key: 'Usia 35-44 Laki', urutan: 38, icon: '👨' },
+                    { label: 'Usia 45-54 Laki', satuan: 'Jiwa', key: 'Usia 45-54 Laki', urutan: 39, icon: '👨' },
+                    { label: 'Usia 55-64 Laki', satuan: 'Jiwa', key: 'Usia 55-64 Laki', urutan: 40, icon: '👴' },
+                    { label: 'Usia 65+ Laki', satuan: 'Jiwa', key: 'Usia 65+ Laki', urutan: 41, icon: '👴' },
+
+                    // Usia Perempuan
+                    { label: 'Usia 0-4 Pr', satuan: 'Jiwa', key: 'Usia 0-4 Pr', urutan: 42, icon: '👧' },
+                    { label: 'Usia 5-14 Pr', satuan: 'Jiwa', key: 'Usia 5-14 Pr', urutan: 43, icon: '👧' },
+                    { label: 'Usia 15-24 Pr', satuan: 'Jiwa', key: 'Usia 15-24 Pr', urutan: 44, icon: '👩' },
+                    { label: 'Usia 25-34 Pr', satuan: 'Jiwa', key: 'Usia 25-34 Pr', urutan: 45, icon: '👩' },
+                    { label: 'Usia 35-44 Pr', satuan: 'Jiwa', key: 'Usia 35-44 Pr', urutan: 46, icon: '👩' },
+                    { label: 'Usia 45-54 Pr', satuan: 'Jiwa', key: 'Usia 45-54 Pr', urutan: 47, icon: '👩' },
+                    { label: 'Usia 55-64 Pr', satuan: 'Jiwa', key: 'Usia 55-64 Pr', urutan: 48, icon: '👵' },
+                    { label: 'Usia 65+ Pr', satuan: 'Jiwa', key: 'Usia 65+ Pr', urutan: 49, icon: '👵' }
                 ];
 
                 let finalStats = [...(dbStatistik || [])];
 
-                // 6. Terapkan Nilai Baru ke Database (Otomatis Simpan!)
+                // 5. UPDATE DIAM-DIAM KE DB
                 for (const blue of blueprintSync) {
                     const valueStr = metrics[blue.key].toString();
                     const existingRow = finalStats.find(row => row.label === blue.label);
 
                     if (existingRow) {
                         if (existingRow.nilai !== valueStr) {
-                            // Update diam-diam ke Database jika nilainya berubah
                             await supabase.from('statistik_desa').update({ nilai: valueStr }).eq('id', existingRow.id);
-                            existingRow.nilai = valueStr; 
+                            existingRow.nilai = valueStr;
                         }
                     } else {
-                        // Jika baris ini belum pernah dibikin di database, Insert otomatis!
                         const { data: newRow } = await supabase.from('statistik_desa').insert([{
-                            label: blue.label,
-                            satuan: blue.satuan,
-                            nilai: valueStr,
-                            urutan: blue.urutan
+                            label: blue.label, satuan: blue.satuan, nilai: valueStr, urutan: blue.urutan
                         }]).select();
                         if(newRow && newRow.length > 0) finalStats.push(newRow[0]);
                     }
                 }
 
-                // 7. Render UI (Gaya Grid Card)
+                // 6. RENDER UI 100% AUTO-SYNC
                 finalStats.sort((a, b) => a.urutan - b.urutan);
                 const autoLabels = blueprintSync.map(s => s.label);
                 
-                // Ganti target ke container Grid
-                const gridContainer = document.getElementById('gridStatistik');
-                let html = '';
+                const sections = {
+                    utama: { title: '👥 Data Demografi Utama', html: '' },
+                    usia: { title: '🎂 Kelompok Usia', html: '' },
+                    pendidikan: { title: '🎓 Tingkat Pendidikan', html: '' }, // <-- Kata "Manual" Dihapus
+                    pekerjaan: { title: '💼 Mata Pencaharian', html: '' },     // <-- Kata "Manual" Dihapus
+                    agama: { title: '🕌 Agama & Kepercayaan', html: '' },
+                    kawin: { title: '💍 Status Perkawinan', html: '' },
+                    lainnya: { title: '📌 Lain-lain', html: '' }
+                };
 
                 finalStats.forEach(row => {
                     const isAuto = autoLabels.includes(row.label);
-                    const blueInfo = blueprintSync.find(b => b.label === row.label);
-                    const icon = blueInfo ? blueInfo.icon : '📌';
+                    let sec = 'lainnya';
+                    let icon = '📌';
 
+                    if (['Total Penduduk', 'Kepala Keluarga (KK)', 'Warga Laki-laki', 'Warga Perempuan', 'Kelahiran / Bayi', 'Jumlah RT', 'Jumlah RW'].includes(row.label)) { sec = 'utama'; icon = '👥'; }
+                    else if (row.label.includes('Usia')) { sec = 'usia'; icon = '🎂'; }
+                    else if (['Tidak/Belum Sekolah', 'Tamat SD/Sederajat', 'SLTP/Sederajat', 'SLTA/Sederajat', 'Diploma I/II/III', 'Strata I', 'Strata II/III'].includes(row.label)) { sec = 'pendidikan'; icon = '🎓'; }
+                    else if (['Warga Bekerja', 'Belum/Tidak Bekerja', 'Pelajar/Mahasiswa', 'Pensiunan', 'Mengurus Rumah Tangga', 'Petani/Pekebun', 'Pedagang', 'Karyawan Swasta', 'PNS/TNI/POLRI', 'Wiraswasta'].includes(row.label)) { sec = 'pekerjaan'; icon = '💼'; }
+                    else if (['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'].includes(row.label)) { sec = 'agama'; icon = '🕌'; }
+                    else if (['Belum Kawin', 'Kawin', 'Cerai Hidup', 'Cerai Mati'].includes(row.label)) { sec = 'kawin'; icon = '💍'; }
+
+                    if (isAuto) {
+                        const blueInfo = blueprintSync.find(b => b.label === row.label);
+                        if (blueInfo && blueInfo.icon) icon = blueInfo.icon;
+                    }
+                    
                     if(isAuto) {
-                        // 🔥 KARTU UNTUK DATA AUTO-SYNC 🔥
-                        html += `
-                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-blue-100 flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
+                        sections[sec].html += `
+                        <div class="bg-white rounded-3xl p-5 shadow-sm border border-blue-100 flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
                             <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                            
-                            <div class="flex justify-between items-start mb-4">
+                            <div class="flex justify-between items-start mb-3">
                                 <div class="flex items-center gap-3">
-                                    <span class="text-3xl bg-blue-50 text-blue-600 w-12 h-12 flex items-center justify-center rounded-2xl">${icon}</span>
+                                    <span class="text-2xl bg-blue-50 text-blue-600 w-10 h-10 flex items-center justify-center rounded-xl">${icon}</span>
                                     <div>
                                         <h4 class="font-extrabold text-slate-800 text-sm">${row.label}</h4>
-                                        <span class="text-[10px] text-slate-500 font-medium">Satuan: ${row.satuan}</span>
+                                        <span class="text-[10px] text-slate-500 font-medium">Satuan: ${row.satuan || 'Jiwa'}</span>
                                     </div>
                                 </div>
                                 <span class="bg-blue-600 text-white text-[9px] px-2 py-1 rounded-md font-bold uppercase tracking-widest shadow-sm">Auto</span>
                             </div>
-                            
-                            <div class="mt-1">
-                                <span class="text-4xl font-black text-slate-800">${row.nilai}</span>
-                            </div>
-                            
-                            <div class="mt-5 pt-4 border-t border-slate-50 flex items-center justify-between mt-auto">
-                                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 flex items-center gap-1.5 w-full justify-center">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> Tersinkron Dukcapil
-                                </span>
-                            </div>
+                            <div class="mt-1"><span class="text-3xl font-black text-slate-800">${row.nilai.toLocaleString('id-ID')}</span></div>
                         </div>`;
                     } else {
-                        // 🔥 KARTU UNTUK DATA MANUAL 🔥
-                        html += `
-                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
-                            
-                            <div class="flex justify-between items-start mb-4">
+                        // Jaga-jaga kalau kamu tiba-tiba nambahin data custom lewat database
+                        sections[sec].html += `
+                        <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start mb-3">
                                 <div class="flex items-center gap-3">
-                                    <span class="text-3xl bg-slate-50 text-slate-600 w-12 h-12 flex items-center justify-center rounded-2xl">📌</span>
+                                    <span class="text-2xl bg-slate-50 text-slate-600 w-10 h-10 flex items-center justify-center rounded-xl">${icon}</span>
                                     <div>
                                         <h4 class="font-bold text-slate-700 text-sm">${row.label}</h4>
-                                        <span class="text-[10px] text-slate-500 font-medium">Satuan: ${row.satuan}</span>
+                                        <span class="text-[10px] text-slate-500 font-medium">Satuan: ${row.satuan || 'Jiwa'}</span>
                                     </div>
                                 </div>
                                 <span class="bg-slate-200 text-slate-600 text-[9px] px-2 py-1 rounded-md font-bold uppercase tracking-widest">Manual</span>
                             </div>
-                            
                             <div class="mt-1">
-                                <input type="number" id="input-${row.id}" value="${row.nilai}" class="w-full text-3xl font-black text-slate-800 bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all" />
+                                <input type="number" id="input-${row.id}" value="${row.nilai}" class="w-full text-2xl font-black text-slate-800 bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all" />
                             </div>
-                            
-                            <div class="mt-5 pt-4 border-t border-slate-50 mt-auto">
-                                <button onclick="updateStatistikManual('${row.id}')" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl transition-all shadow-sm active:scale-95 text-xs flex items-center justify-center gap-2">
+                            <div class="mt-4 pt-3 border-t border-slate-50 mt-auto">
+                                <button onclick="updateStatistikManual('${row.id}')" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-xl transition-all shadow-sm active:scale-95 text-xs flex items-center justify-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                                     Simpan Perubahan
                                 </button>
@@ -267,35 +361,43 @@ import AdminLayout from '../../layout/AdminLayout.astro';
                         </div>`;
                     }
                 });
+
+                let finalHtml = '';
+                for (const key in sections) {
+                    if (sections[key].html !== '') {
+                        finalHtml += `
+                            <div class="w-full mt-10 mb-4 border-b-2 border-slate-100 pb-3">
+                                <h3 class="text-xl font-black text-teal-900 flex items-center gap-2">${sections[key].title}</h3>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
+                                ${sections[key].html}
+                            </div>
+                        `;
+                    }
+                }
                 
-                if (gridContainer) gridContainer.innerHTML = html;
+                document.getElementById('gridStatistik').innerHTML = finalHtml;
 
             } catch (error) {
                 console.error(error);
-                document.getElementById('tableStatistik').innerHTML = `<tr><td colspan="3" class="p-8 text-center text-rose-500 font-bold bg-rose-50 rounded-xl border border-rose-200">Terjadi Kesalahan Sinkronisasi: ${error.message}</td></tr>`;
+                document.getElementById('gridStatistik').innerHTML = `<div class="col-span-full p-8 text-center text-rose-500 font-bold bg-rose-50 rounded-xl border border-rose-200">Terjadi Kesalahan Sinkronisasi: ${error.message}</div>`;
             }
         }
 
-        // ================= FUNGSI UPDATE DATA MANUAL =================
         window.updateStatistikManual = async (id) => {
             const inputElemen = document.getElementById(`input-${id}`);
             const nilaiBaru = inputElemen.value;
 
             inputElemen.classList.add('opacity-50', 'pointer-events-none');
-
             const { error } = await supabase.from('statistik_desa').update({ nilai: nilaiBaru }).eq('id', id);
-
             inputElemen.classList.remove('opacity-50', 'pointer-events-none');
 
             if (error) {
                 if(typeof showCustomAlert !== 'undefined') await showCustomAlert('error','Gagal Simpan',error.message);
                 else alert(error.message);
             } else {
-                // Efek sukses hijau ala UI modern
                 inputElemen.classList.add('bg-emerald-50', 'border-emerald-400', 'text-emerald-700', 'ring-2', 'ring-emerald-200');
-                setTimeout(() => {
-                    inputElemen.classList.remove('bg-emerald-50', 'border-emerald-400', 'text-emerald-700', 'ring-2', 'ring-emerald-200');
-                }, 1500);
+                setTimeout(() => inputElemen.classList.remove('bg-emerald-50', 'border-emerald-400', 'text-emerald-700', 'ring-2', 'ring-emerald-200'), 1500);
             }
         };
 

@@ -1,68 +1,60 @@
 ---
 // src/pages/index.astro
 import '../global.css';
-import Header from '../components/Header.astro';
+import BaseLayout from '../layout/BaseLayout.astro'; // Pastikan path folder layout kamu sesuai!
 import Hero from '../components/Hero.astro';
 import QuickServices from '../components/QuickServices.astro';
-// Impor komponen baru
 import StatistikDesa from '../components/StatistikDesa.astro';
 import TransparencyWidget from '../components/TransparencyWidget.astro';
 import AparaturDesa from '../components/AparaturDesa.astro';
 import BeritaDesa from '../components/BeritaDesa.astro';
-import Footer from '../components/Footer.astro';
 ---
 
-<html lang="id" class="scroll-smooth">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Portal Resmi Desa Mulyamekar</title>
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-  </head>
-  <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen overflow-x-hidden">
+<BaseLayout title="Portal Resmi Desa Mulyamekar">
+  
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+  
+  <main class="flex-grow">
+    <Hero />
+    <QuickServices />
+    <StatistikDesa />
+    <TransparencyWidget />
+    <AparaturDesa />
+    <BeritaDesa />
     
-    <Header />
-    
-    <main class="flex-grow">
-      <Hero />
-      <QuickServices />
-      <StatistikDesa />
-      <TransparencyWidget />
-      <AparaturDesa />
-      <BeritaDesa />
-      <section class="py-20 bg-orange-50 relative overflow-hidden">
-    <div class="absolute -right-20 -top-20 w-80 h-80 bg-orange-200 rounded-full blur-3xl opacity-50"></div>
-    <div class="container mx-auto px-4 max-w-6xl relative z-10">
-        <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
-            <div>
-                <span class="text-orange-600 font-extrabold text-sm tracking-widest uppercase mb-2 block">Dukung Ekonomi Lokal</span>
-                <h2 class="text-3xl md:text-4xl font-black text-gray-900">Pasar Desa Mulyamekar 🛍️</h2>
-                <p class="text-gray-600 mt-2">Temukan produk kerajinan, makanan, dan hasil bumi asli buatan warga kami.</p>
-            </div>
-            <a href="/umkm" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform hover:scale-105 whitespace-nowrap">
-                Buka Pasar &rarr;
-            </a>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="previewUmkm">
-            <p class="text-gray-500 animate-pulse col-span-full text-center">Memuat produk unggulan...</p>
-        </div>
-    </div>
-</section>
-    </main>
-    <Footer />
+    <section class="py-20 bg-orange-50 relative overflow-hidden">
+      <div class="absolute -right-20 -top-20 w-80 h-80 bg-orange-200 rounded-full blur-3xl opacity-50"></div>
+      <div class="container mx-auto px-4 max-w-6xl relative z-10">
+          <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
+              <div>
+                  <span class="text-orange-600 font-extrabold text-sm tracking-widest uppercase mb-2 block">Dukung Ekonomi Lokal</span>
+                  <h2 class="text-3xl md:text-4xl font-black text-gray-900">Pasar Desa Mulyamekar 🛍️</h2>
+                  <p class="text-gray-600 mt-2">Temukan produk kerajinan, makanan, dan hasil bumi asli buatan warga kami.</p>
+              </div>
+              <a href="/umkm" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform hover:scale-105 whitespace-nowrap">
+                  Buka Pasar &rarr;
+              </a>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="previewUmkm">
+              <p class="text-gray-500 animate-pulse col-span-full text-center">Memuat produk unggulan...</p>
+          </div>
+      </div>
+    </section>
+  </main>
 
-    <script is:inline src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script is:inline>
-      // Inisialisasi animasi AOS secara global
-      AOS.init({
-        duration: 900, // Durasi sedikit lebih lama biar lebih smooth (0.9 detik)
-        once: true,    // Animasi cuma jalan sekali pas di-scroll ke bawah
-        offset: 120,   // Jarak trigger animasi dari bawah layar
-        delay: 50,     // Delay global awal agar tidak terlalu instan
-      });
-    </script>
-    <script>
+  <script is:inline src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script is:inline>
+    // Inisialisasi animasi AOS secara global
+    AOS.init({
+      duration: 900, 
+      once: true,    
+      offset: 120,   
+      delay: 50,     
+    });
+  </script>
+
+  <script>
     import { supabase } from '../lib/supabase.js';
     
     async function loadPreviewUmkm() {
@@ -99,10 +91,8 @@ import Footer from '../components/Footer.astro';
         wadah.innerHTML = html;
     }
     
-    // Jangan lupa panggil fungsinya pas halaman index dimuat
     document.addEventListener('DOMContentLoaded', () => {
         loadPreviewUmkm();
     });
-</script>
-  </body>
-</html>
+  </script>
+</BaseLayout>

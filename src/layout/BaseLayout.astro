@@ -28,51 +28,71 @@ const { title = "Desa Mulyamekar Smart Village" } = Astro.props;
     <Footer />
     <CustomAlert/>
     <KontakModal />
-<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>  
-<div id="layarTransisi" class="fixed inset-0 bg-teal-950 z-[99999] flex flex-col items-center justify-center transition-all duration-500 ease-in-out opacity-100 pointer-events-none">
-        
-        <svg class="w-12 h-12 text-orange-400 mb-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-        </svg>
-        <p class="text-teal-100 font-bold tracking-widest text-sm animate-pulse">MEMUAT HALAMAN...</p>
-        
+    <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>  
+    <div id="layarLoadingUtama" class="fixed inset-0 z-[9999] bg-[#196d63] flex flex-col items-center justify-center transition-opacity duration-500 ease-in-out">
+        <img 
+            id="gambarLoadingUtama" 
+            src="/animasi-galeri/ezgif-frame-010.jpg" 
+            alt="Loading..." 
+            class="w-40 h-40 object-contain drop-shadow-2xl" 
+        />
+        <p class="text-teal-400 font-bold mt-6 animate-pulse tracking-widest text-sm">MEMUAT HALAMAN...</p>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const layar = document.getElementById("layarTransisi");
+        (function() {
+            const loader = document.getElementById('layarLoadingUtama');
+            const imgElement = document.getElementById('gambarLoadingUtama');
             
-            // 1. TRANSISI MASUK (Saat Halaman Selesai Dimuat)
-            // Kasih jeda sedikit (300ms) lalu tarik layar ke atas (-translate-y-full)
-            setTimeout(() => {
-                layar.classList.remove("opacity-100");
-                layar.classList.add("opacity-0", "-translate-y-full"); 
-            }, 300);
+            if (!loader || !imgElement) return;
 
-            // 2. TRANSISI KELUAR (Saat Link Apapun Diklik)
-            // Pilih semua tag <a> kecuali yang buka tab baru atau link anchor (#)
-            const semuaLink = document.querySelectorAll("a:not([target='_blank']):not([href^='#']):not([href^='javascript'])");
+            const folderGambar = '/animasi-galeri'; // Pastikan nama folder bener!
+            const namaFileAwal = 'ezgif-frame-';
+            const ekstensi = '.jpg'; // Perhatikan huruf kecil/besarnya (.png atau .PNG)
+
+            const frameMulai = 10;
+            const totalFrames = 184;
+            const intervalTime = 1000 / 21; // 21 FPS
+
+            let currentFrame = frameMulai;
+
+            // 1. Nyalakan mesin pemutar gambar
+            const loaderInterval = setInterval(() => {
+                currentFrame++;
+                if (currentFrame > totalFrames) currentFrame = frameMulai;
+                
+                const frameFormat = String(currentFrame).padStart(3, '0');
+                imgElement.src = `${folderGambar}/${namaFileAwal}${frameFormat}${ekstensi}`;
+            }, intervalTime);
+
+            // 2. Fungsi saklar untuk mematikan loading
+            function tutupLoader() {
+                if(loader.style.display === 'none') return; // Cegah double trigger
+                
+                loader.classList.add('opacity-0');
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    clearInterval(loaderInterval);
+                }, 500);
+            }
+
+            // 3. Deteksi "Selesai" Multi-Lapis (Dijamin Hilang!)
             
-            semuaLink.forEach(link => {
-                link.addEventListener("click", function(e) {
-                    
-                    // Biarkan perilaku default kalau user klik kanan, tahan tombol Ctrl/Cmd untuk buka tab baru
-                    if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
-                    
-                    e.preventDefault(); // Tahan proses pindah halaman bawaan browser
-                    const urlTujuan = this.getAttribute("href");
-                    
-                    // Turunkan kembali layar loading menutupi konten
-                    layar.classList.remove("opacity-0", "-translate-y-full");
-                    layar.classList.add("opacity-100", "translate-y-0");
+            // Lapis A: Jika halaman memang sudah selesai dari tadi
+            if (document.readyState === 'complete') {
+                setTimeout(tutupLoader, 500); 
+            } else {
+                // Lapis B: Menunggu halaman selesai normal
+                window.addEventListener('load', tutupLoader);
+            }
 
-                    // Pindah halaman secara otomatis setelah durasi animasi Tailwind selesai (500ms)
-                    setTimeout(() => {
-                        window.location.href = urlTujuan;
-                    }, 500);
-                });
-            });
-        });
+            // Lapis C: Khusus jika lu pakai Astro ViewTransitions
+            document.addEventListener('astro:page-load', tutupLoader);
+
+            // Lapis D: JARING PENGAMAN! Apapun yang terjadi, paksa hilang setelah 4 detik.
+            setTimeout(tutupLoader, 4000);
+
+        })();
     </script>
 </body>
 </html>
