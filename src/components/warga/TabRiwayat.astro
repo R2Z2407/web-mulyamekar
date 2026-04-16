@@ -1,0 +1,176 @@
+---
+---
+
+<div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+    <div class="flex space-x-2 border-b border-gray-200 px-6 pt-6 bg-gray-50">
+        <button onclick="pindahTabWarga('surat')" id="tab_surat" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-teal-600 text-teal-800 bg-teal-100/50">
+            📋 Riwayat Surat
+        </button>
+        <button onclick="pindahTabWarga('aduan')" id="tab_aduan" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+            📢 Pantau Aduan
+        </button>
+    </div>
+
+    <div id="konten_surat" class="p-6 md:p-8 block animate-fadeIn">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 border-b border-gray-50 pb-4">
+            <div class="flex items-center gap-3">
+                <h2 class="text-xl font-black text-gray-800">Riwayat Pengajuan Surat Anda</h2>
+            </div>
+            <div class="relative w-full sm:w-64">
+                <input type="text" id="searchRiwayat" placeholder="Cari surat..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all">
+                <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+        </div>
+        
+        <div id="riwayatContainer" class="space-y-4">
+            <div class="text-center py-10 text-gray-400 animate-pulse font-bold">Memuat data riwayat...</div>
+        </div>
+        <div id="paginationWarga" class="mt-4 pt-4 border-t border-gray-50"></div>
+    </div>
+
+    <div id="konten_aduan" class="p-6 md:p-8 hidden animate-fadeIn">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 border-b border-gray-50 pb-4">
+            <div class="flex items-center gap-3">
+                <h2 class="text-xl font-black text-gray-800">Pantau Aduan Anda</h2>
+            </div>
+            <div class="relative w-full sm:w-64">
+                <input type="text" id="searchRiwayatAduan" placeholder="Cari aduan yang diajukan..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 outline-none transition-all">
+                <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+        </div>
+        
+        <div id="riwayatAduanContainer" class="space-y-4">
+            <div class="text-center py-10 text-gray-400 animate-pulse font-bold">Memuat data aduan Anda...</div>
+        </div>
+        <div id="paginationAduanWarga" class="mt-4 pt-4 border-t border-gray-50"></div>
+    </div>
+</div>
+<script>
+    import { supabase } from '../../lib/supabase.js';
+
+    const itemsPerPage = 5;
+    let rawRiwayatWarga = [], filteredRiwayatWarga = [];
+    let rawRiwayatAduan = [], filteredRiwayatAduan = [];
+
+    // --- LOGIKA TAB ---
+    window.pindahTabWarga = (tab) => {
+        const tabSurat = document.getElementById('tab_surat'), tabAduan = document.getElementById('tab_aduan');
+        const kontenSurat = document.getElementById('konten_surat'), kontenAduan = document.getElementById('konten_aduan');
+        const classNonAktif = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700";
+        
+        tabSurat.className = classNonAktif; tabAduan.className = classNonAktif;
+        kontenSurat.classList.add('hidden'); kontenAduan.classList.add('hidden');
+
+        if (tab === 'surat') {
+            tabSurat.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-teal-600 text-teal-800 bg-teal-100/50";
+            kontenSurat.classList.remove('hidden'); kontenSurat.classList.add('block');
+        } else if (tab === 'aduan') {
+            tabAduan.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-rose-500 text-rose-800 bg-rose-100/50";
+            kontenAduan.classList.remove('hidden'); kontenAduan.classList.add('block');
+        }
+    };
+
+    // --- LOGIKA PAGINASI BERSAMA ---
+    function createTabPaginationUI(tipe, pageSekarang, totalData) {
+        const totalPages = Math.ceil(totalData / itemsPerPage) || 1;
+        if (totalPages <= 1) return ''; 
+        let html = '<div class="flex justify-center gap-2 mt-6 mb-2 flex-wrap">';
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === pageSekarang) {
+                html += `<button class="w-10 h-10 rounded-xl bg-teal-600 text-white font-black shadow-md transform scale-110 transition-transform">${i}</button>`;
+            } else {
+                html += `<button onclick="gantiHalaman('${tipe}', ${i})" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-500 hover:border-teal-400 hover:text-teal-600 font-bold shadow-sm transition-colors">${i}</button>`;
+            }
+        }
+        return html + '</div>';
+    }
+
+    window.gantiHalaman = (tipe, page) => {
+        if (tipe === 'Warga') renderRiwayatWarga(page);
+        if (tipe === 'AduanWarga') renderRiwayatAduan(page);
+    };
+
+    // --- RIWAYAT SURAT ---
+    async function loadRiwayatSurat() {
+        const container = document.getElementById('riwayatContainer');
+        const { data, error } = await supabase.from('pengajuan_surat').select('*').eq('user_id', window.currentUser.id).order('created_at', { ascending: false });
+        if (error) { container.innerHTML = `<div class="text-center py-8 text-rose-500 font-bold">Gagal memuat data surat.</div>`; return; }
+        rawRiwayatWarga = data || []; filteredRiwayatWarga = rawRiwayatWarga; 
+        renderRiwayatWarga(1);
+    }
+
+    function renderRiwayatWarga(page) {
+        const container = document.getElementById('riwayatContainer'), paginasiContainer = document.getElementById('paginationWarga');
+        if (filteredRiwayatWarga.length === 0) {
+            container.innerHTML = `<div class="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200"><p class="text-gray-500 font-bold">Tidak ada riwayat pengajuan surat.</p></div>`;
+            paginasiContainer.innerHTML = ''; return;
+        }
+        const start = (page - 1) * itemsPerPage, dataTampil = filteredRiwayatWarga.slice(start, start + itemsPerPage);
+        let html = '';
+        dataTampil.forEach(s => {
+            const tgl = new Date(s.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+            const statusRtText = s.status_rt || ''; 
+            let catatanHTML = '';
+            let bDesa = s.status === 'Menunggu' ? 'bg-amber-50 text-amber-600 border-amber-200' : (s.status === 'Diproses' ? 'bg-blue-50 text-blue-600 border-blue-200' : (s.status === 'Ditolak' ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'));
+            
+            let bRT = 'bg-gray-100 text-gray-500 border-gray-200', teksAlur = statusRtText;
+            if (statusRtText === 'Menunggu ACC RT') { bRT = 'bg-amber-50 text-amber-600 border-amber-200'; teksAlur = '⏳ Menunggu RT'; }
+            else if (statusRtText === 'Menunggu ACC RW') { bRT = 'bg-indigo-50 text-indigo-600 border-indigo-200'; teksAlur = (!s.rt || s.rt === '00' || s.rt === '') ? '⏳ Menunggu RW' : '✅ ACC RT ➔ ⏳ Menunggu RW'; }
+            else if (['Disetujui RW', 'Laporan RW', 'Laporan RT', 'Bypass RT'].includes(statusRtText)) { bRT = 'bg-emerald-50 text-emerald-600 border-emerald-200'; teksAlur = '✅ ACC Wilayah ➔ ⏳ Ke Desa'; }
+            else if (statusRtText.includes('Ditolak')) { bRT = 'bg-rose-50 text-rose-600 border-rose-200'; teksAlur = '❌ ' + statusRtText; }
+
+            if (s.status === 'Selesai' && s.file_hasil) catatanHTML = `<a href="${s.file_hasil}" target="_blank" class="mt-3 inline-block bg-emerald-500 text-white px-4 py-2 rounded-xl text-[11px] font-bold shadow-md hover:bg-emerald-600 transition-all hover:-translate-y-0.5">📥 Download Surat (PDF)</a>`;
+            else if (s.status === 'Ditolak' && s.alasan_penolakan) catatanHTML = `<div class="mt-3 bg-rose-50 p-3 rounded-xl border border-rose-100"><p class="text-[10px] font-black text-rose-800 uppercase">Alasan Penolakan:</p><p class="text-xs text-rose-600 font-medium mt-1">${window.steril(s.alasan_penolakan)}</p></div>`;
+            else if (statusRtText.includes('Ditolak')) catatanHTML = `<div class="mt-3 bg-rose-50 p-3 rounded-xl border border-rose-100"><p class="text-xs text-rose-600 font-medium">Ditolak oleh Pengurus Wilayah (RT/RW).</p></div>`;
+
+            html += `<div class="p-5 border border-gray-100 rounded-3xl hover:border-teal-200 bg-white flex flex-col md:flex-row justify-between gap-4 shadow-sm transition-all hover:shadow-md"><div class="flex-grow"><h3 class="font-black text-teal-950 text-base">${window.steril(s.jenis_surat)}</h3><p class="text-[11px] text-gray-500 font-medium mt-1">Tgl Pengajuan: ${tgl}</p>${catatanHTML}</div><div class="flex flex-col gap-2 shrink-0 items-start md:items-end"><span class="px-3 py-1.5 rounded-lg text-[10px] font-bold border ${bRT} whitespace-nowrap">RT: ${statusRtText || 'Menunggu'}</span><span class="px-3 py-1.5 rounded-lg text-[10px] font-bold border ${bDesa} whitespace-nowrap">Desa: ${s.status}</span></div></div>`;
+        });
+        container.innerHTML = html; paginasiContainer.innerHTML = createTabPaginationUI('Warga', page, filteredRiwayatWarga.length);
+    }
+
+    // --- RIWAYAT ADUAN ---
+    async function loadRiwayatAduan() {
+        const container = document.getElementById('riwayatAduanContainer');
+        const { data, error } = await supabase.from('aduan_warga').select('*').eq('user_id', window.currentUser.id).order('created_at', { ascending: false });
+        if (error) { container.innerHTML = `<div class="text-center py-8 text-rose-500 font-bold">Gagal memuat data aduan.</div>`; return; }
+        rawRiwayatAduan = data || []; filteredRiwayatAduan = rawRiwayatAduan; 
+        renderRiwayatAduan(1);
+    }
+
+    function renderRiwayatAduan(page) {
+        const container = document.getElementById('riwayatAduanContainer'), paginasiContainer = document.getElementById('paginationAduanWarga');
+        if (filteredRiwayatAduan.length === 0) {
+            container.innerHTML = `<div class="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200"><p class="text-gray-500 font-bold">Belum ada riwayat aduan yang diajukan.</p></div>`;
+            paginasiContainer.innerHTML = ''; return;
+        }
+        const start = (page - 1) * itemsPerPage, dataTampil = filteredRiwayatAduan.slice(start, start + itemsPerPage);
+        let html = '';
+        dataTampil.forEach(a => {
+            const tgl = new Date(a.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+            let bStatus = a.status === 'Menunggu' ? 'bg-amber-50 text-amber-600 border-amber-200' : (a.status === 'Diproses' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200');
+            let fotoHTML = a.foto_url ? `<button type="button" onclick="lihatFoto('${a.foto_url}')" class="mt-2 inline-flex items-center gap-1 bg-white text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm hover:border-teal-400 hover:text-teal-600 transition-all">📸 Lihat Foto Bukti</button>` : '';
+            let deskripsiHTML = window.steril(a.deskripsi).replace(/\(Maps:\s*(-?\d+\.\d+),\s*(-?\d+\.\d+)\)/g, '<a href="https://www.google.com/maps?q=$1,$2" target="_blank" class="text-blue-600 font-bold underline bg-blue-50 px-2 py-0.5 rounded-lg hover:bg-blue-100 transition-colors inline-flex items-center gap-1 mt-1">🗺️ Buka di Google Maps</a>');
+            html += `<div class="p-5 border border-gray-100 rounded-3xl hover:border-rose-200 bg-white flex flex-col md:flex-row justify-between gap-4 shadow-sm transition-all hover:shadow-md"><div class="flex-grow"><span class="text-[9px] font-bold text-rose-600 uppercase bg-rose-50 px-2 py-0.5 rounded border border-rose-100 mb-1.5 inline-block">${window.steril(a.kategori)}</span><h3 class="font-bold text-gray-800 text-sm">${window.steril(a.judul)}</h3><p class="text-[11px] text-gray-500 font-medium mt-1 mb-2">Dikirim pada: ${tgl}</p><p class="text-xs text-gray-600 whitespace-pre-wrap leading-relaxed">${deskripsiHTML}</p>${fotoHTML}</div><div class="flex flex-col gap-2 shrink-0 items-start md:items-end"><span class="px-3 py-1.5 rounded-lg text-[10px] font-bold border ${bStatus} whitespace-nowrap">Status: ${a.status}</span></div></div>`;
+        });
+        container.innerHTML = html; paginasiContainer.innerHTML = createTabPaginationUI('AduanWarga', page, filteredRiwayatAduan.length);
+    }
+
+    // Listener Pencarian
+    document.getElementById('searchRiwayat')?.addEventListener('input', (e) => {
+        const keyword = e.target.value.toLowerCase();
+        filteredRiwayatWarga = rawRiwayatWarga.filter(s => s.jenis_surat.toLowerCase().includes(keyword) || s.status.toLowerCase().includes(keyword) || (s.status_rt || '').toLowerCase().includes(keyword));
+        renderRiwayatWarga(1);
+    });
+    
+    document.getElementById('searchRiwayatAduan')?.addEventListener('input', (e) => {
+        const keyword = e.target.value.toLowerCase();
+        filteredRiwayatAduan = rawRiwayatAduan.filter(a => (a.kategori || '').toLowerCase().includes(keyword) || (a.judul || '').toLowerCase().includes(keyword) || (a.status || '').toLowerCase().includes(keyword));
+        renderRiwayatAduan(1);
+    });
+
+    // Fetch data setelah init selesai
+    window.addEventListener('wargaReady', () => {
+        loadRiwayatSurat();
+        loadRiwayatAduan();
+    });
+</script>

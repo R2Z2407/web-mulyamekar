@@ -7,7 +7,14 @@ const daftarRT = ["Belum Diatur", "RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 
 <div id="modalProfil" class="fixed inset-0 z-[80] bg-gray-900/80 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
     <div id="modalProfilBox" class="bg-white rounded-3xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col">
         <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-teal-50 rounded-t-3xl">
-            <h3 class="text-xl font-black text-teal-900">Pengaturan Profil</h3>
+            
+            <div class="flex items-center gap-4">
+                <div class="relative w-12 h-12 shrink-0">
+                    <img id="imgModalProfil" src="" alt="Profil" class="w-12 h-12 rounded-full object-cover border-2 border-teal-200 shadow-sm foto-profil-global">
+                </div>
+                <h3 class="text-xl font-black text-teal-900">Pengaturan Profil</h3>
+            </div>
+
             <button onclick="tutupModalProfil()" class="text-teal-400 hover:text-teal-600 bg-white p-2 rounded-full shadow-sm font-bold">✖</button>
         </div>
         <div class="p-6 overflow-y-auto">
@@ -52,3 +59,33 @@ const daftarRT = ["Belum Diatur", "RT 01 / RW 01", "RT 02 / RW 01", "RT 01 / RW 
 <div id="modalFoto" class="fixed inset-0 z-[90] bg-gray-900/90 hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="tutupFoto()">
     <img id="imgPreview" src="" class="max-w-full max-h-[90vh] rounded-xl shadow-2xl transform scale-95 transition-transform duration-300">
 </div>
+
+<script>
+    // Gabungkan Listener Global untuk mengisi Foto dan Data Form
+    window.addEventListener('sistemGlobalReady', () => {
+        const profil = window.profilWarga;
+        if (!profil) return;
+
+        // 1. Update Foto Profil di Modal
+        if (profil.avatar_url) {
+            const imgModal = document.getElementById('imgModalProfil');
+            if (imgModal) imgModal.src = profil.avatar_url;
+        }
+
+        // 2. Auto-fill Form Input
+        const inputNama = document.getElementById('inputNama');
+        const inputNik = document.getElementById('inputNik');
+        const inputRT = document.getElementById('inputRT');
+
+        if (inputNama) inputNama.value = profil.nama_lengkap || '';
+        if (inputNik) inputNik.value = profil.nik || '';
+        
+        if (inputRT && profil.wilayah_rt) {
+            let opsiCocok = false;
+            Array.from(inputRT.options).forEach(opt => {
+                if (opt.value === profil.wilayah_rt) opsiCocok = true;
+            });
+            if (opsiCocok) inputRT.value = profil.wilayah_rt;
+        }
+    });
+</script>

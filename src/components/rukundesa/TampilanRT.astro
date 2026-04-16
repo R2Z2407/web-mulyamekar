@@ -1,0 +1,62 @@
+---
+// src/components/TampilanRT.astro
+import HeaderRT from './HeaderRTRW.astro';
+import TabSuratRT from './TabSuratRT.astro';
+import TabAduanRT from './TabAduanRT.astro';
+import TabDaftarWargaRT from './TabDaftarWargaRT.astro';
+import TabLaporanRT from './TabLaporanRT.astro';
+import ModalWargaRT from './ModalWargaRT.astro';
+---
+
+<div id="tampilanRT" class="hidden animate-fadeIn">
+    <HeaderRT />
+
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+        <div class="flex overflow-x-auto hide-scrollbar space-x-2 border-b border-gray-200 px-6 pt-6 bg-gray-50">
+            <button onclick="switchTabRT('surat')" id="btnTab-surat" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-amber-500 text-amber-800 bg-amber-100/50 whitespace-nowrap flex items-center gap-2">
+                📄 Verifikasi Surat
+            </button>
+            <button onclick="switchTabRT('aduan')" id="btnTab-aduan" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap flex items-center gap-2">
+                📢 Pantau Aduan
+            </button>
+            <button onclick="switchTabRT('daftarwarga')" id="btnTab-daftarwarga" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap flex items-center gap-2">
+                📋 Daftar Warga
+            </button>
+            <button onclick="switchTabRT('laporan')" id="btnTab-laporan" class="px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap flex items-center gap-2">
+                📝 Laporan Khusus RT
+            </button>
+        </div>
+
+        <TabSuratRT />
+        <TabAduanRT />
+        <TabDaftarWargaRT />
+        <TabLaporanRT />
+    </div>
+
+    <ModalWargaRT />
+</div>
+<script>
+    // FUNGSI PINDAH TAB KHUSUS RT
+    window.switchTabRT = (tabName) => {
+        ['surat', 'aduan', 'daftarwarga', 'laporan'].forEach(id => {
+            const el = document.getElementById(`tab-${id}`);
+            if(el) { el.classList.add('hidden'); el.classList.remove('block'); }
+        });
+
+        const btnSurat = document.getElementById('btnTab-surat');
+        const btnAduan = document.getElementById('btnTab-aduan');
+        const btnDaftar = document.getElementById('btnTab-daftarwarga');
+        const btnLaporan = document.getElementById('btnTab-laporan');
+        
+        const classNonAktif = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap flex items-center gap-2";
+        [btnSurat, btnAduan, btnDaftar, btnLaporan].forEach(btn => { if(btn) btn.className = classNonAktif; });
+
+        const targetTab = document.getElementById(`tab-${tabName}`);
+        if(targetTab) { targetTab.classList.remove('hidden'); targetTab.classList.add('block'); }
+
+        if(tabName === 'surat' && btnSurat) btnSurat.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-amber-500 text-amber-800 bg-amber-100/50 whitespace-nowrap flex items-center gap-2";
+        else if(tabName === 'aduan' && btnAduan) btnAduan.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-rose-500 text-rose-800 bg-rose-100/50 whitespace-nowrap flex items-center gap-2";
+        else if(tabName === 'daftarwarga' && btnDaftar) btnDaftar.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-emerald-500 text-emerald-800 bg-emerald-100/50 whitespace-nowrap flex items-center gap-2";
+        else if(tabName === 'laporan' && btnLaporan) btnLaporan.className = "px-6 py-3 font-bold text-sm rounded-t-xl transition-all border-b-4 border-purple-500 text-purple-800 bg-purple-100/50 whitespace-nowrap flex items-center gap-2";
+    };
+</script>

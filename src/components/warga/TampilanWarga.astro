@@ -1,0 +1,65 @@
+---
+// src/components/TampilanWarga.astro
+// Komponen khusus untuk mode dashboard Warga biasa
+import HeaderProfil from './HeaderProfil.astro';
+import MenuLayanan from './MenuLayanan.astro';
+import TabRiwayat from './TabRiwayat.astro';
+import ModalProfil from './ModalProfil.astro';
+---
+
+<div id="tampilanWarga" class="block animate-fadeIn relative">
+    <HeaderProfil />
+    <MenuLayanan />
+    <TabRiwayat />
+    <ModalProfil />
+</div>
+
+<script>
+    // 1. Fungsi Steril
+    window.steril = function(teks) {
+        if (!teks) return '';
+        return String(teks).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char] || char));
+    };
+
+    // 2. Fungsi ini HANYA JALAN setelah dipanggil oleh index.astro
+    function muatDashboardWarga() {
+        // Ambil data yang sudah disiapkan oleh index.astro
+        const profil = window.profilWarga;
+        if (!profil) {
+            if(document.getElementById('namaWarga')) document.getElementById('namaWarga').innerText = "Gagal Memuat";
+            return;
+        }
+
+        // Penentuan Gender & Avatar Otomatis
+        let finalGender = profil.jenis_kelamin;
+        if (profil.nik && profil.nik.length >= 8) {
+            const kodeTglLahir = parseInt(profil.nik.substring(6, 8));
+            finalGender = (kodeTglLahir > 40) ? 'Perempuan' : 'Laki-laki';
+        }
+
+        let avatarDefault = finalGender === 'Perempuan' 
+            ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${profil.nama_lengkap}&backgroundColor=ffdfbf`
+            : `https://api.dicebear.com/7.x/avataaars/svg?seed=${profil.nama_lengkap}&backgroundColor=b6e3f4`;
+        let avatarFix = profil.avatar_url || avatarDefault;
+
+        // Tembakkan ke HTML
+        const safeName = window.steril(profil.nama_lengkap);
+        if(document.getElementById('namaWarga')) document.getElementById('namaWarga').innerText = safeName || 'Warga';
+        if(document.getElementById('nikWarga')) document.getElementById('nikWarga').innerText = window.steril(profil.nik) || '---';
+        if(document.getElementById('wilayahWarga')) document.getElementById('wilayahWarga').innerText = profil.wilayah_rt ? `RT/RW ${profil.wilayah_rt}` : '---';
+        
+        document.querySelectorAll('.foto-profil-global').forEach(img => img.src = avatarFix);
+
+        // Isi Form di Modal Profil
+        if(document.getElementById('inputEditNama')) document.getElementById('inputEditNama').value = profil.nama_lengkap || '';
+        if(document.getElementById('inputEditNik')) document.getElementById('inputEditNik').value = profil.nik || '';
+        if(document.getElementById('inputEditEmail')) document.getElementById('inputEditEmail').value = profil.email || '';
+        if(document.getElementById('inputEditPhone')) document.getElementById('inputEditPhone').value = profil.phone || profil.no_telp || '';
+
+        // 🔥 Lanjut kasih aba-aba ke TabRiwayat dan MenuLayanan untuk fetch data mereka
+        window.dispatchEvent(new Event('wargaReady'));
+    }
+
+    // Dengarkan sinyal dari index.astro, JANGAN pakai DOMContentLoaded lagi
+    window.addEventListener('sistemGlobalReady', muatDashboardWarga);
+</script>

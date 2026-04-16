@@ -1,0 +1,121 @@
+---
+---
+<div id="tab-daftarwarga" class="p-6 md:p-8 hidden animate-fadeIn">
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 border-b border-gray-50 pb-4">
+        <div>
+            <h2 class="text-xl font-bold text-gray-900">Buku Induk RT</h2>
+            <p class="text-sm text-gray-500 mt-1">Daftar warga yang tercatat secara resmi di wilayah Anda.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <div class="relative w-full sm:w-64">
+                <input type="text" id="searchWargaRT" placeholder="Cari nama/NIK..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                <svg class="w-4 h-4 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            
+            <div id="wadahFilterRTWarga" class="hidden w-full sm:w-auto">
+                <select id="filterRTWarga" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 outline-none cursor-pointer focus:ring-2 focus:ring-emerald-500 transition-all">
+                    <option value="Semua">Semua RT</option>
+                </select>
+            </div>
+
+            <button onclick="document.getElementById('modalTambahWargaRT').classList.remove('hidden')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold shrink-0 shadow-sm flex items-center justify-center gap-2 transition-all active:scale-95 w-full sm:w-auto">
+                <i class="bi bi-person-plus-fill"></i> Tambah Warga
+            </button>
+        </div>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-gray-50 border-b border-gray-100 text-gray-600">
+                <tr>
+                    <th class="p-4 font-bold text-xs uppercase tracking-wider w-16 text-center">No</th>
+                    <th class="p-4 font-bold text-xs uppercase tracking-wider">Nama Lengkap</th>
+                    <th class="p-4 font-bold text-xs uppercase tracking-wider text-center">L/P</th>
+                    <th class="p-4 font-bold text-xs uppercase tracking-wider text-center">RT/RW</th>
+                    <th class="p-4 font-bold text-xs uppercase tracking-wider">Pekerjaan</th>
+                    <th class="p-4 font-bold text-xs uppercase tracking-wider text-center">Status Warga</th>
+                </tr>
+            </thead>
+            <tbody id="tableDaftarWargaRT" class="divide-y divide-gray-100 text-sm">
+                <tr><td colspan="5" class="p-8 text-center text-gray-400 animate-pulse font-bold">Memuat data warga...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="paginationDaftarWargaRT" class="mt-4 pt-4 border-t border-gray-50"></div>
+</div>
+<script>
+    import { supabase } from '../../lib/supabase.js';
+
+    let rawDaftarWargaRT = [];
+    let filteredDaftarWargaRT = [];
+    const itemsPerPage = 5;
+
+    window.loadDaftarWargaRT = async () => {
+        if (!window.profilWarga?.rw) return;
+        try {
+            let query = supabase.from('data_penduduk').select('*');
+            if (window.profilWarga.role === 'rw') {
+                query = query.eq('rw', window.profilWarga.rw);
+                const wadah = document.getElementById('wadahFilterRTWarga');
+                if (wadah) wadah.classList.remove('hidden');
+                const { data: listRT } = await supabase.from('master_wilayah').select('nomor_rt').eq('nomor_rw', window.profilWarga.rw).order('nomor_rt');
+                if (listRT) {
+                    const sel = document.getElementById('filterRTWarga');
+                    let html = '<option value="Semua">Semua RT</option>';
+                    [...new Set(listRT.map(i => i.nomor_rt))].forEach(rt => { html += `<option value="${rt}">RT ${rt}</option>`; });
+                    if(sel) sel.innerHTML = html;
+                }
+            } else {
+                query = query.eq('rw', window.profilWarga.rw).eq('rt', window.profilWarga.rt);
+            }
+
+            const { data, error } = await query.order('nama_lengkap', { ascending: true });
+            if (error) throw error;
+
+            rawDaftarWargaRT = (data || []).map(d => ({
+                ...d, nik: (typeof window.decrypt === 'function' && d.nik.length > 20) ? window.decrypt(d.nik) : d.nik 
+            }));
+            filteredDaftarWargaRT = rawDaftarWargaRT; window.renderDaftarWargaRT(1);
+        } catch (err) {
+            console.error("Gagal narik data warga:", err);
+        }
+    };
+
+    window.terapkanFilterWargaRT = () => {
+        const keyword = document.getElementById('searchWargaRT').value.toLowerCase();
+        const filterRT = document.getElementById('filterRTWarga')?.value || 'Semua';
+        filteredDaftarWargaRT = rawDaftarWargaRT.filter(w => {
+            const matchNama = (w.nama_lengkap || '').toLowerCase().includes(keyword);
+            const matchNik = (w.nik || '').includes(keyword);
+            const matchRT = filterRT === 'Semua' ? true : w.rt === filterRT;
+            return (matchNama || matchNik) && matchRT;
+        });
+        window.renderDaftarWargaRT(1);
+    };
+
+    window.renderDaftarWargaRT = (page) => {
+        const tbody = document.getElementById('tableDaftarWargaRT');
+        const paginasiContainer = document.getElementById('paginationDaftarWargaRT');
+        if (!tbody || !paginasiContainer) return;
+
+        if (filteredDaftarWargaRT.length === 0) { 
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500 font-medium">Belum ada warga terdata.</td></tr>`;
+            paginasiContainer.innerHTML = ''; return; 
+        }
+        
+        const start = (page - 1) * itemsPerPage;
+        const dataTampil = filteredDaftarWargaRT.slice(start, start + itemsPerPage);
+        let html = '';
+
+        dataTampil.forEach((w, index) => {
+            let badgeStatus = w.status_warga === 'Tetap' ? 'bg-emerald-100 text-emerald-700' : (w.status_warga === 'Pendatang' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700');
+            let labelWilayah = `RT ${w.rt || '-'} / RW ${w.rw || '-'}`;
+            html += `<tr class="hover:bg-emerald-50/30 border-b border-gray-50 transition-colors"><td class="p-4 text-center text-gray-500 text-sm font-bold">${start + index + 1}</td><td class="p-4"><p class="font-black text-gray-800 text-sm md:text-base">${window.steril(w.nama_lengkap)}</p></td><td class="p-4 text-center text-gray-700 font-bold text-sm md:text-base">${w.jenis_kelamin === 'Laki-laki' ? 'L' : 'P'}</td><td class="p-4 text-center"><span class="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs md:text-sm font-black whitespace-nowrap shadow-sm">${labelWilayah}</span></td><td class="p-4 text-gray-600 text-xs md:text-sm">${window.steril(w.pekerjaan)}</td><td class="p-4 text-center"><span class="px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase border shadow-sm ${badgeStatus}">${window.steril(w.status_warga)}</span></td></tr>`;
+        });
+        
+        tbody.innerHTML = html; 
+        if(typeof window.createTabPaginationUI === 'function') paginasiContainer.innerHTML = window.createTabPaginationUI('DaftarWargaRT', page, filteredDaftarWargaRT.length);
+    };
+
+    document.getElementById('searchWargaRT')?.addEventListener('input', window.terapkanFilterWargaRT);
+    document.getElementById('filterRTWarga')?.addEventListener('change', window.terapkanFilterWargaRT);
+</script>

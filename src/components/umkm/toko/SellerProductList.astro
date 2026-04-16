@@ -1,0 +1,29 @@
+---
+// src/components/toko/SellerProductList.astro
+---
+<div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+    <div class="p-6 md:p-8 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50/50">
+        <h2 class="text-xl font-black text-gray-800">Manajemen Produk</h2>
+        <button onclick="persiapanTambahProduk()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-2xl font-black transition-all shadow-lg active:scale-95 flex items-center gap-2 text-sm w-full sm:w-auto justify-center">
+            <i class="bi bi-plus-circle-fill"></i> Tambah Produk
+        </button>
+    </div>
+
+    <div class="p-0 overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-gray-50 text-gray-600">
+                <tr>
+                    <th class="p-4 font-black text-[10px] uppercase tracking-wider border-b border-gray-100">Produk</th>
+                    <th class="p-4 font-black text-[10px] uppercase tracking-wider border-b border-gray-100">Harga</th>
+                    <th class="p-4 font-black text-[10px] uppercase tracking-wider border-b border-gray-100 text-center">Status</th>
+                    <th class="p-4 font-black text-[10px] uppercase tracking-wider border-b border-gray-100 text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tableProdukSeller" class="divide-y divide-gray-50">
+                <tr>
+                    <td colspan="4" class="p-12 text-center text-gray-400 font-bold animate-pulse">Memuat data...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

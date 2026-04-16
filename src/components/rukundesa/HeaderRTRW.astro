@@ -1,0 +1,43 @@
+---
+---
+<div class="bg-gradient-to-br from-amber-600 to-orange-500 rounded-3xl p-8 text-white shadow-xl mb-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden border border-amber-400/50">
+    <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-orange-400 rounded-full opacity-40 blur-3xl"></div>
+    <div class="relative z-10 text-center md:text-left">
+        <span class="inline-block px-4 py-1 bg-white text-orange-600 font-extrabold rounded-full text-[10px] uppercase tracking-widest mb-3 shadow-sm">Pengurus Rukun Wilayah Desa Mulyamekar</span>
+        <h1 class="text-2xl md:text-3xl font-black tracking-tight" id="namaRT">Memuat...</h1>
+        <p class="text-orange-50 mt-1 font-medium">Ketua <span id="wilayahRTLabel" class="font-bold border-b border-orange-200 pb-0.5">...</span></p>
+    </div>
+</div>
+<script>
+    function isiHeaderRT() {
+        const profil = window.profilWarga;
+        if (!profil) return;
+
+        const labelJabatan = profil.role === 'rw' ? 'Ketua RW' : 'Ketua RT';
+        let labelWilayah = 'Belum Diset';
+
+        // Logika membedah string "RT 34 / RW 03"
+        if (profil.wilayah_rt) {
+            // Memecah teks berdasarkan garis miring -> ["RT 34 ", " RW 03"]
+            const pisahWilayah = profil.wilayah_rt.split('/'); 
+            
+            if (profil.role === 'rw') {
+                // Ambil potongan kedua dan hilangkan spasi sisa -> "RW 03"
+                labelWilayah = pisahWilayah[1] ? pisahWilayah[1].trim() : profil.wilayah_rt;
+            } else {
+                // Sesuai idemu, kalau RT ambil ininya aja (potongan pertama) -> "RT 34"
+                labelWilayah = pisahWilayah[0] ? pisahWilayah[0].trim() : profil.wilayah_rt;
+                
+                // Catatan: Kalau kamu mau nampilin utuh "RT 34 / RW 03", 
+                // cukup ganti baris di atas jadi: labelWilayah = profil.wilayah_rt;
+            }
+        }
+
+        // Tembakkan ke HTML
+        if(document.getElementById('namaRT')) document.getElementById('namaRT').innerText = profil.nama_lengkap || labelJabatan;
+        if(document.getElementById('wilayahRTLabel')) document.getElementById('wilayahRTLabel').innerText = labelWilayah;
+    }
+
+    // Tunggu sinyal dari index.astro bahwa data sudah siap
+    window.addEventListener('sistemGlobalReady', isiHeaderRT);
+</script>

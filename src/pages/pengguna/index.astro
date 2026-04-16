@@ -3,10 +3,9 @@
 import BaseLayout from '../../layout/BaseLayout.astro';
 
 // 🔥 IMPORT SEMUA KOMPONEN YANG UDAH DIPISAH 🔥
-import TampilanWarga from '../../components/TampilanWarga.astro';
-import TampilanRT from '../../components/TampilanRT.astro';
+import TampilanWarga from '../../components/warga/TampilanWarga.astro';
+import TampilanRT from '../../components/rukundesa/TampilanRT.astro';
 import ModalDashboard from '../../components/ModalDashboard.astro';
-import ScriptDashboard from '../../components/ScriptDashboard.astro';
 ---
 
 <BaseLayout title="Dashboard Warga & RT - Desa Mulyamekar">
@@ -22,7 +21,7 @@ import ScriptDashboard from '../../components/ScriptDashboard.astro';
                         <input type="checkbox" id="toggleMode" class="sr-only peer" onchange="gantiMode(this.checked)">
                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500 shadow-inner"></div>
                     </label>
-                    <span class="text-sm font-bold text-amber-600">Mode RT/RW</span>
+                    <span id="textModeRT" class="text-sm font-bold text-amber-600">Mode RT/RW</span>
                 </div>
             </div>
 
@@ -34,5 +33,146 @@ import ScriptDashboard from '../../components/ScriptDashboard.astro';
 
     <ModalDashboard />
 
-    <ScriptDashboard />
+    <style>
+        .animate-fadeIn { animation: fadeIn 0.3s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+
+    <script>
+        import { supabase } from '../../lib/supabase.js';
+
+        // 1. Variabel Global
+        window.currentUser = null;
+        window.profilWarga = null;
+        window.currentDashboardMode = 'WARGA';
+
+        // 2. Sistem Paginasi Universal
+        window.createTabPaginationUI = function(tipe, pageSekarang, totalData) {
+            const itemsPerPage = 5;
+            const totalPages = Math.ceil(totalData / itemsPerPage) || 1;
+            if (totalPages <= 1) return ''; 
+
+            let html = '<div class="flex justify-center gap-2 mt-6 mb-2 flex-wrap">';
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === pageSekarang) {
+                    html += `<button class="w-10 h-10 rounded-xl bg-teal-600 text-white font-black shadow-md transform scale-110 transition-transform">${i}</button>`;
+                } else {
+                    html += `<button onclick="gantiHalaman('${tipe}', ${i})" class="w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-500 hover:border-teal-400 hover:text-teal-600 font-bold shadow-sm transition-colors">${i}</button>`;
+                }
+            }
+            return html + '</div>';
+        };
+
+        window.gantiHalaman = (tipe, page) => {
+            if (tipe === 'Warga' && typeof window.renderRiwayatWarga === 'function') window.renderRiwayatWarga(page);
+            if (tipe === 'AduanWarga' && typeof window.renderRiwayatAduan === 'function') window.renderRiwayatAduan(page);
+            if (tipe === 'SuratRT' && typeof window.renderSuratRT === 'function') window.renderSuratRT(page);
+            if (tipe === 'AduanRT' && typeof window.renderAduanRT === 'function') window.renderAduanRT(page);
+            if (tipe === 'DaftarWargaRT' && typeof window.renderDaftarWargaRT === 'function') window.renderDaftarWargaRT(page);
+        };
+
+        // 3. Modal & UI Helper
+        window.lihatFoto = (url) => {
+            const modalF = document.getElementById('modalFoto');
+            const imgP = document.getElementById('imgPreview');
+            if(!modalF || !imgP) return;
+            imgP.src = url;
+            modalF.classList.remove('hidden');
+            setTimeout(() => { modalF.classList.remove('opacity-0'); imgP.classList.remove('scale-95'); imgP.classList.add('scale-100'); }, 10);
+        };
+
+        window.tutupFoto = () => {
+            const modalF = document.getElementById('modalFoto');
+            const imgP = document.getElementById('imgPreview');
+            if(!modalF || !imgP) return;
+            modalF.classList.add('opacity-0'); imgP.classList.remove('scale-100'); imgP.classList.add('scale-95');
+            setTimeout(() => { modalF.classList.add('hidden'); imgP.src=''; }, 300);
+        };
+
+        window.bukaModalToko = () => { document.body.classList.add('overflow-hidden'); const m = document.getElementById('modalDaftarToko'); m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); document.getElementById('modalDaftarTokoBox').classList.replace('scale-95', 'scale-100'); }, 10); };
+        window.tutupModalToko = () => { document.body.classList.remove('overflow-hidden'); const m = document.getElementById('modalDaftarToko'); m.classList.add('opacity-0'); setTimeout(() => { m.classList.add('hidden'); }, 300); };
+
+        // 4. Logika Ganti Mode (Toggle)
+        window.gantiMode = (isModeRT) => {
+            const mode = isModeRT ? 'RT' : 'WARGA';
+            window.currentDashboardMode = mode;
+            const wadahWarga = document.getElementById('tampilanWarga');
+            const wadahRT = document.getElementById('tampilanRT');
+
+            if (mode === 'WARGA') {
+                wadahWarga?.classList.replace('hidden', 'block');
+                wadahRT?.classList.replace('block', 'hidden');
+            } else {
+                wadahWarga?.classList.replace('block', 'hidden');
+                wadahRT?.classList.replace('hidden', 'block');
+                if (typeof window.loadSuratRT === 'function') window.loadSuratRT();
+                if (typeof window.loadAduanRT === 'function') window.loadAduanRT();
+                if (typeof window.loadDaftarWargaRT === 'function') window.loadDaftarWargaRT();
+            }
+        };
+
+        // 5. 🔥 FUNGSI UPDATE GAMBAR GLOBAL (Fix Image Masalah) 🔥
+        function updateGambarGlobal(profil) {
+            let finalGender = profil.jenis_kelamin;
+            if (profil.nik && profil.nik.length >= 8) {
+                const kodeTglLahir = parseInt(profil.nik.substring(6, 8));
+                finalGender = (kodeTglLahir > 40) ? 'Perempuan' : 'Laki-laki';
+            }
+            const avatarDefault = finalGender === 'Perempuan' 
+                ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${profil.nama_lengkap}&backgroundColor=ffdfbf`
+                : `https://api.dicebear.com/7.x/avataaars/svg?seed=${profil.nama_lengkap}&backgroundColor=b6e3f4`;
+            
+            const urlFix = profil.avatar_url || avatarDefault;
+            document.querySelectorAll('.foto-profil-global').forEach(img => img.src = urlFix);
+        }
+
+        // 6. 🔥 INISIALISASI SISTEM GLOBAL (Sesuai Permintaanmu) 🔥
+        async function initSistemGlobal() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = '/'; return; }
+            window.currentUser = session.user;
+
+            // Ambil semua kolom agar tidak ada error kolom hilang
+            const { data: profil, error } = await supabase.from('profil_user').select('*').eq('id', window.currentUser.id).single();
+            if (error || !profil) { window.location.href = '/'; return; }
+            
+            // Simpan ke Global
+            window.profilWarga = profil;
+            
+            // Logika Satpam/Token (Multi-device Login Prevention)
+            const localToken = localStorage.getItem('mulyamekar_session');
+            if (profil.active_token && profil.active_token !== localToken) {
+                await supabase.auth.signOut(); localStorage.removeItem('mulyamekar_session');
+                alert('Sesi Berakhir: Akun sedang digunakan di perangkat lain.'); window.location.href = '/'; return;
+            }
+
+            // Realtime Listener
+            supabase.channel('patroli-sesi').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profil_user', filter: `id=eq.${window.currentUser.id}` }, async (payload) => {
+                if (payload.new.active_token && payload.new.active_token !== localToken) {
+                    await supabase.auth.signOut(); localStorage.removeItem('mulyamekar_session');
+                    alert('Sesi Berakhir! Seseorang login di perangkat lain.'); window.location.href = '/';
+                }
+            }).subscribe();
+
+            // 🔥 Fix Gambar Langsung 🔥
+            updateGambarGlobal(profil);
+        
+            if (profil.role === 'rt' || profil.role === 'rw') {
+                document.getElementById('kontrolModeRT')?.classList.remove('hidden');
+            
+                // 🔥 LOGIKA PENUKAR TEKS TOGGLE 🔥
+                const labelToggle = document.getElementById('textModeRT');
+                if (labelToggle) {
+                    labelToggle.innerText = profil.role === 'rw' ? 'Mode RW' : 'Mode RT';
+                }
+            }
+        
+            // 🔥 KIRIM SINYAL GLOBAL: Data Profil Sudah Siap!
+            window.dispatchEvent(new Event('sistemGlobalReady'));
+        }
+
+        document.addEventListener('DOMContentLoaded', initSistemGlobal);
+    </script>
 </BaseLayout>
